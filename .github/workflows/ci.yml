@@ -15,7 +15,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: PSScriptAnalyzer (gate: Error severity)
+      - name: "PSScriptAnalyzer (gate: Error severity)"
         shell: pwsh
         run: |
           Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
