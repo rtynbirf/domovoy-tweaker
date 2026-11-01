@@ -1,0 +1,169 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/rtynbirf/domovoy-tweaker/blob/main/schema/features.schema.json",
+  "title": "Domovoy feature manifest",
+  "description": "Declarative description of one Domovoy tweak: operations, probes and undo mode.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "title",
+    "version",
+    "category",
+    "risk",
+    "description",
+    "ops",
+    "undo",
+    "verify",
+    "references"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(\\.[a-z0-9-]+)+$",
+      "description": "Feature id: category.object.action in lowercase latin, digits, dots, hyphens."
+    },
+    "title": {
+      "type": "string",
+      "minLength": 5
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "category": {
+      "enum": [
+        "privacy",
+        "services",
+        "apps",
+        "ui",
+        "network",
+        "maintenance",
+        "drivers",
+        "security",
+        "core"
+      ]
+    },
+    "risk": {
+      "enum": ["low", "medium", "high"]
+    },
+    "description": {
+      "type": "string",
+      "minLength": 10
+    },
+    "ops": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/op"
+      }
+    },
+    "undo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode"],
+      "properties": {
+        "mode": {
+          "enum": ["snapshot"]
+        }
+      }
+    },
+    "verify": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/probe"
+      }
+    },
+    "references": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^https://"
+      }
+    }
+  },
+  "definitions": {
+    "op": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "path", "name", "value", "valueType"],
+          "properties": {
+            "type": { "const": "registry.set" },
+            "path": {
+              "type": "string",
+              "pattern": "^(HKLM|HKCU|HKCR|HKU):"
+            },
+            "name": { "type": "string", "minLength": 1 },
+            "value": {},
+            "valueType": {
+              "enum": [
+                "String",
+                "DWord",
+                "QWord",
+                "ExpandString",
+                "Binary",
+                "MultiString"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "name", "startupType"],
+          "properties": {
+            "type": { "const": "service.startup" },
+            "name": { "type": "string", "minLength": 1 },
+            "startupType": {
+              "enum": [
+                "Automatic",
+                "Manual",
+                "Disabled",
+                "AutomaticDelayedStart"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "probe": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "path", "name", "value"],
+          "properties": {
+            "type": { "const": "registry.set" },
+            "path": {
+              "type": "string",
+              "pattern": "^(HKLM|HKCU|HKCR|HKU):"
+            },
+            "name": { "type": "string", "minLength": 1 },
+            "value": {}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "name", "startupType"],
+          "properties": {
+            "type": { "const": "service.startup" },
+            "name": { "type": "string", "minLength": 1 },
+            "startupType": {
+              "enum": [
+                "Automatic",
+                "Manual",
+                "Disabled",
+                "AutomaticDelayedStart"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

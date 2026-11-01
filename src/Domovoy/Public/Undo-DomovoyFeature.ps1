@@ -1,0 +1,91 @@
+function Undo-DomovoyFeature {
+    <#
+    .SYNOPSIS
+    Undoes a feature by restoring the exact state captured before its last apply.
+
+    .DESCRIPTION
+    Finds the most recent feature.apply event for the feature in the ledger and
+    restores every captured value (registry values with their original types,
+    service startup types). Values that did not exist before the tweak are
+    removed. Without -Apply the command is a dry-run: it shows what would be
+    restored.
+
+    .EXAMPLE
+    Undo-DomovoyFeature -Id services.diagtrack.disabled
+
+    .EXAMPLE
+    Undo-DomovoyFeature -Id services.diagtrack.disabled -Apply
+    #>
+    [CmdletBinding(SupportsShouldProcess)]
+    [OutputType([pscustomobject])]
+    param(
+        [Parameter(Mandatory)]
+        [string]$Id,
+
+        [switch]$Apply
+    )
+
+    if (-not (Test-Path (Get-DomovoyStorePath -SubPath 'ledger.jsonl'))) {
+        throw 'Ledger not found. Nothing to undo.'
+    }
+
+    $entry = Get-DomovoyLedger -FeatureId $Id -Event 'feature.apply' -Last 1000000 |
+        Select-Object -Last 1
+
+    if (-not $entry) {
+        throw "No ledger entry to undo for: $Id"
+    }
+
+    # Dry-run by default (invariant I3).
+    if (-not $Apply) {
+        [pscustomobject]@{
+            Feature = $Id
+            Mode = 'DryRun'
+            AppliedAt = $entry.timestamp
+            Snapshot = $entry.snapshot
+        }
+        return
+    }
+
+    # Elevation is checked explicitly (invariant I5).
+    if (-not (Test-DomovoyAdmin)) {
+        throw 'Undo requires an elevated PowerShell session.'
+    }
+
+    if ($PSCmdlet.ShouldProcess($Id, 'Restore snapshot')) {
+        foreach ($state in @($entry.snapshot)) {
+            switch ($state.op) {
+                'registry.set' {
+                    if ($state.previousValue -eq '<unset>') {
+                        Remove-ItemProperty -LiteralPath $state.path -Name $state.name -ErrorAction SilentlyContinue
+                    }
+                    elseif ($state.previousType -and $state.previousType -ne 'None') {
+                        $null = New-ItemProperty -LiteralPath $state.path -Name $state.name -Value $state.previousValue -PropertyType $state.previousType -Force
+                    }
+                    else {
+                        $null = New-ItemProperty -LiteralPath $state.path -Name $state.name -Value $state.previousValue -Force
+                    }
+                }
+                'service.startup' {
+                    if ($state.previousValue -ne '<missing>') {
+                        Set-Service -Name $state.name -StartupType $state.previousValue
+                    }
+                }
+            }
+        }
+
+        $verification = Test-DomovoyEffect -Id $Id
+        $written = Write-DomovoyLedgerEntry -Entry @{
+            event = 'feature.undo'
+            featureId = $Id
+            verification = $verification
+        }
+
+        [pscustomobject]@{
+            Feature = $Id
+            Mode = 'Undo'
+            Verification = $verification
+            LedgerTimestamp = $written['timestamp']
+        }
+    }
+}

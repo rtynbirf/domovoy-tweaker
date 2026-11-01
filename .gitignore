@@ -1,0 +1,23 @@
+# Build / output
+out/
+bin/
+obj/
+*.zip
+*.7z
+*.cab
+
+# Logs and local state
+*.log
+ledger.local.jsonl
+
+# IDE / OS
+.vs/
+.vscode/
+.idea/
+*.user
+Thumbs.db
+.DS_Store
+
+# Pester / analyzer results
+TestResults/
+PSScriptAnalyzer*.xml

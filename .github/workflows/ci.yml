@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Lint + Test (windows-latest)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: PSScriptAnalyzer (gate: Error severity)
+        shell: pwsh
+        run: |
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+          Install-Module -Name PSScriptAnalyzer -Scope CurrentUser -Force
+          $results = Invoke-ScriptAnalyzer -Path src -Recurse
+          foreach ($r in $results) {
+            Write-Host ("{0} {1}:{2} {3}" -f $r.Severity, $r.ScriptName, $r.Line, $r.Message)
+          }
+          $errors = @($results | Where-Object { $_.Severity -eq 'Error' })
+          Write-Host "Analyzer errors: $($errors.Count)"
+          if ($errors.Count -gt 0) { exit 1 }
+
+      - name: Pester tests
+        shell: pwsh
+        run: |
+          Install-Module -Name Pester -MinimumVersion 5.5.0 -Scope CurrentUser -Force -SkipPublisherCheck
+          Import-Module -Name Pester
+          $config = New-PesterConfiguration
+          $config.Run.Path = 'tests'
+          $config.Run.Exit = $true
+          $config.Output.Verbosity = 'Detailed'
+          Invoke-Pester -Configuration $config
+
+      - name: Validate manifests against JSON schema
+        shell: pwsh
+        run: |
+          Get-ChildItem -LiteralPath 'config/features' -Filter '*.json' | ForEach-Object {
+            Test-Json -Json (Get-Content -LiteralPath $_.FullName -Raw -Encoding UTF8) -SchemaFile 'schema/features.schema.json'
+            Write-Host "OK $($_.Name)"
+          }
