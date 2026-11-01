@@ -1,0 +1,31 @@
+{
+  "id": "policy.telemetry.level0",
+  "title": "Set telemetry policy AllowTelemetry to 0 (diagnostic data off)",
+  "version": "1.0.0",
+  "category": "privacy",
+  "risk": "medium",
+  "description": "Sets the documented group policy value AllowTelemetry under HKLM Software Policies Microsoft Windows DataCollection to 0 (Diagnostic data off). The previous value and its type are captured in a snapshot before the change and restored by per-feature undo.",
+  "ops": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection",
+      "name": "AllowTelemetry",
+      "value": 0,
+      "valueType": "DWord"
+    }
+  ],
+  "undo": {
+    "mode": "snapshot"
+  },
+  "verify": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection",
+      "name": "AllowTelemetry",
+      "value": 0
+    }
+  ],
+  "references": [
+    "https://learn.microsoft.com/windows/privacy/configure-windows-telemetry-in-your-organization"
+  ]
+}

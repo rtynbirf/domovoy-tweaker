@@ -1,0 +1,28 @@
+{
+  "id": "services.diagtrack.disabled",
+  "title": "Disable the Connected User Experiences and Telemetry service (DiagTrack)",
+  "version": "1.0.0",
+  "category": "services",
+  "risk": "low",
+  "description": "Sets the startup type of the DiagTrack service (Connected User Experiences and Telemetry) to Disabled. The previous startup type is captured in a snapshot before the change and restored by per-feature undo.",
+  "ops": [
+    {
+      "type": "service.startup",
+      "name": "DiagTrack",
+      "startupType": "Disabled"
+    }
+  ],
+  "undo": {
+    "mode": "snapshot"
+  },
+  "verify": [
+    {
+      "type": "service.startup",
+      "name": "DiagTrack",
+      "startupType": "Disabled"
+    }
+  ],
+  "references": [
+    "https://learn.microsoft.com/windows/privacy/configure-windows-telemetry-in-your-organization"
+  ]
+}
