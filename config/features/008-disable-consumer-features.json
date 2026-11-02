@@ -1,0 +1,29 @@
+{
+  "id": "privacy.consumerfeatures.disabled",
+  "title": "Turn off Microsoft consumer experiences (DisableWindowsConsumerFeatures)",
+  "version": "1.0.0",
+  "category": "privacy",
+  "risk": "medium",
+  "description": "Sets the documented policy value DisableWindowsConsumerFeatures under HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\CloudContent to 1. Windows stops showing consumer content: app suggestions, Windows Tips and third-party suggestions. Known side effect: extra Store apps stop being installed automatically. The previous value and its type are captured in a snapshot before the change and restored by per-feature undo.",
+  "ops": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\CloudContent",
+      "name": "DisableWindowsConsumerFeatures",
+      "value": 1,
+      "valueType": "DWord"
+    }
+  ],
+  "undo": { "mode": "snapshot" },
+  "verify": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\CloudContent",
+      "name": "DisableWindowsConsumerFeatures",
+      "value": 1
+    }
+  ],
+  "references": [
+    "https://learn.microsoft.com/windows/client-management/mdm/policy-csp-experience"
+  ]
+}

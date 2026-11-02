@@ -1,0 +1,18 @@
+{
+  "id": "services.remoteregistry.disabled",
+  "title": "Disable the Remote Registry service (RemoteRegistry)",
+  "version": "1.0.0",
+  "category": "services",
+  "risk": "low",
+  "description": "Sets the startup type of the RemoteRegistry service to Disabled. Remote Registry enables remote users to modify registry settings on this computer; on modern Windows it is disabled by default, so applying is usually an idempotent no-op. The previous startup type is captured in a snapshot before the change and restored by per-feature undo.",
+  "ops": [
+    { "type": "service.startup", "name": "RemoteRegistry", "startupType": "Disabled" }
+  ],
+  "undo": { "mode": "snapshot" },
+  "verify": [
+    { "type": "service.startup", "name": "RemoteRegistry", "startupType": "Disabled" }
+  ],
+  "references": [
+    "https://learn.microsoft.com/windows/win32/services/services"
+  ]
+}

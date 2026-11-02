@@ -1,0 +1,29 @@
+{
+  "id": "privacy.advertisinginfo.disabled",
+  "title": "Turn off the advertising ID (AdvertisingInfo Enabled = 0)",
+  "version": "1.0.0",
+  "category": "privacy",
+  "risk": "low",
+  "description": "Sets the documented value Enabled to 0 under HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\AdvertisingInfo so Windows apps cannot obtain the advertising ID. Apps can no longer use the identifier to associate collected data across apps. The previous value and its type are captured in a snapshot before the change and restored by per-feature undo.",
+  "ops": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\AdvertisingInfo",
+      "name": "Enabled",
+      "value": 0,
+      "valueType": "DWord"
+    }
+  ],
+  "undo": { "mode": "snapshot" },
+  "verify": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\AdvertisingInfo",
+      "name": "Enabled",
+      "value": 0
+    }
+  ],
+  "references": [
+    "https://learn.microsoft.com/windows/privacy/manage-connections-from-windows-operating-system-components-to-microsoft-services"
+  ]
+}

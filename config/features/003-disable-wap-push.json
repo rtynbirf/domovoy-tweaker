@@ -1,0 +1,18 @@
+{
+  "id": "services.dmwappush.disabled",
+  "title": "Disable the WAP Push Message Routing Service (dmwappushservice)",
+  "version": "1.0.0",
+  "category": "services",
+  "risk": "low",
+  "description": "Sets the startup type of the dmwappushservice (WAP Push Message Routing Service) to Disabled. The service is referenced in the Windows telemetry documentation as part of the diagnostic data path. The previous startup type is captured in a snapshot before the change and restored by per-feature undo. If the service is not present on this edition, apply fails with a clear error.",
+  "ops": [
+    { "type": "service.startup", "name": "dmwappushservice", "startupType": "Disabled" }
+  ],
+  "undo": { "mode": "snapshot" },
+  "verify": [
+    { "type": "service.startup", "name": "dmwappushservice", "startupType": "Disabled" }
+  ],
+  "references": [
+    "https://learn.microsoft.com/windows/privacy/configure-windows-telemetry-in-your-organization"
+  ]
+}

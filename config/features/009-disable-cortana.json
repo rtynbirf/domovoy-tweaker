@@ -1,0 +1,29 @@
+{
+  "id": "privacy.cortana.disabled",
+  "title": "Turn off Cortana voice assistance (AllowCortana = 0)",
+  "version": "1.0.0",
+  "category": "privacy",
+  "risk": "low",
+  "description": "Sets the documented policy value AllowCortana under HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search to 0. Cortana voice assistance is turned off on the device. The previous value and its type are captured in a snapshot before the change and restored by per-feature undo.",
+  "ops": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search",
+      "name": "AllowCortana",
+      "value": 0,
+      "valueType": "DWord"
+    }
+  ],
+  "undo": { "mode": "snapshot" },
+  "verify": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search",
+      "name": "AllowCortana",
+      "value": 0
+    }
+  ],
+  "references": [
+    "https://learn.microsoft.com/windows/client-management/mdm/policy-csp-search"
+  ]
+}

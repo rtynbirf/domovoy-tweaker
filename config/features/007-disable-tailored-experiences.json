@@ -1,0 +1,29 @@
+{
+  "id": "privacy.tailoredexperiences.disabled",
+  "title": "Turn off tailored experiences with diagnostic data",
+  "version": "1.0.0",
+  "category": "privacy",
+  "risk": "low",
+  "description": "Sets the documented policy value DisableTailoredExperiencesWithDiagnosticData under HKCU\\SOFTWARE\\Policies\\Microsoft\\Windows\\CloudContent to 1. Windows stops using diagnostic data to build personalized tips, tricks and recommendations. The value is written to the current user hive; the previous value and its type are captured in a snapshot before the change and restored by per-feature undo.",
+  "ops": [
+    {
+      "type": "registry.set",
+      "path": "HKCU:\\SOFTWARE\\Policies\\Microsoft\\Windows\\CloudContent",
+      "name": "DisableTailoredExperiencesWithDiagnosticData",
+      "value": 1,
+      "valueType": "DWord"
+    }
+  ],
+  "undo": { "mode": "snapshot" },
+  "verify": [
+    {
+      "type": "registry.set",
+      "path": "HKCU:\\SOFTWARE\\Policies\\Microsoft\\Windows\\CloudContent",
+      "name": "DisableTailoredExperiencesWithDiagnosticData",
+      "value": 1
+    }
+  ],
+  "references": [
+    "https://learn.microsoft.com/windows/client-management/mdm/policy-csp-experience"
+  ]
+}
