@@ -35,9 +35,17 @@ jobs:
           Import-Module -Name Pester
           $config = New-PesterConfiguration
           $config.Run.Path = 'tests'
-          $config.Run.Exit = $true
+          $config.Run.Exit = $false
           $config.Output.Verbosity = 'Detailed'
-          Invoke-Pester -Configuration $config
+          $result = Invoke-Pester -Configuration $config
+          foreach ($test in @($result.Failed)) {
+            foreach ($err in @($test.ErrorRecord)) {
+              Write-Host ("##[error]{0} :: {1}" -f $test.Path, $err.Exception.Message)
+              Write-Host ("##[error]{0} :: {1}" -f $test.Path, ($err.ScriptStackTrace -replace '\r?\n', ' | '))
+            }
+          }
+          Write-Host ("Tests passed: {0}, failed: {1}" -f $result.PassedCount, $result.FailedCount)
+          if ($result.FailedCount -gt 0) { exit 1 }
 
       - name: Validate manifests and profiles against JSON schemas
         shell: pwsh
