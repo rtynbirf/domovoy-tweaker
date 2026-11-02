@@ -39,10 +39,14 @@ jobs:
           $config.Output.Verbosity = 'Detailed'
           Invoke-Pester -Configuration $config
 
-      - name: Validate manifests against JSON schema
+      - name: Validate manifests and profiles against JSON schemas
         shell: pwsh
         run: |
           Get-ChildItem -LiteralPath 'config/features' -Filter '*.json' | ForEach-Object {
             Test-Json -Json (Get-Content -LiteralPath $_.FullName -Raw -Encoding UTF8) -SchemaFile 'schema/features.schema.json'
+            Write-Host "OK $($_.Name)"
+          }
+          Get-ChildItem -LiteralPath 'config/profiles' -Filter '*.json' | ForEach-Object {
+            Test-Json -Json (Get-Content -LiteralPath $_.FullName -Raw -Encoding UTF8) -SchemaFile 'schema/profiles.schema.json'
             Write-Host "OK $($_.Name)"
           }
