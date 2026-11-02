@@ -407,6 +407,8 @@ Describe 'v0.4 temp cleanup' {
 Describe 'v0.5 effect reports' {
 
     It 'apply reports what really changed: snapshot before vs probes after' {
+        # Self-sufficient: earlier tests may have left the value applied.
+        Remove-ItemProperty -LiteralPath $script:testRoot -Name 'TestValue' -ErrorAction SilentlyContinue
         $before = Get-ItemProperty -LiteralPath $script:testRoot -Name 'TestValue' -ErrorAction SilentlyContinue
         $before | Should -BeNullOrEmpty
 
