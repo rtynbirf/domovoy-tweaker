@@ -1,0 +1,29 @@
+{
+  "id": "standard",
+  "title": "Standard",
+  "maxRisk": "medium",
+  "description": "Everything from the cautious profile plus documented medium-risk features: telemetry level 0 policy, consumer features, OneDrive file sync policy and Store package removals (OneDrive sync app, Chat, Xbox Game Bar overlay). Nothing high-risk is ever included.",
+  "features": [
+    "services.diagtrack.disabled",
+    "policy.telemetry.level0",
+    "services.dmwappush.disabled",
+    "services.remoteregistry.disabled",
+    "policy.feedback.notifications.hidden",
+    "privacy.advertisinginfo.disabled",
+    "privacy.tailoredexperiences.disabled",
+    "privacy.consumerfeatures.disabled",
+    "privacy.cortana.disabled",
+    "privacy.onedrive.filesync.disabled",
+    "packages.onedrive.store.removed",
+    "packages.chat.removed",
+    "packages.xboxgamingoverlay.removed",
+    "packages.cortana.app.removed",
+    "packages.gethelp.removed",
+    "packages.getstarted.removed",
+    "ui.contextmenu.classic",
+    "ui.explorer.advanced.visibility",
+    "ui.widgets.panel.disabled",
+    "policy.input.personalization.disabled",
+    "policy.search.cloudsearch.disabled"
+  ]
+}

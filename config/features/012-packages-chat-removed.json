@@ -1,0 +1,19 @@
+{
+  "id": "packages.chat.removed",
+  "title": "Remove the Chat taskbar app (MicrosoftTeams)",
+  "version": "1.0.0",
+  "category": "apps",
+  "risk": "medium",
+  "description": "Removes the Microsoft Teams personal Chat app (MicrosoftTeams) that backs the Windows 11 Chat taskbar button, for the current user. The taskbar icon disappears after Explorer restart. On undo the package is re-registered from its install location when the files are still on disk. Provisioned removal is not part of this feature and is not restored by undo.",
+  "ops": [
+    { "type": "appx.remove", "name": "MicrosoftTeams" }
+  ],
+  "undo": { "mode": "snapshot" },
+  "verify": [
+    { "type": "appx.absent", "name": "MicrosoftTeams" }
+  ],
+  "references": [
+    "https://learn.microsoft.com/windows/application-management/remove-provisioned-apps",
+    "https://learn.microsoft.com/windows/client-management/mdm/policy-csp-admx-taskbar"
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "id": "ui.widgets.panel.disabled",
+  "title": "Disable the Widgets panel (News and interests) by policy",
+  "version": "1.0.0",
+  "category": "ui",
+  "risk": "low",
+  "description": "Sets the documented policy AllowNewsAndInterests=0 under HKLM\\SOFTWARE\\Policies\\Microsoft\\Dsh, which disables the Windows 11 Widgets panel and the Windows 10 News and interests taskbar feed. Explorer must be restarted for the change to show. The previous policy value is restored from the snapshot on undo.",
+  "ops": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Dsh",
+      "name": "AllowNewsAndInterests",
+      "value": 0,
+      "valueType": "DWord"
+    }
+  ],
+  "undo": { "mode": "snapshot" },
+  "verify": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Dsh",
+      "name": "AllowNewsAndInterests",
+      "value": 0
+    }
+  ],
+  "references": [
+    "https://learn.microsoft.com/windows/client-management/mdm/policy-csp-admx-dsh"
+  ]
+}

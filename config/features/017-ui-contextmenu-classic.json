@@ -1,0 +1,29 @@
+{
+  "id": "ui.contextmenu.classic",
+  "title": "Restore the classic full context menu in Windows 11",
+  "version": "1.0.0",
+  "category": "ui",
+  "risk": "low",
+  "description": "Creates the CLSID key {86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\\InprocServer32 with an empty default value, which makes Windows 11 Explorer show the classic full context menu instead of the condensed one. Explorer must be restarted for the change to show (the feature does not kill Explorer itself). Undo removes the value and the now-empty key chain that apply created, restoring the exact pre-apply state.",
+  "ops": [
+    {
+      "type": "registry.set",
+      "path": "HKCU:\\Software\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\\InprocServer32",
+      "name": "(default)",
+      "value": "",
+      "valueType": "String"
+    }
+  ],
+  "undo": { "mode": "snapshot" },
+  "verify": [
+    {
+      "type": "registry.set",
+      "path": "HKCU:\\Software\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\\InprocServer32",
+      "name": "(default)",
+      "value": ""
+    }
+  ],
+  "references": [
+    "https://learn.microsoft.com/windows/win32/shell/clsidkey-shell-extend"
+  ]
+}

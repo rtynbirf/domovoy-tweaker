@@ -1,0 +1,18 @@
+{
+  "id": "packages.gethelp.removed",
+  "title": "Remove the Get Help app (Microsoft.GetHelp)",
+  "version": "1.0.0",
+  "category": "apps",
+  "risk": "low",
+  "description": "Removes the Microsoft Get Help Store package (Microsoft.GetHelp) for the current user. This is the support-contact app; removing it does not affect Windows Update or system support tools. On undo the package is re-registered from its install location when the files are still on disk.",
+  "ops": [
+    { "type": "appx.remove", "name": "Microsoft.GetHelp" }
+  ],
+  "undo": { "mode": "snapshot" },
+  "verify": [
+    { "type": "appx.absent", "name": "Microsoft.GetHelp" }
+  ],
+  "references": [
+    "https://learn.microsoft.com/windows/application-management/remove-provisioned-apps"
+  ]
+}

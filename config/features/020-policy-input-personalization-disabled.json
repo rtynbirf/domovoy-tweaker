@@ -1,0 +1,42 @@
+{
+  "id": "policy.input.personalization.disabled",
+  "title": "Disable inking and typing personalization by policy",
+  "version": "1.0.0",
+  "category": "privacy",
+  "risk": "low",
+  "description": "Sets the documented InputPersonalization policies RestrictImplicitInkCollection=1 and RestrictImplicitTextCollection=1, which stop Windows from silently collecting handwriting and typing data for the personal dictionary. The previous policy values are restored from the snapshot on undo.",
+  "ops": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\InputPersonalization",
+      "name": "RestrictImplicitInkCollection",
+      "value": 1,
+      "valueType": "DWord"
+    },
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\InputPersonalization",
+      "name": "RestrictImplicitTextCollection",
+      "value": 1,
+      "valueType": "DWord"
+    }
+  ],
+  "undo": { "mode": "snapshot" },
+  "verify": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\InputPersonalization",
+      "name": "RestrictImplicitInkCollection",
+      "value": 1
+    },
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\InputPersonalization",
+      "name": "RestrictImplicitTextCollection",
+      "value": 1
+    }
+  ],
+  "references": [
+    "https://learn.microsoft.com/windows/client-management/mdm/policy-csp-admx-inputpersonalization"
+  ]
+}

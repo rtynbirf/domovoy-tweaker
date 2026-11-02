@@ -1,0 +1,23 @@
+{
+  "id": "cautious",
+  "title": "Cautious",
+  "maxRisk": "low",
+  "description": "Only low-risk documented tweaks: telemetry and feedback policies, service startup changes, small Store app removals and interface visibility settings. Medium-impact package removals and the telemetry level 0 policy are excluded and reported as skipped.",
+  "features": [
+    "services.diagtrack.disabled",
+    "services.dmwappush.disabled",
+    "services.remoteregistry.disabled",
+    "policy.feedback.notifications.hidden",
+    "privacy.advertisinginfo.disabled",
+    "privacy.tailoredexperiences.disabled",
+    "privacy.cortana.disabled",
+    "packages.cortana.app.removed",
+    "packages.gethelp.removed",
+    "packages.getstarted.removed",
+    "ui.contextmenu.classic",
+    "ui.explorer.advanced.visibility",
+    "ui.widgets.panel.disabled",
+    "policy.input.personalization.disabled",
+    "policy.search.cloudsearch.disabled"
+  ]
+}

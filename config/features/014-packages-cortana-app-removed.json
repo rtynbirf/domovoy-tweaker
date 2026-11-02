@@ -1,0 +1,19 @@
+{
+  "id": "packages.cortana.app.removed",
+  "title": "Remove the Cortana app (Microsoft.549981C3F5F10)",
+  "version": "1.0.0",
+  "category": "apps",
+  "risk": "low",
+  "description": "Removes the Cortana Store package (Microsoft.549981C3F5F10) for the current user. This complements the Cortana policy feature (privacy.cortana.disabled) by removing the app itself. On undo the package is re-registered from its install location when the files are still on disk.",
+  "ops": [
+    { "type": "appx.remove", "name": "Microsoft.549981C3F5F10" }
+  ],
+  "undo": { "mode": "snapshot" },
+  "verify": [
+    { "type": "appx.absent", "name": "Microsoft.549981C3F5F10" }
+  ],
+  "references": [
+    "https://learn.microsoft.com/windows/configuration/cortana",
+    "https://learn.microsoft.com/windows/application-management/remove-provisioned-apps"
+  ]
+}

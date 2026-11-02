@@ -1,0 +1,18 @@
+{
+  "id": "packages.onedrive.store.removed",
+  "title": "Remove the OneDrive sync app (Store package Microsoft.OneDriveSync)",
+  "version": "1.0.0",
+  "category": "apps",
+  "risk": "medium",
+  "description": "Removes the Microsoft Store OneDrive sync package (Microsoft.OneDriveSync) for the current user. User files, the classic (non-Store) OneDrive installer and account data are not touched. On undo the package is re-registered from its install location when the files are still on disk; if they are gone, the post-undo verification reports honestly that restoration was not possible.",
+  "ops": [
+    { "type": "appx.remove", "name": "Microsoft.OneDriveSync" }
+  ],
+  "undo": { "mode": "snapshot" },
+  "verify": [
+    { "type": "appx.absent", "name": "Microsoft.OneDriveSync" }
+  ],
+  "references": [
+    "https://learn.microsoft.com/onedrive/deploy-on-windows"
+  ]
+}

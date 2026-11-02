@@ -1,0 +1,42 @@
+{
+  "id": "policy.search.cloudsearch.disabled",
+  "title": "Disable cloud search and web suggestions in Windows search",
+  "version": "1.0.0",
+  "category": "privacy",
+  "risk": "low",
+  "description": "Sets the documented Windows Search policies AllowCloudSearch=0 (no consumer cloud search sources) and ConnectedSearchUseWeb=0 (no web suggestions from the search box). Local files, apps and settings keep working in search. The previous policy values are restored from the snapshot on undo. Together with privacy.cortana.disabled this completes catalog item #13.",
+  "ops": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search",
+      "name": "AllowCloudSearch",
+      "value": 0,
+      "valueType": "DWord"
+    },
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search",
+      "name": "ConnectedSearchUseWeb",
+      "value": 0,
+      "valueType": "DWord"
+    }
+  ],
+  "undo": { "mode": "snapshot" },
+  "verify": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search",
+      "name": "AllowCloudSearch",
+      "value": 0
+    },
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search",
+      "name": "ConnectedSearchUseWeb",
+      "value": 0
+    }
+  ],
+  "references": [
+    "https://learn.microsoft.com/windows/client-management/mdm/policy-csp-admx-windowssearch"
+  ]
+}

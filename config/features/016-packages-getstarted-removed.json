@@ -1,0 +1,18 @@
+{
+  "id": "packages.getstarted.removed",
+  "title": "Remove the Tips app (Microsoft.Getstarted)",
+  "version": "1.0.0",
+  "category": "apps",
+  "risk": "low",
+  "description": "Removes the Microsoft Tips Store package (Microsoft.Getstarted) that shows promotional and onboarding content, for the current user. On undo the package is re-registered from its install location when the files are still on disk.",
+  "ops": [
+    { "type": "appx.remove", "name": "Microsoft.Getstarted" }
+  ],
+  "undo": { "mode": "snapshot" },
+  "verify": [
+    { "type": "appx.absent", "name": "Microsoft.Getstarted" }
+  ],
+  "references": [
+    "https://learn.microsoft.com/windows/application-management/remove-provisioned-apps"
+  ]
+}

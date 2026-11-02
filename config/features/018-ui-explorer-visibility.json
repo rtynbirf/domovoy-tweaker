@@ -1,0 +1,42 @@
+{
+  "id": "ui.explorer.advanced.visibility",
+  "title": "Show file extensions and hidden files in Explorer",
+  "version": "1.0.0",
+  "category": "ui",
+  "risk": "low",
+  "description": "Sets the documented Explorer Advanced settings HideFileExt=0 (show extensions for known file types) and Hidden=1 (show hidden files and folders). Unlike the Attrib_off approach of Modern Tweaker 2.0, this changes the Explorer view settings only - no attributes are stripped from any user files. Both values are restored from the snapshot on undo.",
+  "ops": [
+    {
+      "type": "registry.set",
+      "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+      "name": "HideFileExt",
+      "value": 0,
+      "valueType": "DWord"
+    },
+    {
+      "type": "registry.set",
+      "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+      "name": "Hidden",
+      "value": 1,
+      "valueType": "DWord"
+    }
+  ],
+  "undo": { "mode": "snapshot" },
+  "verify": [
+    {
+      "type": "registry.set",
+      "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+      "name": "HideFileExt",
+      "value": 0
+    },
+    {
+      "type": "registry.set",
+      "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+      "name": "Hidden",
+      "value": 1
+    }
+  ],
+  "references": [
+    "https://support.microsoft.com/windows/view-hidden-files-and-folders-in-windows-97fbc472-c603-9d90-4d73-9bbe-2f9e0b7f46a0"
+  ]
+}

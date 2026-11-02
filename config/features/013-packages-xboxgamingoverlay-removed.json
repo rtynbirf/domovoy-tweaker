@@ -1,0 +1,32 @@
+{
+  "id": "packages.xboxgamingoverlay.removed",
+  "title": "Remove the Xbox Game Bar overlay and disable Game DVR policy",
+  "version": "1.0.0",
+  "category": "apps",
+  "risk": "medium",
+  "description": "Removes the Microsoft.XboxGamingOverlay package (the Game Bar overlay with screen recording and game tips) for the current user and sets the documented Game DVR policy AllowGameDVR=0, which disables background game recording. On undo the package is re-registered from its install location when the files are still on disk and the policy value is restored from the snapshot.",
+  "ops": [
+    { "type": "appx.remove", "name": "Microsoft.XboxGamingOverlay" },
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\GameDVR",
+      "name": "AllowGameDVR",
+      "value": 0,
+      "valueType": "DWord"
+    }
+  ],
+  "undo": { "mode": "snapshot" },
+  "verify": [
+    { "type": "appx.absent", "name": "Microsoft.XboxGamingOverlay" },
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\GameDVR",
+      "name": "AllowGameDVR",
+      "value": 0
+    }
+  ],
+  "references": [
+    "https://learn.microsoft.com/windows/client-management/mdm/policy-csp-admx-gamedvr",
+    "https://learn.microsoft.com/windows/application-management/remove-provisioned-apps"
+  ]
+}
