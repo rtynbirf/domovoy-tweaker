@@ -51,7 +51,7 @@ jobs:
           Write-Host ("Tests passed: {0}, failed: {1}" -f $result.PassedCount, $result.FailedCount)
           if ($result.FailedCount -gt 0) { exit 1 }
 
-      - name: Validate manifests and profiles against JSON schemas
+      - name: Validate manifests, profiles and groups against JSON schemas
         shell: pwsh
         run: |
           Get-ChildItem -LiteralPath 'config/features' -Filter '*.json' | ForEach-Object {
@@ -60,6 +60,10 @@ jobs:
           }
           Get-ChildItem -LiteralPath 'config/profiles' -Filter '*.json' | ForEach-Object {
             Test-Json -Json (Get-Content -LiteralPath $_.FullName -Raw -Encoding UTF8) -SchemaFile 'schema/profiles.schema.json'
+            Write-Host "OK $($_.Name)"
+          }
+          Get-ChildItem -LiteralPath 'config/groups' -Filter '*.json' | ForEach-Object {
+            Test-Json -Json (Get-Content -LiteralPath $_.FullName -Raw -Encoding UTF8) -SchemaFile 'schema/groups.schema.json'
             Write-Host "OK $($_.Name)"
           }
 

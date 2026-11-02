@@ -2,8 +2,10 @@ BeforeAll {
     $repoRoot = Split-Path -Parent $PSScriptRoot
     $featureFiles = @(Get-ChildItem -LiteralPath (Join-Path -Path $repoRoot -ChildPath 'config/features') -Filter '*.json')
     $profileFiles = @(Get-ChildItem -LiteralPath (Join-Path -Path $repoRoot -ChildPath 'config/profiles') -Filter '*.json')
+    $groupFiles = @(Get-ChildItem -LiteralPath (Join-Path -Path $repoRoot -ChildPath 'config/groups') -Filter '*.json')
     $schemaPath = Join-Path -Path $repoRoot -ChildPath 'schema/features.schema.json'
     $profileSchemaPath = Join-Path -Path $repoRoot -ChildPath 'schema/profiles.schema.json'
+    $groupSchemaPath = Join-Path -Path $repoRoot -ChildPath 'schema/groups.schema.json'
 }
 
 Describe 'Feature manifests' {
@@ -147,5 +149,117 @@ Describe 'Feature profiles' {
             (Get-Content -LiteralPath $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json).id
         }
         @($ids).Count | Should -Be (@($ids) | Select-Object -Unique).Count
+    }
+}
+
+Describe 'Feature groups' {
+
+    It 'repository contains at least one group' {
+        $groupFiles.Count | Should -BeGreaterThan 0
+    }
+
+    It 'every group has all required fields and a content source' {
+        foreach ($file in $groupFiles) {
+            $g = Get-Content -LiteralPath $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
+            foreach ($field in @('id', 'title', 'maxRisk', 'description')) {
+                $g.PSObject.Properties[$field] | Should -Not -BeNullOrEmpty -Because "$file.Name must define $field"
+            }
+            $hasContent = $false
+            foreach ($field in @('dependsOn', 'profiles', 'features')) {
+                $prop = $g.PSObject.Properties[$field]
+                if ($prop -and $null -ne $prop.Value -and @($prop.Value).Count -gt 0) { $hasContent = $true }
+            }
+            $hasContent | Should -BeTrue -Because "$file.Name must pull at least one profile or feature"
+        }
+    }
+
+    It 'every group validates against the group JSON schema' {
+        foreach ($file in $groupFiles) {
+            {
+                Test-Json -Json (Get-Content -LiteralPath $file.FullName -Raw -Encoding UTF8) -SchemaFile $groupSchemaPath
+            } | Should -Not -Throw -Because "$file.Name must match the schema"
+        }
+    }
+
+    It 'group ids are unique' {
+        $ids = foreach ($file in $groupFiles) {
+            (Get-Content -LiteralPath $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json).id
+        }
+        @($ids).Count | Should -Be (@($ids) | Select-Object -Unique).Count
+    }
+
+    It 'every dependency, profile and feature reference resolves' {
+        $groupIds = foreach ($file in $groupFiles) {
+            (Get-Content -LiteralPath $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json).id
+        }
+        $profileIds = foreach ($file in $profileFiles) {
+            (Get-Content -LiteralPath $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json).id
+        }
+        $featureIds = foreach ($file in $featureFiles) {
+            (Get-Content -LiteralPath $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json).id
+        }
+        foreach ($file in $groupFiles) {
+            $g = Get-Content -LiteralPath $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
+            # An absent optional list yields @($null) - filter it out before
+            # the membership assertion.
+            foreach ($dep in (@($g.PSObject.Properties['dependsOn'].Value) | Where-Object { $_ })) {
+                $dep | Should -BeIn $groupIds -Because "$file.Name depends on $dep"
+            }
+            foreach ($prof in (@($g.PSObject.Properties['profiles'].Value) | Where-Object { $_ })) {
+                $prof | Should -BeIn $profileIds -Because "$file.Name references profile $prof"
+            }
+            foreach ($feat in (@($g.PSObject.Properties['features'].Value) | Where-Object { $_ })) {
+                $feat | Should -BeIn $featureIds -Because "$file.Name references feature $feat"
+            }
+        }
+    }
+
+    It 'no group content exceeds the group risk ceiling' {
+        $riskOrder = @{ low = 0; medium = 1; high = 2 }
+        $featureRisks = @{}
+        foreach ($file in $featureFiles) {
+            $m = Get-Content -LiteralPath $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
+            $featureRisks[$m.id] = $m.risk
+        }
+        $profileCeilings = @{}
+        foreach ($file in $profileFiles) {
+            $p = Get-Content -LiteralPath $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
+            $profileCeilings[$p.id] = $p.maxRisk
+        }
+        foreach ($file in $groupFiles) {
+            $g = Get-Content -LiteralPath $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
+            foreach ($feat in @($g.PSObject.Properties['features'].Value)) {
+                $riskOrder[$featureRisks[$feat]] | Should -BeLessOrEqual $riskOrder[$g.maxRisk] -Because "$file.Name (max $($g.maxRisk)) includes $feat ($($featureRisks[$feat]))"
+            }
+            foreach ($prof in @($g.PSObject.Properties['profiles'].Value)) {
+                $riskOrder[$profileCeilings[$prof]] | Should -BeLessOrEqual $riskOrder[$g.maxRisk] -Because "$file.Name (max $($g.maxRisk)) pulls profile $prof (max $($profileCeilings[$prof]))"
+            }
+        }
+    }
+
+    It 'the bundled group graph has no cycles' {
+        # A tiny DFS over the parsed JSON: cycle detection mirrors the
+        # runtime resolver so a broken bundle fails before it ships.
+        $graph = @{}
+        foreach ($file in $groupFiles) {
+            $g = Get-Content -LiteralPath $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
+            $deps = @($g.PSObject.Properties['dependsOn'].Value) | Where-Object { $_ }
+            $graph[$g.id] = @($deps)
+        }
+        function Test-DomovoyCycle {
+            param([string]$NodeId, [string[]]$Path)
+            if (@($Path) -contains $NodeId) {
+                throw "cycle: $((@($Path) + $NodeId) -join ' -> ')"
+            }
+            if ($script:manifestVisited -contains $NodeId) { return }
+            $script:manifestVisited += $NodeId
+            foreach ($dep in $graph[$NodeId]) {
+                Test-DomovoyCycle -NodeId $dep -Path (@($Path) + $NodeId)
+            }
+        }
+        $script:manifestVisited = @()
+        foreach ($id in $graph.Keys) {
+            { Test-DomovoyCycle -NodeId $id -Path @() } | Should -Not -Throw -Because 'the bundled group graph must stay acyclic'
+        }
     }
 }

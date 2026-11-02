@@ -21,7 +21,7 @@ function Write-DomovoyLedgerEntry {
 
     $ledgerPath = Get-DomovoyStorePath -SubPath 'ledger.jsonl'
 
-    $Entry['schema'] = 1
+    $Entry['schema'] = Get-DomovoyLedgerSchemaVersion
     $Entry['tool'] = 'Domovoy'
     $module = Get-Module -Name Domovoy
     if ($module) {

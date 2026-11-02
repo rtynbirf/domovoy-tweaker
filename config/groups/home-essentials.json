@@ -1,0 +1,16 @@
+{
+  "id": "home-essentials",
+  "title": "Home essentials",
+  "maxRisk": "medium",
+  "description": "Everything from privacy-essential (resolved first through the dependency) plus the standard profile, the documented proxy-off switch and the auto-DoH policy. The plan reports the exact order and where every feature came from.",
+  "dependsOn": [
+    "privacy-essential"
+  ],
+  "profiles": [
+    "standard"
+  ],
+  "features": [
+    "network.proxy.off",
+    "policy.doh.auto.disabled"
+  ]
+}

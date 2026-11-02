@@ -3,7 +3,7 @@
 #
 @{
     RootModule = 'Domovoy.psm1'
-    ModuleVersion = '1.2.0'
+    ModuleVersion = '1.3.0'
     GUID = '8546e1cf-4418-4133-92f4-4adcb7897011'
     Author = 'rtynbirf'
     CompanyName = 'Domovoy contributors'
@@ -59,7 +59,12 @@
         'Test-DomovoyLedgerIntegrity',
         'Get-DomovoyDriverRollbackReport',
         'Invoke-DomovoyComponentStoreCleanup',
-        'Show-Domovoy'
+        'Show-Domovoy',
+        'Get-DomovoyGroup',
+        'Invoke-DomovoyGroup',
+        'Get-DomovoyLedgerSchema',
+        'Invoke-DomovoyLedgerMigration',
+        'Get-DomovoyShellMenuReport'
     )
     CmdletsToExport = @()
     VariablesToExport = @()
@@ -70,7 +75,7 @@
             Tags = @('Windows', 'Tweaker', 'Privacy', 'Telemetry', 'Debloat', 'Undo', 'Ledger', 'Drift', 'Network', 'Security', 'Drivers')
             LicenseUri = 'https://github.com/rtynbirf/domovoy-tweaker/blob/main/LICENSE'
             ProjectUri = 'https://github.com/rtynbirf/domovoy-tweaker'
-            ReleaseNotes = 'v1.2.0: the ledger becomes tamper-evident (a SHA-256 hash chain with an honest verifier, catalog 103), a new file.timestamp op with all four projections and probes, five documented catalog policies (taskbar alignment, VisualFX profiles, automatic DoH off, Office client telemetry off), the driver rollback-readiness report and the component store cleanup that only triggers the built-in Windows servicing task.'
+            ReleaseNotes = 'v1.3.0: feature groups with dependencies on top of profiles (an honest resolved order with attribution, catalog 102), the explicit journal schema migration mechanism with an honest verdict when there is nothing to migrate (catalog 101), and the read-only shell menu audit: context-menu shell extensions and Open-with associations (catalog 104, groundwork of 81). Also: componentstore.apply is now a first-class ledger event filter.'
         }
     }
 }

@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/rtynbirf/domovoy-tweaker/blob/main/schema/groups.schema.json",
+  "title": "Domovoy feature group",
+  "description": "Declarative package of features with dependencies on other groups. A group sits on top of profiles: it may pull whole profiles and single features, and may depend on other groups. The execution order is resolved from the dependency graph and reported honestly.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "title", "maxRisk", "description"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+([.-][a-z0-9]+)*$",
+      "description": "Group id in lowercase latin, digits, dots, hyphens."
+    },
+    "title": {
+      "type": "string",
+      "minLength": 3
+    },
+    "maxRisk": {
+      "enum": ["low", "medium", "high"],
+      "description": "Risk ceiling for the whole resolved package: features with a higher risk are skipped and reported honestly."
+    },
+    "description": {
+      "type": "string",
+      "minLength": 10
+    },
+    "dependsOn": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+([.-][a-z0-9]+)*$",
+        "description": "Group id this group depends on. Dependencies are resolved before this group; cycles are rejected."
+      }
+    },
+    "profiles": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+([.-][a-z0-9]+)*$",
+        "description": "Profile id whose features are pulled into the package."
+      }
+    },
+    "features": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(\\.[a-z0-9-]+)+$",
+        "description": "Single feature id pulled directly into the package."
+      }
+    }
+  },
+  "anyOf": [
+    { "required": ["dependsOn"] },
+    { "required": ["profiles"] },
+    { "required": ["features"] }
+  ]
+}

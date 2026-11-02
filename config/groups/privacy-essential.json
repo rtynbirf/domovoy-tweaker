@@ -1,0 +1,14 @@
+{
+  "id": "privacy-essential",
+  "title": "Privacy essential",
+  "maxRisk": "low",
+  "description": "The whole cautious profile plus three extra low-risk privacy policies: activity history, cross-device clipboard and error reporting. Nothing medium or high risk is ever included, so the package is safe for a work machine.",
+  "profiles": [
+    "cautious"
+  ],
+  "features": [
+    "policy.activityhistory.disabled",
+    "policy.clipboard.crossdevice.disabled",
+    "policy.errorreporting.disabled"
+  ]
+}
