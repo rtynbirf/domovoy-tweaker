@@ -59,11 +59,30 @@ domovoy-tweaker/
 │   ├── features.schema.json      # JSON-схема манифеста функции
 │   └── profiles.schema.json      # JSON-схема профиля
 ├── config/
-│   ├── features/                 # манифесты функций (26: службы, приватность, debloat, интерфейс, планировщик)
+│   ├── features/                 # манифесты функций (29: службы, приватность, debloat, интерфейс, сеть, планировщик)
 │   └── profiles/                 # профили cautious / standard (JSON, не скрипты)
-├── src/Domovoy/                  # модуль PowerShell (23 публичные команды)
+├── src/Domovoy/                  # модуль PowerShell (35 публичных команд)
+├── packaging/winget/             # шаблоны winget-манифестов + генератор
 └── tests/                        # Pester
 ```
+
+## Установка
+
+Из PowerShell Gallery (одна команда, когда релиз опубликован в галерее):
+
+```powershell
+Install-Module -Name Domovoy -Scope CurrentUser
+Import-Module Domovoy
+```
+
+Из zip-архива релиза (без `install.ps1` - он не нужен):
+
+```powershell
+# распаковать Domovoy-0.6.0.zip и выполнить:
+Import-Module .\Domovoy\Domovoy.psd1 -Force
+```
+
+Подробности (PSGallery-публикация, подпись кода, winget) - [docs/distribution.md](docs/distribution.md).
 
 ## Быстрый старт
 
@@ -98,6 +117,22 @@ Get-DomovoyChangeReport -Since (Get-Date).AddDays(-7)     # №63: что изм
 Invoke-DomovoyEventLogCleanup                             # №38: журналы событий — сначала отчёт, очистка только с -Apply
 Invoke-DomovoyMemoryTrim                                  # №40: тримминг — честная пометка «эффект временный»
 Invoke-DomovoySystemIntegrityCheck                        # №51: sfc/DISM с записью результата в журнал
+
+# Авто-лечение и прозрачная сила (v0.6.0)
+Invoke-DomovoyFeature -Id network.dns.cloudflare          # №34: DNS-профиль (cloudflare/quad9/google), dry-run
+Invoke-DomovoyAutoHeal                                    # №58: dry-run — кто дрейфует и будет вылечен
+Invoke-DomovoyAutoHeal -Apply                             # №58: вылечить: снапшот дрейфа → ре-apply → журнал
+Register-DomovoyWatchdog -Apply                           # №58: opt-in задача планировщика на каждый день
+Unregister-DomovoyWatchdog -Apply                         # №58: выключить дозор
+Get-DomovoyPrivilege                                      # №52: привилегии токена — честная таблица
+Enable-DomovoyPrivilege -Name SeTakeOwnershipPrivilege -Apply   # №52: включение — в журнал
+Set-DomovoyFileOwner -Path C:\path\file -Owner 'BUILTIN\Administrators' -Apply  # №48: владелец с undo
+Undo-DomovoyFileOwner -Apply                              # №48: прежний владелец из журнала
+Invoke-DomovoyFileAttributeClear -Path C:\path\file -Attributes Hidden -Apply   # №47: снятие атрибутов
+Undo-DomovoyFileAttributeClear -Apply                     # №47: прежние атрибуты из журнала
+Invoke-DomovoyDriverDedup                                 # №43: старые дубликаты драйверов — отчёт
+Invoke-DomovoyDriverDedup -Apply                          # №43: бэкап .cab → удаление (без бэкапа — ни шага)
+Backup-DomovoyBitLockerKey -MountPoint C: -OutFile D:\keys\c.txt -Apply         # №50: ключ BitLocker в файл
 ```
 
 Требуется Windows 10/11, PowerShell 5.1 или 7+; для `-Apply` — сессия с правами администратора.
@@ -105,15 +140,16 @@ Invoke-DomovoySystemIntegrityCheck                        # №51: sfc/DISM с �
 ## Дорожная карта
 
 Вехи с критериями приёмки — в [docs/roadmap.md](docs/roadmap.md).
-Сейчас: **v0.5.0** — 26 функций (службы, приватность, debloat, интерфейс,
-задачи планировщика), профили cautious/standard, дозор дрейфа с базовой
-линией из последнего verified-снимка, op-типы `appx.remove`, `file.attribute`
-и `scheduler.task` с 4 проекциями, 100% покрытие манифестов пробами,
-отчёт «что реально изменилось» по apply, измеримые «до/после» для очисток,
-отчёты по телеметрии/автозагрузке/драйверам/BitLocker и «что изменилось
-с момента X» — только чтение; сброс сети, очистка журналов событий, тримминг
-памяти и sfc/DISM — dry-run по умолчанию, факт в журнал.
-Дальше: v0.6.0 — авто-лечение (opt-in) и дистрибуция (PSGallery); v1.0.0 — 100+ функций и стабильный API.
+Сейчас: **v0.6.0** — 29 функций (службы, приватность, debloat, интерфейс,
+сеть, планировщик), профили cautious/standard, дозор дрейфа + **авто-лечение
+opt-in** (Invoke-DomovoyAutoHeal с журналируемым циклом и задача
+Register-DomovoyWatchdog), DNS-профили как манифесты (op `network.dns`
+с 4 проекциями), дедуп старых драйверов только после полного бэкапа .cab,
+снятие атрибутов и смена владельца файлов со снапшотами в журнале,
+журналируемое управление привилегиями токена, бэкап ключа BitLocker по явному
+запросу; дистрибуция: PSGallery/zip/winget-манифесты, подпись кода, когда
+настроен сертификат. Дальше: v0.7.0 — GUI-слой и экспорт политик GPO/Intune;
+v1.0.0 — 100+ функций и стабильный API.
 
 ## Отказ от ответственности
 

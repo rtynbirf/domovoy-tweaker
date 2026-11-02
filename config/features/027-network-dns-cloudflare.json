@@ -1,0 +1,28 @@
+{
+  "id": "network.dns.cloudflare",
+  "title": "DNS preset: Cloudflare public resolvers (1.1.1.1)",
+  "version": "1.0.0",
+  "category": "network",
+  "risk": "medium",
+  "description": "Sets the documented Cloudflare public resolver addresses on every connected network adapter. The previous per-adapter DNS lists are captured in a snapshot before the change and restored by per-feature undo (an empty snapshot resets back to the DHCP defaults).",
+  "ops": [
+    {
+      "type": "network.dns",
+      "interfaceAlias": "*",
+      "servers": ["1.1.1.1", "1.0.0.1"]
+    }
+  ],
+  "undo": {
+    "mode": "snapshot"
+  },
+  "verify": [
+    {
+      "type": "network.dns",
+      "interfaceAlias": "*",
+      "servers": ["1.1.1.1", "1.0.0.1"]
+    }
+  ],
+  "references": [
+    "https://developers.cloudflare.com/1.1.1.1/setup/"
+  ]
+}

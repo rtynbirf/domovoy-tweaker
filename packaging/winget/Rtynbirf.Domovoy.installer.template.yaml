@@ -1,0 +1,13 @@
+PackageIdentifier: Rtynbirf.Domovoy
+PackageVersion: __VERSION__
+Installers:
+  - Architecture: x64
+    InstallerType: zip
+    InstallerUrl: https://github.com/rtynbirf/domovoy-tweaker/releases/download/v__VERSION__/Domovoy-__VERSION__.zip
+    InstallerSha256: __SHA256__
+    NestedInstallerType: portable
+    NestedInstallerFiles:
+      - RelativeFilePath: Domovoy/Domovoy.psd1
+        PortableCommandAlias: Domovoy
+ManifestType: installer
+ManifestVersion: 1.6.0

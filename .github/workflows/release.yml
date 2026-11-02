@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   release:
-    name: Publish release (ubuntu-latest)
+    name: Package + notes (ubuntu-latest)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -33,16 +33,116 @@ jobs:
           echo '--- release notes ---'
           cat release_notes.md
 
-      - name: Create GitHub release
+      - name: Build the module zip
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          mkdir -p staging
+          cp -r src/Domovoy staging/Domovoy
+          cp README.md LICENSE staging/
+          cd staging
+          zip -r "../Domovoy-${VERSION}.zip" .
+          cd ..
+          rm -rf staging
+          SHA256=$(sha256sum "Domovoy-${VERSION}.zip" | cut -d' ' -f1)
+          echo "SHA256=${SHA256}" >> "$GITHUB_ENV"
+          echo "zip sha256: ${SHA256}"
+
+      - name: Generate winget manifests for this version
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          python3 packaging/winget/generate.py \
+            --version "${VERSION}" \
+            --sha256 "${SHA256}" \
+            --out "winget-manifests"
+
+      - name: Create GitHub release with assets
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          VERSION="${GITHUB_REF_NAME#v}"
           FLAG=""
           case "${GITHUB_REF_NAME}" in
             v0.*) FLAG="--prerelease" ;;
           esac
+          zip -j "Domovoy-${VERSION}-winget-manifests.zip" winget-manifests/*
           if gh release view "${GITHUB_REF_NAME}" > /dev/null 2>&1; then
-            echo "Release ${GITHUB_REF_NAME} already exists - skipping create"
+            echo "Release ${GITHUB_REF_NAME} already exists - uploading assets"
+            gh release upload "${GITHUB_REF_NAME}" \
+              "Domovoy-${VERSION}.zip" \
+              "Domovoy-${VERSION}-winget-manifests.zip" --clobber
           else
-            gh release create "${GITHUB_REF_NAME}" --title "${GITHUB_REF_NAME}" --notes-file release_notes.md $FLAG
+            gh release create "${GITHUB_REF_NAME}" \
+              "Domovoy-${VERSION}.zip" \
+              "Domovoy-${VERSION}-winget-manifests.zip" \
+              --title "${GITHUB_REF_NAME}" --notes-file release_notes.md $FLAG
           fi
+
+  sign:
+    name: Optional Authenticode signing (windows-latest)
+    runs-on: windows-latest
+    needs: release
+    env:
+      CODE_SIGNING_PFX: ${{ secrets.CODE_SIGNING_PFX }}
+      CODE_SIGNING_PASSWORD: ${{ secrets.CODE_SIGNING_PASSWORD }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Sign module files when a certificate is configured
+        shell: pwsh
+        run: |
+          if ([string]::IsNullOrEmpty($env:CODE_SIGNING_PFX)) {
+            Write-Host "CODE_SIGNING_PFX is not configured - the module ships unsigned by design."
+            exit 0
+          }
+          $pfxPath = Join-Path $env:RUNNER_TEMP 'domovoy-codesign.pfx'
+          [IO.File]::WriteAllBytes($pfxPath, [Convert]::FromBase64String($env:CODE_SIGNING_PFX))
+          $cert = Import-PfxCertificate -FilePath $pfxPath -CertStoreLocation Cert:\CurrentUser\My -Password (ConvertTo-SecureString $env:CODE_SIGNING_PASSWORD -AsPlainText -Force)
+          Remove-Item $pfxPath -Force
+          Write-Host "Signing with: $($cert.Subject)"
+
+          $timestampUrl = 'http://timestamp.digicert.com'
+          $files = Get-ChildItem -Path 'src/Domovoy' -Recurse -Include *.ps1,*.psm1,*.psd1
+          foreach ($f in $files) {
+            $null = Set-AuthenticodeSignature -FilePath $f.FullName -Certificate $cert -TimestampServer $timestampUrl -HashAlgorithm SHA256
+          }
+
+          $VERSION = $env:GITHUB_REF_NAME.Substring(1)
+          New-Item -ItemType Directory -Path 'staging' -Force | Out-Null
+          Copy-Item -Recurse -Path 'src/Domovoy' -Destination 'staging/Domovoy'
+          Copy-Item 'README.md','LICENSE' 'staging/'
+          Compress-Archive -Path 'staging/*' -DestinationPath "Domovoy-$VERSION-signed.zip" -Force
+
+      - name: Upload the signed zip to the release
+        if: ${{ env.CODE_SIGNING_PFX != '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: |
+          $VERSION = $env:GITHUB_REF_NAME.Substring(1)
+          gh release upload "$env:GITHUB_REF_NAME" "Domovoy-$VERSION-signed.zip" --clobber
+          Write-Host "Signed zip uploaded."
+
+  publish-psgallery:
+    name: Optional PSGallery publish (windows-latest)
+    runs-on: windows-latest
+    needs: release
+    env:
+      PSGALLERY_API_KEY: ${{ secrets.PSGALLERY_API_KEY }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Publish to the PowerShell Gallery when the API key is configured
+        shell: pwsh
+        run: |
+          if ([string]::IsNullOrEmpty($env:PSGALLERY_API_KEY)) {
+            Write-Host "PSGALLERY_API_KEY is not configured - skipping the gallery publish."
+            exit 0
+          }
+          Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Scope CurrentUser | Out-Null
+          Import-Module -Name (Join-Path (Get-Location) 'src/Domovoy/Domovoy.psd1') -Force
+          $meta = Test-ModuleManifest -Path (Join-Path (Get-Location) 'src/Domovoy/Domovoy.psd1')
+          Write-Host "Publishing $($meta.Name) $($meta.Version) to the PowerShell Gallery."
+          Publish-Module -Path (Join-Path (Get-Location) 'src/Domovoy') -NuGetApiKey $env:PSGALLERY_API_KEY
+          Write-Host "Published. Install-Module -Name Domovoy now serves this release."

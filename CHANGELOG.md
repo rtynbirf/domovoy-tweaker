@@ -5,9 +5,66 @@
 
 ## [Unreleased]
 
-### Planned (v0.6.0)
-- Авто-лечение дрейфа (opt-in, по расписанию, журнал каждого действия).
-- Упаковка: PSGallery, winget; каталог №34, 43, 47–48, 50, 52, 58.
+### Planned (v0.7.0)
+- Слой графического интерфейса поверх CLI; экспорт состояния в
+  GPO/Intune-совместимые политики (№62); каталог №29, 33, 35.
+
+## [0.6.0] — 2026-11-02
+
+### Added
+- Авто-лечение дрейфа (№58) — полный контур: `Invoke-DomovoyAutoHeal`
+  (dry-run по умолчанию; `-Apply` лечит ре-apply манифеста из
+  verified-базовой линии, дрейф-состояние снапшотится и остаётся undo-ным
+  обычным `Undo-DomovoyFeature`) и `Register-/Unregister-DomovoyWatchdog` —
+  opt-in задача планировщика `\Domovoy\DriftWatchdog` (Interactive-вход без
+  хранения пароля, RunLevel Highest, runner-скрипт генерируется при
+  регистрации). Каждый цикл — событие `autoheal.cycle` с триггером
+  Manual/Scheduled и списками healed/failed.
+- DNS-профили (№34): новый op-тип `network.dns` со всеми четырьмя
+  проекциями (plan, snapshot, execute, undo) и пробой `network.dns`;
+  манифесты cloudflare/quad9/google. `*` = все подключённые адаптеры;
+  undo с пустым снапшотом возвращает DHCP-умолчания
+  (`Set-DnsClientServerAddress -ResetServerAddresses`).
+- `Invoke-DomovoyDriverDedup` (№43 + №46): дедуп старых копий драйверов
+  ТОЛЬКО после полного бэкапа — сначала `pnputil /export-driver *`, затем
+  упаковка всего экспорта в один LZX .cab (`makecab`), и лишь при живом
+  архиве удаляются старые oem-копии одного INF (без `/force`: занятый
+  драйвер уходит в честный failed-список). Событие `driverdedup.apply`.
+- Прозрачные привилегии токена (№52): `Get-DomovoyPrivilege` — честная
+  таблица привилегий текущего процесса (GetTokenInformation +
+  LookupPrivilegeName), `Enable-/Disable-DomovoyPrivilege` — реальный
+  AdjustTokenPrivileges с dry-run по умолчанию; каждое включение/выключение —
+  событие `privilege.enable`/`privilege.disable`.
+- Смена владельца файлов (№48): `Set-DomovoyFileOwner` фиксирует прежнего
+  владельца в журнале (событие `fileowner.set`), `Undo-DomovoyFileOwner`
+  восстанавливает его из журнала (`fileowner.undo`); повышение нужных
+  привилегий едёт через журналируемый №52.
+- Снятие атрибутов (№47): `Invoke-DomovoyFileAttributeClear -Path
+  -Attributes` — по явному пути, только перечисленные атрибуты, полный
+  прежний набор — в журнал (`fileattr.clear`), `Undo-DomovoyFileAttributeClear`
+  восстанавливает (`fileattr.clear.undo`).
+- Бэкап ключа BitLocker (№50): `Backup-DomovoyBitLockerKey -MountPoint
+  -OutFile` — по явному запросу, ключ ТОЛЬКО в файл пользователя (ACL
+  ограничивается текущим пользователем), никогда в журнал и в вывод
+  команды; dry-run показывает протекторы без ключа.
+
+### Changed
+- Дистрибуция: каждый релиз вкладывает `Domovoy-<версия>.zip` и готовые
+  winget-манифесты (`packaging/winget/generate.py` из шаблонов);
+  опциональная Authenticode-подпись (секреты `CODE_SIGNING_PFX` +
+  `CODE_SIGNING_PASSWORD`) и опциональная публикация в PSGallery
+  (секрет `PSGALLERY_API_KEY`) — без секретов релизы выходят как раньше,
+  с явной пометкой в логе; CI проверяет подпись на каждый пуш (нет
+  подписи — «unsigned by design», есть — обязана быть Valid).
+- Установка одной командой: `Install-Module -Name Domovoy` (PSGallery);
+  `install.ps1` не существует и не нужен.
+- Каталог честен: №29, 33, 35 перенесены в v0.7 с пометкой о переносе
+  (не вошли в свою веху — так и написано).
+
+### Security
+- Ключ восстановления BitLocker не попадает ни в журнал, ни в вывод —
+  только в файл по явному пути пользователя; запись об этом в спецификации
+  и в описании команды.
 
 ## [0.5.0] — 2026-11-02
 

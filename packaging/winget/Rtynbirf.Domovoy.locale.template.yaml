@@ -1,0 +1,24 @@
+PackageIdentifier: Rtynbirf.Domovoy
+PackageVersion: __VERSION__
+PackageLocale: en-US
+Publisher: rtynbirf
+PublisherUrl: https://github.com/rtynbirf
+Author: rtynbirf
+PackageName: Domovoy
+PackageUrl: https://github.com/rtynbirf/domovoy-tweaker
+License: MIT
+LicenseUrl: https://github.com/rtynbirf/domovoy-tweaker/blob/main/LICENSE
+Copyright: (c) 2026 rtynbirf. MIT licensed.
+ShortDescription: Windows tweaker as a state, not an event.
+Description: Domovoy is a Windows tweaking module built as a state machine instead of a bag of scripts - every change is an append-only ledger event with a snapshot taken before the change, per-feature undo, a drift sentinel with an opt-in auto-heal contour and honest effect verification probes. Dry-run is the default for every mutating command.
+Moniker: domovoy
+Tags:
+  - windows
+  - tweaker
+  - privacy
+  - telemetry
+  - powershell
+ReleaseNotes: Domovoy v__VERSION__
+ReleaseNotesUrl: https://github.com/rtynbirf/domovoy-tweaker/releases/tag/v__VERSION__
+ManifestType: defaultLocale
+ManifestVersion: 1.6.0

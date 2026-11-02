@@ -37,11 +37,25 @@ function Invoke-DomovoyFeature {
     }
     else {
         $feature = Get-DomovoyFeature -Id $Id
-        if (-not $feature) {
-            throw "Feature not found: $Id"
+        if ($feature) {
+            $manifest = Read-FeatureManifest -Path $feature[0].File
+            $manifestPath = $feature[0].File
         }
-        $manifest = Read-FeatureManifest -Path $feature[0].File
-        $manifestPath = $feature[0].File
+        else {
+            # Not in the catalog: fall back to the manifest recorded in the
+            # ledger (v0.2 featureSource invariant), the same resolution rule
+            # Undo-DomovoyFeature uses. Auto-heal relies on this for features
+            # that were applied from external manifest files.
+            $lastApply = @(Get-DomovoyLedger -FeatureId $Id -Event 'feature.apply' -Last 1000000) |
+                Select-Object -Last 1
+            if (-not $lastApply -or
+                -not $lastApply.featureSource -or
+                -not (Test-Path -LiteralPath $lastApply.featureSource)) {
+                throw "Feature not found: $Id"
+            }
+            $manifest = Read-FeatureManifest -Path $lastApply.featureSource
+            $manifestPath = $lastApply.featureSource
+        }
     }
 
     # Build the plan: for every operation, capture the current state.
@@ -144,6 +158,24 @@ function Invoke-DomovoyFeature {
                     CurrentType = $null
                     New = 'Disabled'
                     NewType = $null
+                }
+            }
+            'network.dns' {
+                $aliases = @(Get-DomovoyDnsTargets -InterfaceAlias $op.interfaceAlias)
+                if ($aliases.Count -eq 0) { $aliases = @('<missing>') }
+                foreach ($alias in $aliases) {
+                    $dnsCurrent = $null
+                    if ($alias -ne '<missing>') {
+                        $dnsCurrent = Get-DnsClientServerAddress -InterfaceAlias $alias -AddressFamily IPv4 -ErrorAction SilentlyContinue
+                    }
+                    $plan += [pscustomobject]@{
+                        Op = 'network.dns'
+                        Target = $alias
+                        Current = if ($dnsCurrent) { (@($dnsCurrent.ServerAddresses) -join ',') } else { '<missing>' }
+                        CurrentType = $null
+                        New = (@($op.servers) -join ',')
+                        NewType = $null
+                    }
                 }
             }
             default {
@@ -273,6 +305,16 @@ function Invoke-DomovoyFeature {
                         previousState = if ($task) { [string]$task.State } else { '<missing>' }
                     }
                 }
+                'network.dns' {
+                    foreach ($alias in @(Get-DomovoyDnsTargets -InterfaceAlias $op.interfaceAlias)) {
+                        $dnsCurrent = Get-DnsClientServerAddress -InterfaceAlias $alias -AddressFamily IPv4 -ErrorAction SilentlyContinue
+                        $snapshot += @{
+                            op = 'network.dns'
+                            interfaceAlias = $alias
+                            previousServers = @($dnsCurrent.ServerAddresses)
+                        }
+                    }
+                }
             }
         }
 
@@ -329,6 +371,11 @@ function Invoke-DomovoyFeature {
                     $task = Get-ScheduledTask -TaskPath $op.taskPath -TaskName $op.taskName -ErrorAction SilentlyContinue
                     if ($task -and $task.State -ne 'Disabled') {
                         $null = Disable-ScheduledTask -TaskPath $op.taskPath -TaskName $op.taskName -ErrorAction Stop
+                    }
+                }
+                'network.dns' {
+                    foreach ($alias in @(Get-DomovoyDnsTargets -InterfaceAlias $op.interfaceAlias)) {
+                        $null = Set-DnsClientServerAddress -InterfaceAlias $alias -ServerAddresses @($op.servers) -ErrorAction Stop
                     }
                 }
             }

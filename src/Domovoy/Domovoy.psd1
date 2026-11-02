@@ -3,12 +3,12 @@
 #
 @{
     RootModule = 'Domovoy.psm1'
-    ModuleVersion = '0.5.0'
+    ModuleVersion = '0.6.0'
     GUID = '8546e1cf-4418-4133-92f4-4adcb7897011'
     Author = 'rtynbirf'
     CompanyName = 'Domovoy contributors'
     Copyright = '(c) 2026 rtynbirf. MIT licensed.'
-    Description = 'Domovoy - Windows tweaker as a state, not an event: change ledger, per-feature undo, drift sentinel, effect verification. Prototype.'
+    Description = 'Domovoy - Windows tweaker as a state, not an event: change ledger, per-feature undo, drift sentinel with opt-in auto-heal, effect verification. Prototype.'
 
     PowerShellVersion = '5.1'
     CompatiblePSEditions = @('Desktop', 'Core')
@@ -20,6 +20,9 @@
         'Undo-DomovoyFeature',
         'Get-DomovoyLedger',
         'Invoke-DomovoyDriftScan',
+        'Invoke-DomovoyAutoHeal',
+        'Register-DomovoyWatchdog',
+        'Unregister-DomovoyWatchdog',
         'Test-DomovoyEffect',
         'Backup-DomovoySnapshot',
         'Backup-DomovoyServiceState',
@@ -36,7 +39,16 @@
         'Undo-DomovoyNetworkReset',
         'Invoke-DomovoyEventLogCleanup',
         'Invoke-DomovoyMemoryTrim',
-        'Invoke-DomovoySystemIntegrityCheck'
+        'Invoke-DomovoySystemIntegrityCheck',
+        'Get-DomovoyPrivilege',
+        'Enable-DomovoyPrivilege',
+        'Disable-DomovoyPrivilege',
+        'Set-DomovoyFileOwner',
+        'Undo-DomovoyFileOwner',
+        'Invoke-DomovoyFileAttributeClear',
+        'Undo-DomovoyFileAttributeClear',
+        'Backup-DomovoyBitLockerKey',
+        'Invoke-DomovoyDriverDedup'
     )
     CmdletsToExport = @()
     VariablesToExport = @()
@@ -44,10 +56,10 @@
 
     PrivateData = @{
         PSData = @{
-            Tags = @('Windows', 'Tweaker', 'Privacy', 'Telemetry', 'Debloat', 'Undo', 'Ledger', 'Drift')
+            Tags = @('Windows', 'Tweaker', 'Privacy', 'Telemetry', 'Debloat', 'Undo', 'Ledger', 'Drift', 'Network', 'Security', 'Drivers')
             LicenseUri = 'https://github.com/rtynbirf/domovoy-tweaker/blob/main/LICENSE'
             ProjectUri = 'https://github.com/rtynbirf/domovoy-tweaker'
-            ReleaseNotes = 'v0.5.0: effect verification as a full loop - a what-really-changed diff on apply (snapshot before vs probes after), 100% probe coverage with the appx.present probe, read-only reports (telemetry policies, Run/RunOnce, drivers, BitLocker, what changed since X) and dry-run actions with ledger records (network reset with a removable-settings snapshot, event log cleanup, memory trim, SFC/DISM).'
+            ReleaseNotes = 'v0.6.0: drift auto-heal as an opt-in contour (Invoke-DomovoyAutoHeal with a journaled cycle and a scheduled watchdog task the user registers explicitly), DNS profiles as manifests (network.dns op with probe, snapshot and undo), driver dedup only after a full .cab backup, file attribute clearing and owner change with ledger snapshots, journaled token privilege management and an explicit BitLocker recovery key backup.'
         }
     }
 }

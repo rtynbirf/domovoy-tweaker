@@ -60,3 +60,28 @@ jobs:
             Test-Json -Json (Get-Content -LiteralPath $_.FullName -Raw -Encoding UTF8) -SchemaFile 'schema/profiles.schema.json'
             Write-Host "OK $($_.Name)"
           }
+
+      - name: Signature check (verifies when a signature is present)
+        shell: pwsh
+        run: |
+          # When the maintainer configures a signing certificate, every
+          # release ships signed files and CI verifies them. Without a
+          # certificate the module ships unsigned by design - the check
+          # accepts that state explicitly instead of pretending.
+          $files = Get-ChildItem -Path 'src/Domovoy' -Recurse -Include *.ps1,*.psm1,*.psd1
+          $signed = 0
+          foreach ($f in $files) {
+            $sig = Get-AuthenticodeSignature -FilePath $f.FullName
+            if ($sig.Status -eq 'NotSigned') { continue }
+            if ($sig.Status -ne 'Valid') {
+              Write-Host "::error::Invalid Authenticode signature: $($f.Name) ($($sig.Status))"
+              exit 1
+            }
+            $signed++
+          }
+          if ($signed -gt 0) {
+            Write-Host "Signature check passed: $signed signed file(s), all signatures Valid."
+          }
+          else {
+            Write-Host "No signatures present (no signing certificate configured) - accepted by design."
+          }

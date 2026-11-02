@@ -101,6 +101,19 @@ function Test-DomovoyEffect {
                 $task = Get-ScheduledTask -TaskPath $probe.taskPath -TaskName $probe.taskName -ErrorAction SilentlyContinue
                 $actual = if ($task) { [string]$task.State } else { '<missing>' }
             }
+            'network.dns' {
+                $selector = $probe.interfaceAlias
+                if ([string]::IsNullOrEmpty($selector)) { $selector = '*' }
+                $target = $selector
+                $expected = (@($probe.servers) | Sort-Object) -join ','
+                $actualServers = @()
+                foreach ($alias in (Get-DomovoyDnsTargets -InterfaceAlias $selector)) {
+                    $dnsCurrent = Get-DnsClientServerAddress -InterfaceAlias $alias -AddressFamily IPv4 -ErrorAction SilentlyContinue
+                    $actualServers += @($dnsCurrent.ServerAddresses)
+                }
+                $actual = (@($actualServers) | Sort-Object -Unique) -join ','
+                if ([string]::IsNullOrEmpty($actual)) { $actual = '<unset>' }
+            }
             'appx.present' {
                 $target = $probe.name
                 $expected = '<present>'

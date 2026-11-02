@@ -150,6 +150,16 @@ function Undo-DomovoyFeature {
                         }
                     }
                 }
+                'network.dns' {
+                    if ($state.PSObject.Properties['previousServers'] -and @($state.previousServers).Count -gt 0) {
+                        $null = Set-DnsClientServerAddress -InterfaceAlias $state.interfaceAlias -ServerAddresses @($state.previousServers) -ErrorAction SilentlyContinue
+                    }
+                    else {
+                        # No explicit servers before the tweak: reset back to
+                        # the DHCP defaults (the documented way to clear them).
+                        $null = Set-DnsClientServerAddress -InterfaceAlias $state.interfaceAlias -ResetServerAddresses -ErrorAction SilentlyContinue
+                    }
+                }
                 'scheduler.task' {
                     # The task is only re-enabled if it was enabled before the
                     # tweak; a task deleted by someone else is not recreated.

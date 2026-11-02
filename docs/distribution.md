@@ -1,0 +1,84 @@
+# Дистрибуция ДОМОВОГО
+
+Как модуль доезжает до пользователя, что здесь честно сделано, а что —
+заготовлено под ключ владельца.
+
+## Установка пользователем
+
+### PowerShell Gallery (основной путь, одна команда)
+
+```powershell
+Install-Module -Name Domovoy -Scope CurrentUser
+Import-Module Domovoy
+```
+
+Критерий приёмки вехи v0.6.0: установка одной командой из PSGallery;
+`install.ps1` не нужен — его не существует.
+
+### Из zip-архива релиза
+
+Каждый релиз на GitHub вкладывает `Domovoy-<версия>.zip` (модуль + README +
+LICENSE). Распаковать и импортировать:
+
+```powershell
+Import-Module .\Domovoy\Domovoy.psd1 -Force
+```
+
+## Что делает release-конвейер при теге `v*`
+
+1. **Заметки релиза** — секция CHANGELOG `[x.y.z]` вырезается автоматически
+   (тот же awk-конвейер, что и в v0.3.0+).
+2. **Zip-артефакт** — `Domovoy-<версия>.zip`, sha256 считается и попадает в
+   winget-манифест.
+3. **Winget-манифесты** — `packaging/winget/generate.py` собирает из шаблонов
+   три YAML (version / installer / defaultLocale) в `winget-manifests/` и
+   вкладывает их в релиз как `Domovoy-<версия>-winget-manifests.zip`.
+4. **Подпись кода (опционально)** — job `sign`: если в секретах репозитория
+   заданы `CODE_SIGNING_PFX` (base64 от .pfx) и `CODE_SIGNING_PASSWORD`,
+   все `*.ps1/*.psm1/*.psd1` подписываются Authenticode (SHA256, сервер
+   меток времени digicert), и в релиз докладывается
+   `Domovoy-<версия>-signed.zip`. Без сертификата модуль выходит
+   неподписанным **по задумке** — job честно пишет об этом и не падает.
+5. **PSGallery (опционально)** — job `publish-psgallery`: если задан секрет
+   `PSGALLERY_API_KEY`, модуль публикуется `Publish-Module` сразу из чекаута
+   тега. Ключа нет — job честно пропускается.
+
+CI (`ci.yml`) проверяет подпись при каждом пуше: если подписи нет —
+«unsigned by design» и зелёный статус; если подпись есть — она обязана быть
+Valid, битая подпись красит CI.
+
+## Что нужно от владельца репозитория (когда придёт время)
+
+| Секрет | Что положить | Что включится |
+|---|---|---|
+| `PSGALLERY_API_KEY` | API-ключ с powershellgallery.com (Account Settings → API Key, scoped на `Domovoy`) | автопубликация релиза в галерею |
+| `CODE_SIGNING_PFX` | base64 сертификата подписи кода (.pfx) | подпись ps1/psd1/psm1 + `-signed.zip` в релизе |
+| `CODE_SIGNING_PASSWORD` | пароль от .pfx | то же |
+
+До тех пор всё работает без них: релизы выходят, артефакты вкладываются,
+CI зелёный. Никаких следов секретов в коде нет — только чтение env.
+
+## Winget: статус и оговорка
+
+Шаблоны манифестов и генератор лежат в `packaging/winget/`; релиз вкладывает
+готовые манифесты под свою версию. Публикация в winget — это pull request в
+[`microsoft/winget-pkgs`](https://github.com/microsoft/winget-pkgs)
+(`manifests/r/Rtynbirf/Domovoy/<версия>/`), который делает владелец из
+готовых файлов.
+
+Оговорка, сказанная прямо: winget рассчитан на исполняемые/portable
+приложения, а ДОМОВОЙ — PowerShell-модуль. Схема с
+`NestedInstallerType: portable` на `.psd1` может не пройти ревью в
+winget-pkgs. Основной канал дистрибуции — PSGallery; winget-манифесты
+даются как готовая отправная точка, и если ревью их не примет — это не
+ломает ни один критерий вехи.
+
+## Именование артефактов релиза
+
+| Файл | Что это |
+|---|---|
+| `Domovoy-<версия>.zip` | модуль + README + LICENSE (всегда) |
+| `Domovoy-<версия>-signed.zip` | то же, но с Authenticode-подписью (когда задан сертификат) |
+| `Domovoy-<версия>-winget-manifests.zip` | три YAML winget-манифеста этой версии |
+
+SHA256 zip-а зашит в `installer.yaml` — совпадение обязано быть точным.
