@@ -89,14 +89,19 @@ verify[]    — пробы эффекта (обязательно ≥1)
 references[]— ссылки на документацию Microsoft (обязательно, https)
 ```
 
-Типы операций v0.1:
+Типы операций (v0.2):
 
 | op | поля | обратная операция из снимка |
 |---|---|---|
 | `registry.set` | `path, name, value, valueType` | восстановление `previousValue`/`previousType` или удаление значения, если его не было |
+| `registry.delete` | `path, name` | то же: восстановление прежнего значения с типом или ничего, если значения не было |
 | `service.startup` | `name, startupType` | восстановление прежнего типа запуска |
+| `service.stop` | `name` | запуск службы, если до твика она была `Running` |
 
-Планируемые типы операций: `registry.delete`, `scheduler.task`, `appx.remove`,
+Типы проб (v0.2): `registry.set` (равенство значения), `registry.absent` (значение
+отсутствует), `service.startup` (тип запуска), `service.status` (фактический статус).
+
+Планируемые типы операций: `scheduler.task`, `appx.remove`,
 `file.attribute`, `service.config`, `profile.export` (см. `roadmap.md`).
 **Инвариант расширения:** новый op-тип принимается только вместе с проекциями
 probe / snapshot / undo (§6.4).
@@ -111,8 +116,9 @@ probe / snapshot / undo (§6.4).
 Файл `ledger.jsonl`, по событию на строку:
 
 ```json
-{"schema":1,"event":"feature.apply","tool":"Domovoy","toolVersion":"0.1.0",
+{"schema":1,"event":"feature.apply","tool":"Domovoy","toolVersion":"0.2.0",
  "timestamp":"2026-11-02T12:00:00.0000000+00:00","featureId":"...","featureVersion":"1.0.0",
+ "featureSource":"C:\\path\\to\\manifest.json",
  "snapshot":[...],"verification":{"feature":"...","allPass":true,"results":[...]}}
 ```
 
@@ -181,7 +187,7 @@ probe / snapshot / undo (§6.4).
 
 ---
 
-## 8. Интерфейс команд (v0.1)
+## 8. Интерфейс команд (v0.2)
 
 | Команда | Назначение |
 |---|---|
@@ -197,12 +203,12 @@ probe / snapshot / undo (§6.4).
 
 ---
 
-## 9. Известные ограничения v0.1 (честно)
+## 9. Известные ограничения (честно, v0.2)
 
-1. Undo восстанавливает значения, но не удаляет ключи реестра, созданные твиком
-   (удаление значений — да). Полное undo ключей — v0.2 вместе с op `registry.delete`.
+1. Undo восстанавливает значения и типы, но не удаляет ключи реестра, созданные
+   твиком (удаление значений — да, включая восстановление удалённых). Полное undo ключей — v0.3.
 2. `service.startup` меняет только тип запуска, не останавливая работающую службу;
-   op `service.stop` — v0.2.
+   для остановки есть отдельный op `service.stop` (с снимком статуса и запуском при undo).
 3. DriftScan сравнивает с ожидаемым из манифеста, а не с последним verified-снимком —
    базовая линия из снимков — v0.4.
 4. Точка восстановления ограничена ОС (раз в 24 ч) — фиксируется в журнале.
