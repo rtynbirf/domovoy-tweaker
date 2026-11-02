@@ -8,13 +8,58 @@ on:
 permissions:
   contents: write
 
+# v1.5 (item 8): never cancel a running release.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
+  # v1.5 (item 6b): the release waits for a green CI run of exactly this
+  # commit before packaging anything. The PS 5.1 job is continue-on-error, so
+  # it never blocks the release gate - this poller only requires the main CI
+  # workflow (".github/workflows/ci.yml", the "test" job) to succeed.
+  await-tests:
+    name: Await green CI on this commit
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Poll for a successful CI run of exactly this commit
+        run: |
+          set -uo pipefail
+          # Poll every 30 s, up to 40 iterations = 20 minutes.
+          for i in $(seq 1 40); do
+            state=$(gh api "/repos/${{ github.repository }}/actions/runs?head_sha=${{ github.sha }}&per_page=100" \
+              --jq '[.workflow_runs[] | select(.path == ".github/workflows/ci.yml" and .event == "push")] | max_by(.id) | if . == null then "none" else ((.status // "unknown") + "/" + (.conclusion // "pending")) end' \
+              2>/dev/null || echo api-error)
+            case "${state}" in
+              */success)
+                echo "CI run for ${{ github.sha }} is green - proceeding with the release."
+                exit 0
+                ;;
+              */failure|*/cancelled|*/timed_out|*/startup_failure|*/action_required)
+                echo "::error::CI run for ${{ github.sha }} concluded '${state##*/}' - refusing to publish a release on a red commit"
+                exit 1
+                ;;
+              none)
+                echo "No CI run registered for this SHA yet (attempt ${i}/40); sleeping 30 s..."
+                ;;
+              *)
+                echo "CI run state: ${state} (attempt ${i}/40); sleeping 30 s..."
+                ;;
+            esac
+            sleep 30
+          done
+          echo "::error::No green CI run for commit ${{ github.sha }} within 20 minutes - refusing to release untested code"
+          exit 1
+
   release:
     name: Package + notes (ubuntu-latest)
     runs-on: ubuntu-latest
+    needs: await-tests
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Extract changelog section for the tag
         run: |
@@ -27,8 +72,11 @@ jobs:
                $0 ~ pat { p = 1; next }
                /^## \[/ { if (p) exit }
                p' CHANGELOG.md > release_notes.md
+          # v1.5 (item 10): a missing CHANGELOG section is a hard failure, not
+          # a placeholder note - every release must carry real release notes.
           if [ ! -s release_notes.md ]; then
-            echo "Domovoy ${GITHUB_REF_NAME}" > release_notes.md
+            echo "::error::No CHANGELOG section for ${GITHUB_REF_NAME} - refusing to publish a placeholder release"
+            exit 1
           fi
           echo '--- release notes ---'
           cat release_notes.md
@@ -48,6 +96,9 @@ jobs:
           cd ..
           rm -rf staging
           SHA256=$(sha256sum "Domovoy-${VERSION}.zip" | cut -d' ' -f1)
+          # v1.5 (item 9): publish the checksum as a release asset in standard
+          # sha256sum format (two spaces between hash and file name).
+          printf '%s  Domovoy-%s.zip\n' "${SHA256}" "${VERSION}" > "Domovoy-${VERSION}.zip.sha256"
           echo "SHA256=${SHA256}" >> "$GITHUB_ENV"
           echo "zip sha256: ${SHA256}"
 
@@ -73,10 +124,12 @@ jobs:
             echo "Release ${GITHUB_REF_NAME} already exists - uploading assets"
             gh release upload "${GITHUB_REF_NAME}" \
               "Domovoy-${VERSION}.zip" \
+              "Domovoy-${VERSION}.zip.sha256" \
               "Domovoy-${VERSION}-winget-manifests.zip" --clobber
           else
             gh release create "${GITHUB_REF_NAME}" \
               "Domovoy-${VERSION}.zip" \
+              "Domovoy-${VERSION}.zip.sha256" \
               "Domovoy-${VERSION}-winget-manifests.zip" \
               --title "${GITHUB_REF_NAME}" --notes-file release_notes.md $FLAG
           fi
@@ -84,13 +137,13 @@ jobs:
   sign:
     name: Optional Authenticode signing (windows-latest)
     runs-on: windows-latest
-    needs: release
+    needs: [await-tests, release]
     env:
       CODE_SIGNING_PFX: ${{ secrets.CODE_SIGNING_PFX }}
       CODE_SIGNING_PASSWORD: ${{ secrets.CODE_SIGNING_PASSWORD }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Sign module files when a certificate is configured
         shell: pwsh
@@ -131,12 +184,12 @@ jobs:
   publish-psgallery:
     name: Optional PSGallery publish (windows-latest)
     runs-on: windows-latest
-    needs: release
+    needs: [await-tests, release]
     env:
       PSGALLERY_API_KEY: ${{ secrets.PSGALLERY_API_KEY }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Publish to the PowerShell Gallery when the API key is configured
         shell: pwsh

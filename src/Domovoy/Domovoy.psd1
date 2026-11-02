@@ -3,7 +3,7 @@
 #
 @{
     RootModule = 'Domovoy.psm1'
-    ModuleVersion = '1.3.0'
+    ModuleVersion = '1.4.0'
     GUID = '8546e1cf-4418-4133-92f4-4adcb7897011'
     Author = 'rtynbirf'
     CompanyName = 'Domovoy contributors'
@@ -64,7 +64,8 @@
         'Invoke-DomovoyGroup',
         'Get-DomovoyLedgerSchema',
         'Invoke-DomovoyLedgerMigration',
-        'Get-DomovoyShellMenuReport'
+        'Get-DomovoyShellMenuReport',
+        'Get-DomovoySmartScreenStatus'
     )
     CmdletsToExport = @()
     VariablesToExport = @()

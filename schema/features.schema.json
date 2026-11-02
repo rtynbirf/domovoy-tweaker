@@ -267,6 +267,64 @@
               "description": "When true, a missing path is skipped instead of failing the apply."
             }
           }
+        },        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "hive", "class", "handler"],
+          "properties": {
+            "type": { "const": "shell.handler.remove" },
+            "hive": { "enum": ["HKCU", "HKLM"] },
+            "class": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Classes subkey the handler is registered under, e.g. '*', 'AllFilesystemObjects', 'Directory', 'Directory\\Background', 'Folder', 'Drive' or a ProgId."
+            },
+            "handler": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Name of the handler key under shellex\\ContextMenuHandlers. Only this exact key is removed; the Approved list and other registrations are never touched."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "clsid"],
+          "properties": {
+            "type": { "const": "shell.handler.block" },
+            "clsid": {
+              "type": "string",
+              "pattern": "^\\{[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}\\}$",
+              "description": "CLSID of the shell extension to block, in braces."
+            },
+            "reason": {
+              "type": "string",
+              "maxLength": 260,
+              "description": "Optional description stored as the Blocked value data."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "extension", "kind", "entry"],
+          "properties": {
+            "type": { "const": "shell.openwith.remove" },
+            "extension": {
+              "type": "string",
+              "pattern": "^\\.[A-Za-z0-9][A-Za-z0-9.]*$",
+              "description": "File extension including the leading dot, e.g. '.txt'."
+            },
+            "kind": {
+              "enum": ["OpenWithList", "OpenWithProgids"],
+              "description": "OpenWithList removes a program suggestion (entry = executable file name); OpenWithProgids removes a PROGID suggestion (entry = the ProgId)."
+            },
+            "entry": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Executable file name (OpenWithList) or PROGID (OpenWithProgids)."
+            }
+          }
         }
       ]
     },
@@ -430,6 +488,42 @@
             "creation": { "$ref": "#/definitions/timestampValue" },
             "lastWrite": { "$ref": "#/definitions/timestampValue" },
             "lastAccess": { "$ref": "#/definitions/timestampValue" }
+          }
+        },        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "hive", "class", "handler"],
+          "properties": {
+            "type": { "const": "shell.handler.absent" },
+            "hive": { "enum": ["HKCU", "HKLM"] },
+            "class": { "type": "string", "minLength": 1 },
+            "handler": { "type": "string", "minLength": 1 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "clsid"],
+          "properties": {
+            "type": { "const": "shell.handler.blocked" },
+            "clsid": {
+              "type": "string",
+              "pattern": "^\\{[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}\\}$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "extension", "kind", "entry"],
+          "properties": {
+            "type": { "const": "shell.openwith.absent" },
+            "extension": {
+              "type": "string",
+              "pattern": "^\\.[A-Za-z0-9][A-Za-z0-9.]*$"
+            },
+            "kind": { "enum": ["OpenWithList", "OpenWithProgids"] },
+            "entry": { "type": "string", "minLength": 1 }
           }
         }
       ]

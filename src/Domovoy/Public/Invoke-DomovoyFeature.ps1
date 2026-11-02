@@ -223,6 +223,81 @@ function Invoke-DomovoyFeature {
                     NewType = $null
                 }
             }
+            'shell.handler.remove' {
+                # Catalog 81: remove a documented context-menu handler
+                # registration. Only the exact handler key is touched;
+                # the Approved list and other handlers stay untouched.
+                $keyPath = '{0}:\Software\Classes\{1}\shellex\ContextMenuHandlers\{2}' -f $op.hive, $op.class, $op.handler
+                $current = '<missing>'
+                if (Test-Path -LiteralPath $keyPath) {
+                    try {
+                        $defaultData = [string](Get-Item -LiteralPath $keyPath -ErrorAction Stop).GetValue('')
+                        $current = if ($defaultData) { $defaultData } else { '<present>' }
+                    }
+                    catch {
+                        $current = '<present>'
+                    }
+                }
+                $plan += [pscustomobject]@{
+                    Op = 'shell.handler.remove'
+                    Target = $keyPath
+                    Current = $current
+                    CurrentType = $null
+                    New = '<removed>'
+                    NewType = $null
+                }
+            }
+            'shell.handler.block' {
+                # Catalog 81: add a CLSID to the documented Blocked list.
+                # Nothing is deleted - the registration itself stays.
+                $blockedKey = 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Shell Extensions\Blocked'
+                $blockNew = if ($op.PSObject.Properties['reason']) { [string]$op.reason } else { '<blocked>' }
+                $plan += [pscustomobject]@{
+                    Op = 'shell.handler.block'
+                    Target = [string]$op.clsid
+                    Current = (Get-RegistryValueSafe -Path $blockedKey -Name $op.clsid)
+                    CurrentType = $null
+                    New = $blockNew
+                    NewType = $null
+                }
+            }
+            'shell.openwith.remove' {
+                # Catalog 81: remove an "Open with" suggestion for one
+                # extension (per-user FileExts associations).
+                $owKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\{0}\{1}' -f $op.extension, $op.kind
+                $owCurrent = '<absent>'
+                if (Test-Path -LiteralPath $owKey) {
+                    try {
+                        $owItem = Get-Item -LiteralPath $owKey -ErrorAction Stop
+                        if ($op.kind -eq 'OpenWithList') {
+                            foreach ($valueName in @($owItem.GetValueNames())) {
+                                if ($valueName -ieq 'MRUList') { continue }
+                                $data = [string]$owItem.GetValue($valueName)
+                                if ($data -ieq [string]$op.entry) {
+                                    $owCurrent = '{0}={1}' -f $valueName, $data
+                                    break
+                                }
+                            }
+                        }
+                        else {
+                            if ($null -ne $owItem.GetValue([string]$op.entry)) {
+                                $owCurrent = '<present>'
+                            }
+                        }
+                    }
+                    catch {
+                        $owCurrent = '<absent>'
+                    }
+                }
+                $plan += [pscustomobject]@{
+                    Op = 'shell.openwith.remove'
+                    Target = '{0}|{1}|{2}' -f $op.extension, $op.kind, $op.entry
+                    Current = $owCurrent
+                    CurrentType = $null
+                    New = '<removed>'
+                    NewType = $null
+                }
+            }
             default {
                 throw "Unsupported op type: $($op.type)"
             }
@@ -381,6 +456,90 @@ function Invoke-DomovoyFeature {
                         previousLastAccess = $previous['lastAccess']
                     }
                 }
+                'shell.handler.remove' {
+                    $keyPath = '{0}:\Software\Classes\{1}\shellex\ContextMenuHandlers\{2}' -f $op.hive, $op.class, $op.handler
+                    $tree = Get-DomovoyRegKeyTree -Path $keyPath
+                    $snapshot += @{
+                        op = 'shell.handler.remove'
+                        key = $keyPath
+                        keyExisted = ($null -ne $tree)
+                        tree = $tree
+                    }
+                }
+                'shell.handler.block' {
+                    $blockedKey = 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Shell Extensions\Blocked'
+                    $snapshot += @{
+                        op = 'shell.handler.block'
+                        clsid = [string]$op.clsid
+                        previousValue = (Get-RegistryValueSafe -Path $blockedKey -Name $op.clsid)
+                    }
+                }
+                'shell.openwith.remove' {
+                    $owKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\{0}\{1}' -f $op.extension, $op.kind
+                    if ($op.kind -eq 'OpenWithList') {
+                        $removedLetters = @()
+                        $mruExisted = $false
+                        $mruData = ''
+                        try {
+                            $listItem = Get-Item -LiteralPath $owKey -ErrorAction Stop
+                            foreach ($valueName in @($listItem.GetValueNames())) {
+                                if ($valueName -ieq 'MRUList') {
+                                    $mruExisted = $true
+                                    $mruData = [string]$listItem.GetValue($valueName)
+                                    continue
+                                }
+                                if ([string]$listItem.GetValue($valueName) -ieq [string]$op.entry) {
+                                    $removedLetters += @{
+                                        letter = [string]$valueName
+                                        data = [string]$listItem.GetValue($valueName)
+                                    }
+                                }
+                            }
+                        }
+                        catch {
+                            # No OpenWithList key for this extension: nothing to remove.
+                        }
+                        $snapshot += @{
+                            op = 'shell.openwith.remove'
+                            extension = [string]$op.extension
+                            kind = 'OpenWithList'
+                            entry = [string]$op.entry
+                            valueExisted = (@($removedLetters).Count -gt 0)
+                            removedLetters = @($removedLetters)
+                            mruExisted = $mruExisted
+                            previousMrulist = $mruData
+                        }
+                    }
+                    else {
+                        $existed = $false
+                        $prevData = $null
+                        $prevKind = 'String'
+                        try {
+                            $progItem = Get-Item -LiteralPath $owKey -ErrorAction Stop
+                            $raw = $progItem.GetValue([string]$op.entry)
+                            if ($null -ne $raw) {
+                                $existed = $true
+                                $prevData = $raw
+                                $prevKind = [string]$progItem.GetValueKind([string]$op.entry)
+                            }
+                        }
+                        catch {
+                            # No OpenWithProgids key for this extension.
+                        }
+                        if ($existed -and $prevKind -eq 'Binary' -and $null -ne $prevData) {
+                            $prevData = [Convert]::ToBase64String([byte[]]$prevData)
+                        }
+                        $snapshot += @{
+                            op = 'shell.openwith.remove'
+                            extension = [string]$op.extension
+                            kind = 'OpenWithProgids'
+                            entry = [string]$op.entry
+                            valueExisted = $existed
+                            previousData = $prevData
+                            previousKind = $prevKind
+                        }
+                    }
+                }
             }
         }
 
@@ -478,6 +637,61 @@ function Invoke-DomovoyFeature {
                                 Set-DomovoyTimestamp -Path $op.path -Field $field -Value ([string]$opProp.Value)
                             }
                         }
+                    }
+                }
+                'shell.handler.remove' {
+                    $keyPath = '{0}:\Software\Classes\{1}\shellex\ContextMenuHandlers\{2}' -f $op.hive, $op.class, $op.handler
+                    if (Test-Path -LiteralPath $keyPath) {
+                        Remove-Item -LiteralPath $keyPath -Recurse -Force
+                    }
+                }
+                'shell.handler.block' {
+                    $blockedKey = 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Shell Extensions\Blocked'
+                    if (-not (Test-Path -LiteralPath $blockedKey)) {
+                        $null = New-Item -Path $blockedKey -ItemType Directory -Force
+                    }
+                    # Idempotent (I6): an existing Blocked entry is never
+                    # clobbered - the op adds the block, not rewrites it.
+                    $existing = Get-RegistryValueSafe -Path $blockedKey -Name $op.clsid
+                    if ($existing -eq '<unset>') {
+                        $blockData = if ($op.PSObject.Properties['reason']) { [string]$op.reason } else { '' }
+                        $null = New-ItemProperty -LiteralPath $blockedKey -Name $op.clsid -Value $blockData -PropertyType String -Force
+                    }
+                }
+                'shell.openwith.remove' {
+                    $owKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\{0}\{1}' -f $op.extension, $op.kind
+                    if ($op.kind -eq 'OpenWithList') {
+                        $letters = @()
+                        try {
+                            $listItem = Get-Item -LiteralPath $owKey -ErrorAction Stop
+                            foreach ($valueName in @($listItem.GetValueNames())) {
+                                if ($valueName -ieq 'MRUList') { continue }
+                                if ([string]$listItem.GetValue($valueName) -ieq [string]$op.entry) {
+                                    $letters += $valueName
+                                }
+                            }
+                        }
+                        catch {
+                            $letters = @()
+                        }
+                        foreach ($letter in $letters) {
+                            Remove-ItemProperty -LiteralPath $owKey -Name $letter -ErrorAction SilentlyContinue
+                        }
+                        if ($letters.Count -gt 0) {
+                            $mru = [string]$listItem.GetValue('MRUList')
+                            foreach ($letter in $letters) {
+                                $mru = $mru.Replace($letter, '')
+                            }
+                            if ($mru -eq '') {
+                                Remove-ItemProperty -LiteralPath $owKey -Name 'MRUList' -ErrorAction SilentlyContinue
+                            }
+                            else {
+                                $null = New-ItemProperty -LiteralPath $owKey -Name 'MRUList' -Value $mru -PropertyType String -Force
+                            }
+                        }
+                    }
+                    else {
+                        Remove-ItemProperty -LiteralPath $owKey -Name ([string]$op.entry) -ErrorAction SilentlyContinue
                     }
                 }
             }

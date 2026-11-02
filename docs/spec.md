@@ -1,6 +1,6 @@
 # Техническая спецификация ДОМОВОЙ
 
-Версия документа: 0.3.0 · Статус: активный прототип · Обновлён: 2026-11-02
+Версия документа: 1.4.0 · Статус: сопровождается · Обновлён: 2026-11-03
 
 ---
 
@@ -31,7 +31,7 @@
 - Не антивирус и не «оптимизатор-ускоритель» с пустыми обещаниями.
 - Не система резервного копирования всего ПК (только то, что трогаем сами).
 - Не инструмент удалённого/корпоративного принуждения (локальная машина, локальный админ).
-- Не замена групповым политикам — наоборот, экспорт в них запланирован (v0.7).
+- Не замена групповым политикам — наоборот, экспорт в них реализован (v0.7, `Export-DomovoyPolicy`).
 
 ---
 
@@ -41,10 +41,11 @@
 |---|---|
 | **Функция (Feature)** | Единица твика с манифестом: id, операции, пробы, откат |
 | **Манифест** | JSON-файл декларативного описания функции (`schema/features.schema.json`) |
-| **Операция (op)** | Атомарное действие: `registry.set`, `registry.delete`, `service.startup`, `service.stop`, `appx.remove`, `file.attribute` |
+| **Операция (op)** | Атомарное действие одним из 13 op-типов — полный список с контрактами в §5.1 и `docs/ops.md` |
 | **Проба (probe/verify)** | Проверка фактического состояния, соответствующая операции |
 | **Снимок (snapshot)** | Значения ДО применения, восстановимые при undo |
 | **Журнал (Ledger)** | Append-only JSONL-файл всех событий изменения состояния |
+| **Группа (group)** | JSON-пакет функций с зависимостями и потолком риска (§5.7, v1.3) |
 | **Дрейф (drift)** | Расхождение фактического состояния с зафиксированным ожидаемым |
 | **Dry-run** | Показ плана изменений без применения (режим по умолчанию) |
 
@@ -65,7 +66,7 @@
 
 ## 4. Архитектура верхнего уровня
 
-CLI-first. GUI — отдельный слой не раньше v0.7 (см. `roadmap.md`).
+CLI-first. GUI — тонкий клиент поверх CLI (v0.7, `Show-Domovoy`, см. `gui.md`).
 Модуль `Domovoy` не содержит сетевых вызовов вообще — это инвариант I4 (§7).
 
 ---
@@ -89,7 +90,7 @@ verify[]    — пробы эффекта (обязательно ≥1)
 references[]— ссылки на документацию Microsoft (обязательно, https)
 ```
 
-Типы операций (v0.3):
+Типы операций (13, по вехам v0.2–v1.4; полные контракты — `docs/ops.md`):
 
 | op | поля | обратная операция из снимка |
 |---|---|---|
@@ -99,15 +100,25 @@ references[]— ссылки на документацию Microsoft (обяза
 | `service.stop` | `name` | запуск службы, если до твика она была `Running`; остановка, если была `Stopped` |
 | `appx.remove` | `name, removeProvisioned?` | пере-регистрация пакета из места установки (без сети); provisioning не восстанавливается — честный отчёт |
 | `file.attribute` | `path, attributes, allowMissing?` | точный прежний набор атрибутов (бит `Directory` сохраняется) |
+| `scheduler.task` (v0.4) | `taskPath, taskName, state` | возврат задачи в прежнее состояние (`Disabled`/`Enabled`) |
+| `network.dns` (v0.6) | `interfaceAlias?, servers[]` | восстановление прежних серверов адаптера(ов) |
+| `network.proxy` (v1.1) | `mode: off \| server \| pac`, `proxyServer?`, `bypassLocal?` | точное восстановление тройки `ProxyEnable/ProxyServer/AutoConfigURL`; ненастроенный ранее прокси остаётся ненастроенным, не «пересоздаётся выключенным» |
+| `file.timestamp` (v1.2) | `path, creation?, lastWrite?, lastAccess?` | восстановление запрошенных штампов из снимка; отсутствие пути — как отсутствие |
+| `shell.handler.remove` (v1.4, №81) | `hive, class, handler` | пересоздание точного ДЕРЕВА ключа обработчика из снимка (`Restore-DomovoyRegKeyTree`); если обработчика не было — восстановление отсутствия. Approved-список и чужие CLSID не трогаются |
+| `shell.handler.block` (v1.4, №81) | `clsid, reason?` | прежнее значение в документированном Blocked-списке (`HKLM:\...\Shell Extensions\Blocked`) или удаление записи, если её не было; регистрация расширения не трогается |
+| `shell.openwith.remove` (v1.4, №81) | `extension, kind (OpenWithList \| OpenWithProgids), entry` | восстановление точных удалённых букв с данными и точной строки `MRUList` (или её отсутствия) / точного типа и данных значения |
 
-Типы проб (v0.3): `registry.set` (равенство значения), `registry.absent` (значение
-отсутствует), `service.startup` (тип запуска), `service.status` (фактический статус),
-`appx.absent` (пакет отсутствует), `file.attributes` (все перечисленные атрибуты установлены).
+Типы проб (14): `registry.set` (равенство значения с типом), `registry.absent`,
+`service.startup` (тип запуска), `service.status` (фактический статус),
+`appx.absent`, `appx.present` (v0.6), `file.attributes` (полный набор),
+`scheduler.taskState` (v0.4), `network.dns` (v0.6), `network.proxy` (v1.1,
+точная тройка, отсутствие = `<unset>`), `file.timestamp` (v1.2, незакреплённые
+поля = `<any>`), `shell.handler.absent` / `shell.handler.blocked` /
+`shell.openwith.absent` (v1.4, №81).
 
-Планируемые типы операций: `scheduler.task`, `service.config`,
-`profile.export` (см. `roadmap.md`).
 **Инвариант расширения:** новый op-тип принимается только вместе с проекциями
-probe / snapshot / undo (§6.4).
+probe / snapshot / undo (§6.4); в v1.4 правило соблюдено на всех 13 op-типах —
+каждый документирован в `docs/ops.md`.
 
 ### 5.2. Снимок
 
@@ -115,7 +126,10 @@ probe / snapshot / undo (§6.4).
 операцию манифеста, собранную перед применением. Дополнительно: `registry.set` несёт
 `pathExisted` (существовал ли ключ до твика), `appx.remove` — `packageFullName`,
 `installLocation`, `provisionedPackageName`, `file.attribute` — `previousAttributes`,
-`scheduler.task` — `previousState`.
+`scheduler.task` — `previousState`, `shell.handler.remove` — полное дерево ключа
+(`tree`, `keyExisted`), `shell.handler.block` — `previousValue` (или `<unset>`),
+`shell.openwith.remove` — `removedLetters` с данными и `previousMrulist` (для
+OpenWithList) либо `previousKind`/`previousData` (для OpenWithProgids).
 
 ### 5.3. Профиль
 
@@ -187,6 +201,18 @@ append-only: только по определённому правилу, тол
 └── backups/                     # экспорты состояния (Backup-DomovoyServiceState)
 ```
 
+### 5.7. Группы функций (v1.3, №102)
+
+JSON по схеме `schema/groups.schema.json`: `id`, `title`, `maxRisk`,
+`description` и источник содержимого — `dependsOn[]` (другие группы),
+`profiles[]` и/или `features[]` (id функций). Группа — данные, не код:
+`Get-DomovoyGroup` резолвит зависимости топологически (цикл — честная ошибка
+с полной цепочкой), `Invoke-DomovoyGroup` применяет в порядке
+зависимости → зависимая, с потолком риска, честной атрибуцией каждой строки
+(профиль/группа/прямое включение, дубликаты — по первому источнику) и
+событием `group.apply` в журнал (каждая функция группы дополнительно пишет
+свой `feature.apply`). Группа без единого источника содержимого не загружается.
+
 ---
 
 ## 6. Алгоритмы
@@ -249,7 +275,9 @@ append-only: только по определённому правилу, тол
 
 ---
 
-## 8. Интерфейс команд (v0.5)
+## 8. Интерфейс команд (52 публичных, синхронизировано с `Domovoy.psd1`)
+
+Ядро состояния:
 
 | Команда | Назначение |
 |---|---|
@@ -258,28 +286,87 @@ append-only: только по определённому правилу, тол
 | `Invoke-DomovoyFeature` | план (dry-run) или применение с снимком и записью в журнал; `Changes` — что реально изменилось |
 | `Undo-DomovoyFeature` | откат функции из последнего снимка |
 | `Get-DomovoyLedger` | чтение журнала, фильтры по функции/событию |
-| `Invoke-DomovoyDriftScan` | скан дрейфа по всем применённым функциям |
 | `Test-DomovoyEffect` | пробы эффекта по функции |
-| `Backup-DomovoySnapshot` | явный снимок состояния функции в файл |
-| `Backup-DomovoyServiceState` | экспорт всей таблицы служб в JSON (только чтение) |
-| `Invoke-DomovoyCleanup` | отчёт об объёме temp (dry-run по умолчанию) и очистка старых файлов с измеримым до/после и записью факта в журнал |
+| `Invoke-DomovoyDriftScan` | скан дрейфа по всем применённым функциям |
+| `Invoke-DomovoyAutoHeal` | opt-in авто-лечение дрейфа ре-apply'ом (№58) |
+| `Register-DomovoyWatchdog` | opt-in задача расписания для дозора дрейфа (№58) |
+| `Unregister-DomovoyWatchdog` | снятие задачи дозора |
+| `Test-DomovoyLedgerIntegrity` | №103: проверка хеш-цепочки журнала (`ok`/`broken` с номером строки/`absent`) |
+| `Get-DomovoyLedgerSchema` | №101: инвентаризация схемы журнала (legacy/current/future) |
+| `Invoke-DomovoyLedgerMigration` | №101: явная миграция схемы журнала с побайтовым бэкапом |
+| `Get-DomovoyChangeReport` | №63: «что изменилось с момента X» — по журналу, с датами |
+
+Каталог и пакеты:
+
+| Команда | Назначение |
+|---|---|
 | `Get-DomovoyProfile` | каталог профилей (JSON-пакеты с потолком риска) |
 | `Invoke-DomovoyProfile` | суммарный dry-run-план профиля или применение по-функционально |
+| `Get-DomovoyGroup` | №102: каталог групп, топологический порядок зависимостей |
+| `Invoke-DomovoyGroup` | №102: применение группы с зависимостями, атрибуцией и `group.apply` в журнале |
+| `Export-DomovoyPolicy` | v0.7: экспорт применённого в GPO/Intune-формат |
+
+Бэкап и снимки:
+
+| Команда | Назначение |
+|---|---|
+| `Backup-DomovoySnapshot` | явный снимок состояния функции в файл |
+| `Backup-DomovoyServiceState` | экспорт всей таблицы служб в JSON (только чтение) |
+| `Backup-DomovoyTaskState` | v1.1: экспорт таблицы задач планировщика в JSON (только чтение) |
+| `Backup-DomovoyBitLockerKey` | экспорт ключей восстановления BitLocker в хранилище |
 | `New-DomovoyRestorePoint` | точка восстановления системы (обёртка `Checkpoint-Computer`) |
-| `Get-DomovoyTelemetryReport` | №15: фактические значения телеметрических политик одним списком (только чтение) |
-| `Get-DomovoyStartupInventory` | №41: документированные Run/RunOnce (только чтение) |
-| `Get-DomovoyDriverInventory` | №45: инвентаризация драйверов; `-Export` — №42, JSON-снимок в хранилище |
-| `Get-DomovoyBitLockerStatus` | №49: состояние BitLocker по томам (только чтение) |
-| `Get-DomovoyChangeReport` | №63: «что изменилось с момента X» — по журналу, с датами |
+
+Инспекции (только чтение):
+
+| Команда | Назначение |
+|---|---|
+| `Get-DomovoyTelemetryReport` | №15: фактические значения телеметрических политик одним списком |
+| `Get-DomovoyStartupInventory` | №41: документированные Run/RunOnce |
+| `Get-DomovoyDriverInventory` | №45: инвентаризация драйверов; `-Export` — №42, JSON-снимок |
+| `Get-DomovoyDriverRollbackReport` | v1.1: отчёт по старым/дублирующим драйверам |
+| `Get-DomovoyLsaStatus` | №94: аудит LSA/защиты учётных данных (RunAsPPL, NTLM и пр.) |
+| `Get-DomovoyBitLockerStatus` | №49: состояние BitLocker по томам |
+| `Get-DomovoyNetworkReport` | v1.1: адаптеры, DNS и оба слоя прокси (только чтение) |
+| `Get-DomovoyShellMenuReport` | №104: аудит обработчиков контекстного меню и «Открыть с помощью» |
+| `Get-DomovoySmartScreenStatus` | №95: аудит политик SmartScreen и подписи SMB |
+| `Get-DomovoyPrivilege` | №52: привилегии токена — честная таблица |
+
+Обслуживание и сеть:
+
+| Команда | Назначение |
+|---|---|
+| `Invoke-DomovoyCleanup` | отчёт об объёме temp (dry-run по умолчанию) и очистка старых файлов с измеримым до/после |
+| `Invoke-DomovoyEventLogCleanup` | №38: отчёт по журналам событий; очистка только с `-Apply`, факт в журнал |
+| `Invoke-DomovoyMemoryTrim` | №40: тримминг рабочих множеств, честная пометка «временно» |
+| `Invoke-DomovoySystemIntegrityCheck` | №51: sfc/DISM; полный вывод в хранилище, факт в журнал |
+| `Invoke-DomovoyComponentStoreCleanup` | v1.2: обслуживание хранилища компонентов (анализ по умолчанию) |
+| `Invoke-DomovoyDriverDedup` | удаление дублирующих пакетов драйверов из хранилища |
 | `Invoke-DomovoyNetworkReset` | №32: сброс winsock/IP, снапшот снимаемых настроек; dry-run по умолчанию |
 | `Undo-DomovoyNetworkReset` | №32: восстановление статических IP/DNS из снапшота последнего сброса |
-| `Invoke-DomovoyEventLogCleanup` | №38: отчёт по журналам событий; очистка только с `-Apply`, факт в журнал |
-| `Invoke-DomovoyMemoryTrim` | №40: тримминг рабочих множеств (EmptyWorkingSet), честная пометка «временно» |
-| `Invoke-DomovoySystemIntegrityCheck` | №51: sfc/DISM; полный вывод в хранилище, факт в журнал |
+| `Export-DomovoyNetworkState` | v1.1: экспорт DNS и прокси в JSON (только чтение) |
+| `Restore-DomovoyNetworkState` | v1.1: применение сетевого состояния из экспорта |
+
+Привилегии и владение файлами:
+
+| Команда | Назначение |
+|---|---|
+| `Enable-DomovoyPrivilege` | №52: включение привилегии в токене, факт в журнал |
+| `Disable-DomovoyPrivilege` | №52: отключение привилегии, факт в журнал |
+| `Set-DomovoyFileOwner` | смена владельца файла/папки, прежний владелец — в снимок |
+| `Undo-DomovoyFileOwner` | возврат прежнего владельца из снимка |
+| `Invoke-DomovoyFileAttributeClear` | №47: снятие атрибутов с чужих файлов, прежние наборы — в журнал |
+| `Undo-DomovoyFileAttributeClear` | восстановление прежних атрибутов из журнала |
+
+Тема и GUI:
+
+| Команда | Назначение |
+|---|---|
+| `Switch-DomovoyTheme` | №30/31: тёмная/светлая тема приложений |
+| `Show-Domovoy` | v0.7: тонкий GUI-клиент поверх тех же CLI-команд |
 
 ---
 
-## 9. Известные ограничения (честно, v0.5)
+## 9. Известные ограничения (честно)
 
 1. `appx.remove`: undo пере-регистрирует пакет только если файлы пакета ещё на
    диске; если удалены — честный отчёт и подсказка документированного источника
@@ -310,6 +397,11 @@ append-only: только по определённому правилу, тол
     DISM с изменением хранилища компонентов — вне модуля.
 12. `Get-DomovoyBitLockerStatus` только отображает состояние; включение/выключение
     шифрования — за рамками модуля. На редакциях без BitLocker-модуля — честная ошибка.
+13. Shell-операции (v1.4, №81): `shell.handler.block` не удаляет регистрацию
+    расширения — отключает её документированным Blocked-списком Windows;
+    `shell.openwith.remove` снимает только подсказки «Открыть с помощью» и
+    не трогает ассоциацию (`UserChoice`); undo восстанавливает ровно то,
+    что захватил снимок, и обещает только это.
 
 ---
 

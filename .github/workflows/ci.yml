@@ -3,9 +3,18 @@ name: CI
 on:
   push:
     branches: [ main ]
+    # v1.5 (item 6a): tag pushes also run CI, so release.yml can gate on a
+    # green run of exactly the tagged commit.
+    tags: [ 'v*' ]
   pull_request:
     branches: [ main ]
   workflow_dispatch:
+
+# v1.5 (item 8): one CI run per ref; a superseded push or tag cancels the
+# outdated run instead of queuing behind it.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
@@ -13,14 +22,17 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: "PSScriptAnalyzer (gate: Error severity)"
         shell: pwsh
         run: |
           Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
           Install-Module -Name PSScriptAnalyzer -Scope CurrentUser -Force
-          $results = Invoke-ScriptAnalyzer -Path src -Recurse
+          # v1.4 (item 3): shared repo-root settings file. The gate stays
+          # Error-only; Warnings are reported but non-blocking; excluded rules
+          # are listed with reasons inside PSScriptAnalyzerSettings.psd1.
+          $results = Invoke-ScriptAnalyzer -Path src -Recurse -Settings PSScriptAnalyzerSettings.psd1
           foreach ($r in $results) {
             Write-Host ("{0} {1}:{2} {3}" -f $r.Severity, $r.ScriptName, $r.Line, $r.Message)
           }
@@ -39,6 +51,16 @@ jobs:
           $config.Run.Path = 'tests'
           $config.Run.Exit = $false
           $config.Output.Verbosity = 'Detailed'
+          # v1.5 (item 5): record a real code-coverage baseline and emit NUnit
+          # test results as an artifact.
+          $config.CodeCoverage.Enabled = $true
+          $config.CodeCoverage.Path = 'src/Domovoy/**/*.ps1'
+          $config.TestResult.Enabled = $true
+          $config.TestResult.OutputPath = 'testResults.xml'
+          # PassThru is required for Invoke-Pester to return the run result
+          # object: without it $result is null and neither the failure loop
+          # nor the coverage block below would ever see real data.
+          $config.Run.PassThru = $true
           $result = Invoke-Pester -Configuration $config
           foreach ($test in @($result.Failed)) {
             foreach ($err in @($test.ErrorRecord)) {
@@ -49,7 +71,32 @@ jobs:
             }
           }
           Write-Host ("Tests passed: {0}, failed: {1}" -f $result.PassedCount, $result.FailedCount)
+          # v1.5 (item 5): the coverage baseline is recorded as a fact for
+          # future comparison, not invented and not gated.
+          $cc = $result.CodeCoverage
+          $analyzed = [int]$cc.CommandsAnalyzedCount
+          $executed = [int]$cc.CommandsExecutedCount
+          if ($analyzed -gt 0) {
+            $pct = [math]::Round((100.0 * $executed / $analyzed), 1)
+          }
+          else {
+            $pct = 0
+          }
+          $pctText = $pct.ToString('0.0', [System.Globalization.CultureInfo]::InvariantCulture)
+          $covLine = "Coverage baseline: {0}% (commands {1}/{2}). Threshold is recorded as fact, not invented." -f $pctText, $executed, $analyzed
+          Write-Host $covLine
+          Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value $covLine
           if ($result.FailedCount -gt 0) { exit 1 }
+
+      - name: Upload NUnit test results
+        # v1.5 (item 5): upload the NUnit XML even when tests fail, so the
+        # result file can be inspected without re-running the suite.
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: test-results
+          path: testResults.xml
+          retention-days: 7
 
       - name: Validate manifests, profiles and groups against JSON schemas
         shell: pwsh
@@ -66,6 +113,121 @@ jobs:
             Test-Json -Json (Get-Content -LiteralPath $_.FullName -Raw -Encoding UTF8) -SchemaFile 'schema/groups.schema.json'
             Write-Host "OK $($_.Name)"
           }
+
+      - name: Packaging verification (catalog ships inside the artifact)
+        shell: pwsh
+        run: |
+          # v1.4 (item 1): regression gate for bug P0-1 - the release packaging
+          # must deliver the feature catalog inside the artifact. This step
+          # recreates the exact staging layout of release.yml and then
+          # exercises the module's own config resolution: no
+          # DOMOVOY_FEATURES_DIR override and a neutral working directory, so
+          # the repository checkout cannot satisfy the resolver.
+          $ErrorActionPreference = 'Stop'
+          try {
+            $stage = Join-Path $env:RUNNER_TEMP 'stage'
+            Remove-Item -LiteralPath $stage -Recurse -Force -ErrorAction SilentlyContinue
+            New-Item -ItemType Directory -Path (Join-Path $stage 'Domovoy') -Force | Out-Null
+            Copy-Item -Path 'src/Domovoy/*' -Destination (Join-Path $stage 'Domovoy') -Recurse
+            Copy-Item -Path 'config','schema' -Destination (Join-Path $stage 'Domovoy/') -Recurse
+            Copy-Item -Path 'README.md','LICENSE' -Destination $stage
+
+            Remove-Item Env:DOMOVOY_FEATURES_DIR -ErrorAction SilentlyContinue
+            Set-Location $env:RUNNER_TEMP
+
+            Import-Module -Name (Join-Path $stage 'Domovoy/Domovoy.psd1') -Force
+            $features = @(Get-DomovoyFeature)
+            $profiles = @(Get-DomovoyProfile)
+            $groups = @(Get-DomovoyGroup)
+            Write-Host ("Staged artifact: features={0}, profiles={1}, groups={2}" -f $features.Count, $profiles.Count, $groups.Count)
+
+            $failed = $false
+            # 56 = current manifest count; -ge so the gate does not rot when
+            # the catalog grows.
+            if ($features.Count -lt 56) {
+              Write-Host ("::error::Staged catalog has {0} features, expected >= 56 - the shipped artifact would not see any feature (regression of P0-1)" -f $features.Count)
+              $failed = $true
+            }
+            if ($profiles.Count -lt 2) {
+              Write-Host ("::error::Staged artifact carries {0} profiles, expected >= 2" -f $profiles.Count)
+              $failed = $true
+            }
+            if ($groups.Count -lt 2) {
+              Write-Host ("::error::Staged artifact carries {0} groups, expected >= 2" -f $groups.Count)
+              $failed = $true
+            }
+            $dups = @($features | Group-Object -Property Id | Where-Object { $_.Count -gt 1 })
+            foreach ($d in $dups) {
+              Write-Host ("::error::Duplicate feature id '{0}' occurs {1} times in the staged catalog" -f $d.Name, $d.Count)
+              $failed = $true
+            }
+            if ($failed) { exit 1 }
+            Write-Host 'Packaging verification passed: the staged artifact carries the full catalog.'
+          }
+          catch {
+            Write-Host ("::error::Packaging verification failed: {0}" -f $_.Exception.Message)
+            exit 1
+          }
+
+      - name: Documentation freshness gate
+        shell: pwsh
+        run: |
+          # v1.4 (item 2): keep the prose honest.
+          # (a) every "N публичн*" claim in README.md must equal the real
+          #     FunctionsToExport count of the module manifest;
+          # (b) every version marked "запланировано" in docs/features.md must
+          #     NOT have a CHANGELOG section yet (a released version always has
+          #     one) - catches silently carried-over planned features.
+          $ErrorActionPreference = 'Stop'
+          $failed = $false
+
+          # (a) README public-command claims vs manifest FunctionsToExport
+          $manifest = Import-PowerShellDataFile -Path 'src/Domovoy/Domovoy.psd1'
+          $exported = @($manifest.FunctionsToExport).Count
+          $readme = Get-Content -LiteralPath 'README.md' -Raw -Encoding UTF8
+          $claims = @([regex]::Matches($readme, '(\d+)\s+публичн'))
+          if ($claims.Count -eq 0) {
+            Write-Host '::error::README.md contains no "N публичн*" public-command claim - the freshness gate needs at least one claim to verify'
+            $failed = $true
+          }
+          foreach ($c in $claims) {
+            $claimed = [int]$c.Groups[1].Value
+            Write-Host ("README claim: {0} public commands (manifest exports: {1})" -f $claimed, $exported)
+            if ($claimed -ne $exported) {
+              Write-Host ("::error::README.md claims {0} public commands but Domovoy.psd1 exports {1} - update the README" -f $claimed, $exported)
+              $failed = $true
+            }
+          }
+
+          # (b) planned versions in docs/features.md must not be released yet.
+          # Versions are matched in tight proximity to the word
+          # "запланировано" (either word order, markdown bold tolerated), so
+          # unrelated version mentions on the same line (e.g. "перенос из
+          # v1.2") are not counted as planned.
+          $featuresDoc = Get-Content -LiteralPath 'docs/features.md' -Raw -Encoding UTF8
+          $opts = [System.Text.RegularExpressions.RegexOptions]::IgnoreCase
+          $planned = @()
+          foreach ($m in [regex]::Matches($featuresDoc, 'запланировано\s+v(\d+\.\d+(?:\.\d+)?)', $opts)) {
+            $planned += $m.Groups[1].Value
+          }
+          foreach ($m in [regex]::Matches($featuresDoc, 'v(\d+\.\d+(?:\.\d+)?)\s*\*{0,2}\s*\(\s*запланировано', $opts)) {
+            $planned += $m.Groups[1].Value
+          }
+          $planned = @($planned | Sort-Object -Unique)
+          $plannedText = if ($planned.Count -gt 0) { $planned -join ', ' } else { '(none)' }
+          Write-Host ("Planned versions in docs/features.md: {0}" -f $plannedText)
+          $changelog = Get-Content -LiteralPath 'CHANGELOG.md' -Encoding UTF8
+          foreach ($v in $planned) {
+            $pattern = '^##\s*\[' + [regex]::Escape($v) + '(\.\d+)*\]'
+            $hits = @($changelog | Where-Object { $_ -match $pattern })
+            foreach ($h in $hits) {
+              Write-Host ("::error::docs/features.md still plans v{0} but CHANGELOG.md already has section '{1}' - silently carried-over feature detected" -f $v, $h.Trim())
+              $failed = $true
+            }
+          }
+
+          if ($failed) { exit 1 }
+          Write-Host 'Documentation freshness gate passed.'
 
       - name: Signature check (verifies when a signature is present)
         shell: pwsh
@@ -91,3 +253,60 @@ jobs:
           else {
             Write-Host "No signatures present (no signing certificate configured) - accepted by design."
           }
+
+  ps51:
+    name: "PS 5.1 leg (windows-latest, experimental)"
+    runs-on: windows-latest
+    # Experimental until first observed green on a real runner; the v1.6 line
+    # turns this job blocking. The release gate (await-tests in release.yml)
+    # looks only at the main "test" job.
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Install Pester 5.7.1
+        shell: powershell
+        run: |
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+          Install-Module -Name Pester -RequiredVersion 5.7.1 -Scope CurrentUser -Force -SkipPublisherCheck
+
+      - name: Import the module on Windows PowerShell 5.1
+        shell: powershell
+        run: |
+          # The manifest declares PowerShellVersion 5.1 - prove it imports on
+          # the real 5.1 engine, not only on pwsh 7.
+          Import-Module -Name (Join-Path -Path $env:GITHUB_WORKSPACE -ChildPath 'src/Domovoy/Domovoy.psd1') -Force
+          $m = Get-Module -Name Domovoy
+          Write-Host ("Imported Domovoy {0} on PS {1}" -f $m.Version, $PSVersionTable.PSVersion.ToString())
+
+      - name: Run the 5.1-safe Pester files
+        shell: powershell
+        run: |
+          # v1.5 (item 4): only the test files verified to be 5.1-safe run on
+          # this leg (no pwsh-7-only syntax; fixtures are registry- and
+          # temp-file based, which works on a windows runner).
+          Import-Module -Name Pester -RequiredVersion 5.7.1
+          Import-Module -Name (Join-Path -Path $env:GITHUB_WORKSPACE -ChildPath 'src/Domovoy/Domovoy.psd1') -Force
+          $config = New-PesterConfiguration
+          $config.Run.Path = @('tests/Domovoy.Loop.Tests.ps1', 'tests/Domovoy.Module.Tests.ps1')
+          $config.Run.Exit = $false
+          $config.Output.Verbosity = 'Detailed'
+          # PassThru is required for Invoke-Pester to return the run result
+          # object; without it $result is null and the gate below is inert.
+          $config.Run.PassThru = $true
+          $result = Invoke-Pester -Configuration $config
+          $lines = @(
+            "PS 5.1 leg - engine: $($PSVersionTable.PSVersion.ToString())",
+            "Files: tests/Domovoy.Loop.Tests.ps1, tests/Domovoy.Module.Tests.ps1",
+            "Tests passed: $($result.PassedCount), failed: $($result.FailedCount)"
+          )
+          foreach ($l in $lines) { Write-Host $l }
+          Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value ($lines -join "`n") -Encoding ASCII
+          foreach ($test in @($result.Failed)) {
+            foreach ($err in @($test.ErrorRecord)) {
+              $msg = ($err.Exception.Message -replace "`r?`n", ' ')
+              Write-Host ("::error::{0} :: {1}" -f $test.Path, $msg)
+            }
+          }
+          if ($result.FailedCount -gt 0) { exit 1 }

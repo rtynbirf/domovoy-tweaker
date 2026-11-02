@@ -181,6 +181,49 @@ function Test-DomovoyEffect {
                     $actual = ($actualParts -join ';')
                 }
             }
+            'shell.handler.absent' {
+                # Catalog 81: the handler registration key must be gone.
+                $keyPath = '{0}:\Software\Classes\{1}\shellex\ContextMenuHandlers\{2}' -f $probe.hive, $probe.class, $probe.handler
+                $target = $keyPath
+                $expected = '<absent>'
+                $actual = if (Test-Path -LiteralPath $keyPath) { '<present>' } else { '<absent>' }
+            }
+            'shell.handler.blocked' {
+                # Catalog 81: the CLSID must appear in the documented
+                # Blocked list (the registration itself stays untouched).
+                $blockedKey = 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Shell Extensions\Blocked'
+                $target = [string]$probe.clsid
+                $expected = '<blocked>'
+                $seen = Get-RegistryValueSafe -Path $blockedKey -Name $probe.clsid
+                $actual = if ($seen -eq '<unset>') { '<unblocked>' } else { '<blocked>' }
+            }
+            'shell.openwith.absent' {
+                # Catalog 81: the "Open with" suggestion must be gone
+                # for the extension (per-user FileExts associations).
+                $owKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\{0}\{1}' -f $probe.extension, $probe.kind
+                $target = '{0}|{1}|{2}' -f $probe.extension, $probe.kind, $probe.entry
+                $expected = '<absent>'
+                $found = $false
+                try {
+                    $owItem = Get-Item -LiteralPath $owKey -ErrorAction Stop
+                    if ($probe.kind -eq 'OpenWithList') {
+                        foreach ($valueName in @($owItem.GetValueNames())) {
+                            if ($valueName -ieq 'MRUList') { continue }
+                            if ([string]$owItem.GetValue($valueName) -ieq [string]$probe.entry) {
+                                $found = $true
+                                break
+                            }
+                        }
+                    }
+                    else {
+                        $found = ($null -ne $owItem.GetValue([string]$probe.entry))
+                    }
+                }
+                catch {
+                    $found = $false
+                }
+                $actual = if ($found) { '<present>' } else { '<absent>' }
+            }
             default {
                 $target = '<unknown-probe>'
                 $expected = '?'

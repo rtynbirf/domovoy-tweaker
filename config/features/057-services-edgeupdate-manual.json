@@ -1,0 +1,29 @@
+{
+  "id": "services.edgeupdate.manual",
+  "title": "Set the Edge Update service (edgeupdate) to Manual startup",
+  "version": "1.0.0",
+  "category": "services",
+  "risk": "medium",
+  "description": "Sets the Microsoft Edge Update Service (edgeupdate) startup type to Manual - not Disabled. Manual means Windows no longer proactively starts this service at boot, but the service stays startable on demand, so Edge updates still arrive when the updater is triggered (for example by a manual update check from the browser). Microsoft's service guidance carries the note 'Don't disable' for this service, which is why Disabled is deliberately never set. If you rely on fully automatic background Edge updates, do not apply this feature: security fixes then arrive only when the updater is triggered on demand. The previous startup type (the documented default is Automatic (Delayed Start)) is captured in a snapshot, restored by per-feature undo and the change is recorded in the ledger. On machines without the service the plan reports it honestly.",
+  "ops": [
+    {
+      "type": "service.startup",
+      "name": "edgeupdate",
+      "startupType": "Manual"
+    }
+  ],
+  "undo": {
+    "mode": "snapshot"
+  },
+  "verify": [
+    {
+      "type": "service.startup",
+      "name": "edgeupdate",
+      "startupType": "Manual"
+    }
+  ],
+  "references": [
+    "https://learn.microsoft.com/en-us/windows/iot/iot-enterprise/optimize/services",
+    "https://learn.microsoft.com/en-us/deployedge/microsoft-edge-update-policies"
+  ]
+}

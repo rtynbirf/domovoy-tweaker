@@ -222,6 +222,79 @@ function Undo-DomovoyFeature {
                         }
                     }
                 }
+                'shell.handler.remove' {
+                    # The exact registration captured before the apply is
+                    # recreated; if it did not exist, the absence is restored.
+                    if ($state.keyExisted -and $null -ne $state.tree) {
+                        if (Test-Path -LiteralPath $state.key) {
+                            Remove-Item -LiteralPath $state.key -Recurse -Force
+                        }
+                        $parent = Split-Path -Parent ([string]$state.key)
+                        Restore-DomovoyRegKeyTree -Tree $state.tree -ParentPath $parent
+                    }
+                    elseif (Test-Path -LiteralPath $state.key) {
+                        Remove-Item -LiteralPath $state.key -Recurse -Force
+                    }
+                }
+                'shell.handler.block' {
+                    $blockedKey = 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Shell Extensions\Blocked'
+                    if ($state.previousValue -eq '<unset>') {
+                        Remove-ItemProperty -LiteralPath $blockedKey -Name ([string]$state.clsid) -ErrorAction SilentlyContinue
+                    }
+                    elseif (Test-Path -LiteralPath $blockedKey) {
+                        $null = New-ItemProperty -LiteralPath $blockedKey -Name ([string]$state.clsid) -Value $state.previousValue -PropertyType String -Force
+                    }
+                }
+                'shell.openwith.remove' {
+                    $owKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\{0}\{1}' -f $state.extension, $state.kind
+                    if ($state.kind -eq 'OpenWithList') {
+                        # Restore the exact removed letters and the exact
+                        # MRUList string captured before the apply.
+                        foreach ($removed in @($state.removedLetters)) {
+                            $null = New-ItemProperty -LiteralPath $owKey -Name ([string]$removed.letter) -Value ([string]$removed.data) -PropertyType String -Force
+                        }
+                        if ($state.PSObject.Properties['mruExisted']) {
+                            if ($state.mruExisted) {
+                                $null = New-ItemProperty -LiteralPath $owKey -Name 'MRUList' -Value ([string]$state.previousMrulist) -PropertyType String -Force
+                            }
+                            else {
+                                Remove-ItemProperty -LiteralPath $owKey -Name 'MRUList' -ErrorAction SilentlyContinue
+                            }
+                        }
+                    }
+                    else {
+                        if ($state.valueExisted) {
+                            if (-not (Test-Path -LiteralPath $owKey)) {
+                                $null = New-Item -Path $owKey -ItemType Directory -Force
+                            }
+                            $kindName = [string]$state.previousKind
+                            $kind = [Microsoft.Win32.RegistryValueKind]::String
+                            if (-not [Enum]::TryParse([Microsoft.Win32.RegistryValueKind], $kindName, $true, [ref]$kind)) {
+                                $kind = [Microsoft.Win32.RegistryValueKind]::String
+                            }
+                            $restoreData = [string]$state.previousData
+                            switch ($kind.ToString()) {
+                                'Binary'      { $restoreData = [Convert]::FromBase64String([string]$state.previousData) }
+                                'MultiString' { $restoreData = [string[]]@($state.previousData | ForEach-Object { [string]$_ }) }
+                                'DWord'       { $restoreData = [int]$state.previousData }
+                                'QWord'       { $restoreData = [long]$state.previousData }
+                            }
+                            try {
+                                $owItem = Get-Item -LiteralPath $owKey -ErrorAction Stop
+                                $owItem.SetValue([string]$state.entry, $restoreData, $kind)
+                            }
+                            catch {
+                                # A None/Unknown kind cannot be stored back
+                                # as-is; the closest honest spelling is String.
+                                Write-Warning ("shell.openwith.remove undo: the exact value kind '{0}' could not be restored, the entry was recreated as String." -f $kindName)
+                                $null = New-ItemProperty -LiteralPath $owKey -Name ([string]$state.entry) -Value ([string]$state.previousData) -PropertyType String -Force
+                            }
+                        }
+                        elseif (Test-Path -LiteralPath $owKey) {
+                            Remove-ItemProperty -LiteralPath $owKey -Name ([string]$state.entry) -ErrorAction SilentlyContinue
+                        }
+                    }
+                }
             }
         }
 

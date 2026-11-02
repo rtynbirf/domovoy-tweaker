@@ -92,6 +92,28 @@ function Get-DomovoyChangeSet {
                 $key = 'file.timestamp|{0}' -f $item.path
                 $value = 'creation={0};lastWrite={1};lastAccess={2}' -f $item.previousCreation, $item.previousLastWrite, $item.previousLastAccess
             }
+            'shell.handler.remove' {
+                $key = 'shell.handler.absent|{0}' -f $item.key
+                $value = '<present>'
+                if ($item.keyExisted -and $null -ne $item.tree) {
+                    foreach ($captured in @($item.tree.values)) {
+                        if ([string]$captured.name -eq '') {
+                            $value = [string]$captured.data
+                        }
+                    }
+                }
+                elseif (-not $item.keyExisted) {
+                    $value = '<absent>'
+                }
+            }
+            'shell.handler.block' {
+                $key = 'shell.handler.blocked|{0}' -f $item.clsid
+                $value = if ($item.previousValue -eq '<unset>') { '<unblocked>' } else { '<blocked>' }
+            }
+            'shell.openwith.remove' {
+                $key = 'shell.openwith.absent|{0}|{1}|{2}' -f $item.extension, $item.kind, $item.entry
+                $value = if ($item.valueExisted) { '<present>' } else { '<absent>' }
+            }
         }
         if ($key) {
             $before[$key] = [string]$value
