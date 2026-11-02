@@ -58,12 +58,58 @@ function Undo-DomovoyFeature {
                 'registry.set' {
                     if ($state.previousValue -eq '<unset>') {
                         Remove-ItemProperty -LiteralPath $state.path -Name $state.name -ErrorAction SilentlyContinue
+                        # v0.3 (spec 9.1): when apply created the registry key itself,
+                        # undo removes the now-empty leaf key and climbs up through
+                        # empty ancestors so the pre-apply state is restored exactly.
+                        if ($state.PSObject.Properties['pathExisted'] -and -not $state.pathExisted) {
+                            $currentPath = $state.path
+                            while ($currentPath -and (Test-Path -LiteralPath $currentPath)) {
+                                $key = Get-Item -LiteralPath $currentPath
+                                if (@($key.GetValueNames()).Count -ne 0 -or @($key.GetSubKeyNames()).Count -ne 0) {
+                                    break
+                                }
+                                $parentPath = Split-Path -Parent $currentPath
+                                Remove-Item -LiteralPath $currentPath -Force
+                                if (-not $parentPath -or $parentPath -notmatch '^(HKLM|HKCU|HKCR|HKU):') {
+                                    break
+                                }
+                                $currentPath = $parentPath
+                            }
+                        }
                     }
                     elseif ($state.previousType -and $state.previousType -ne 'None') {
                         $null = New-ItemProperty -LiteralPath $state.path -Name $state.name -Value $state.previousValue -PropertyType $state.previousType -Force
                     }
                     else {
                         $null = New-ItemProperty -LiteralPath $state.path -Name $state.name -Value $state.previousValue -Force
+                    }
+                }
+                'appx.remove' {
+                    # Re-register the package from its install location when the
+                    # files are still on disk (documented mechanism, no network - I4).
+                    if ($state.PSObject.Properties['installLocation']) {
+                        $location = $state.installLocation
+                        if ($location -and $location -ne '<missing>') {
+                            $manifestPath = Join-Path -Path $location -ChildPath 'AppxManifest.xml'
+                            if (Test-Path -LiteralPath $manifestPath) {
+                                $null = Add-AppxPackage -Register $manifestPath -DisableDevelopmentMode -ErrorAction SilentlyContinue
+                            }
+                        }
+                    }
+                    # Provisioned removal is not restored in v0.3; the post-undo
+                    # verification reports this honestly instead of pretending.
+                }
+                'file.attribute' {
+                    if ($state.PSObject.Properties['previousAttributes'] -and
+                        $state.previousAttributes -ne '<missing>' -and
+                        (Test-Path -LiteralPath $state.path)) {
+                        $item = Get-Item -LiteralPath $state.path
+                        $target = [System.IO.FileAttributes]$state.previousAttributes
+                        if ($item.Attributes -band [System.IO.FileAttributes]::Directory) {
+                            # The Directory bit itself cannot be cleared; keep it.
+                            $target = $target -bor [System.IO.FileAttributes]::Directory
+                        }
+                        $item.Attributes = $target
                     }
                 }
                 'registry.delete' {

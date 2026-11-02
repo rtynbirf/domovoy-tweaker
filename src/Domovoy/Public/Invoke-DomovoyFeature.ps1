@@ -108,6 +108,31 @@ function Invoke-DomovoyFeature {
                     NewType = $null
                 }
             }
+            'appx.remove' {
+                $pkg = Get-AppxPackage -Name $op.name -ErrorAction SilentlyContinue
+                $plan += [pscustomobject]@{
+                    Op = 'appx.remove'
+                    Target = $op.name
+                    Current = if ($pkg) { $pkg.PackageFullName } else { '<missing>' }
+                    CurrentType = $null
+                    New = '<absent>'
+                    NewType = $null
+                }
+            }
+            'file.attribute' {
+                $current = '<missing>'
+                if (Test-Path -LiteralPath $op.path) {
+                    $current = [string](Get-Item -LiteralPath $op.path).Attributes
+                }
+                $plan += [pscustomobject]@{
+                    Op = 'file.attribute'
+                    Target = $op.path
+                    Current = $current
+                    CurrentType = $null
+                    New = (@($op.attributes) -join ',')
+                    NewType = $null
+                }
+            }
             default {
                 throw "Unsupported op type: $($op.type)"
             }
@@ -160,6 +185,7 @@ function Invoke-DomovoyFeature {
                         name = $op.name
                         previousValue = (Get-RegistryValueSafe -Path $op.path -Name $op.name)
                         previousType = $kind
+                        pathExisted = [bool](Test-Path -LiteralPath $op.path)
                     }
                 }
                 'service.startup' {
@@ -196,6 +222,34 @@ function Invoke-DomovoyFeature {
                         previousStatus = if ($service) { [string]$service.Status } else { '<missing>' }
                     }
                 }
+                'appx.remove' {
+                    $pkg = Get-AppxPackage -Name $op.name -ErrorAction SilentlyContinue
+                    $provName = '<missing>'
+                    if ($op.removeProvisioned) {
+                        $prov = Get-AppxProvisionedPackage -Online -ErrorAction SilentlyContinue |
+                            Where-Object { $_.DisplayName -eq $op.name } |
+                            Select-Object -First 1
+                        if ($prov) { $provName = $prov.PackageName }
+                    }
+                    $snapshot += @{
+                        op = 'appx.remove'
+                        name = $op.name
+                        packageFullName = if ($pkg) { $pkg.PackageFullName } else { '<missing>' }
+                        installLocation = if ($pkg) { $pkg.InstallLocation } else { '<missing>' }
+                        provisionedPackageName = $provName
+                    }
+                }
+                'file.attribute' {
+                    $previousAttributes = '<missing>'
+                    if (Test-Path -LiteralPath $op.path) {
+                        $previousAttributes = [string](Get-Item -LiteralPath $op.path).Attributes
+                    }
+                    $snapshot += @{
+                        op = 'file.attribute'
+                        path = $op.path
+                        previousAttributes = $previousAttributes
+                    }
+                }
             }
         }
 
@@ -218,6 +272,34 @@ function Invoke-DomovoyFeature {
                     $running = Get-Service -Name $op.name -ErrorAction SilentlyContinue
                     if ($running -and $running.Status -eq 'Running') {
                         Stop-Service -Name $op.name -Force -ErrorAction Stop
+                    }
+                }
+                'appx.remove' {
+                    $pkg = Get-AppxPackage -Name $op.name -ErrorAction SilentlyContinue
+                    if ($pkg) {
+                        Remove-AppxPackage -Package $pkg.PackageFullName -ErrorAction Stop
+                    }
+                    if ($op.removeProvisioned) {
+                        $provisioned = @(Get-AppxProvisionedPackage -Online -ErrorAction Stop |
+                            Where-Object { $_.DisplayName -eq $op.name })
+                        foreach ($provisionedItem in $provisioned) {
+                            $null = Remove-AppxProvisionedPackage -Online -PackageName $provisionedItem.PackageName -ErrorAction Stop
+                        }
+                    }
+                }
+                'file.attribute' {
+                    if (-not (Test-Path -LiteralPath $op.path)) {
+                        if (-not $op.allowMissing) {
+                            throw ("Path not found for file.attribute: {0}" -f $op.path)
+                        }
+                    }
+                    else {
+                        $item = Get-Item -LiteralPath $op.path
+                        $newAttributes = $item.Attributes
+                        foreach ($attrName in @($op.attributes)) {
+                            $newAttributes = $newAttributes -bor [System.IO.FileAttributes]::$attrName
+                        }
+                        $item.Attributes = $newAttributes
                     }
                 }
             }

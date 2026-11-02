@@ -3,7 +3,7 @@
 #
 @{
     RootModule = 'Domovoy.psm1'
-    ModuleVersion = '0.2.0'
+    ModuleVersion = '0.3.0'
     GUID = '8546e1cf-4418-4133-92f4-4adcb7897011'
     Author = 'rtynbirf'
     CompanyName = 'Domovoy contributors'
@@ -22,6 +22,9 @@
         'Invoke-DomovoyDriftScan',
         'Test-DomovoyEffect',
         'Backup-DomovoySnapshot',
+        'Backup-DomovoyServiceState',
+        'Get-DomovoyProfile',
+        'Invoke-DomovoyProfile',
         'New-DomovoyRestorePoint'
     )
     CmdletsToExport = @()
@@ -33,7 +36,7 @@
             Tags = @('Windows', 'Tweaker', 'Privacy', 'Telemetry', 'Debloat', 'Undo', 'Ledger', 'Drift')
             LicenseUri = 'https://github.com/rtynbirf/domovoy-tweaker/blob/main/LICENSE'
             ProjectUri = 'https://github.com/rtynbirf/domovoy-tweaker'
-            ReleaseNotes = 'v0.2.0: registry.delete and service.stop ops with snapshot undo, 8 documented service and privacy features (10 total), featureSource in ledger, end-to-end apply-undo tests.'
+            ReleaseNotes = 'v0.3.0: appx.remove and file.attribute ops with full projections (package re-register undo), profiles as declarative JSON with risk ceiling, service table export, registry key undo for apply-created keys, 11 documented features (21 total).'
         }
     }
 }

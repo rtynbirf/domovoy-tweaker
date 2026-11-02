@@ -68,6 +68,30 @@ function Test-DomovoyEffect {
                     $actual = '<missing>'
                 }
             }
+            'appx.absent' {
+                $target = $probe.name
+                $expected = '<absent>'
+                $pkg = Get-AppxPackage -Name $probe.name -ErrorAction SilentlyContinue
+                $actual = if ($pkg) { '<present>' } else { '<absent>' }
+            }
+            'file.attributes' {
+                $target = $probe.path
+                $requested = @($probe.attributes)
+                $expected = ($requested -join ',')
+                if (Test-Path -LiteralPath $probe.path) {
+                    $currentAttributes = (Get-Item -LiteralPath $probe.path).Attributes
+                    $present = @()
+                    foreach ($attrName in $requested) {
+                        if (($currentAttributes -band [System.IO.FileAttributes]::$attrName) -ne 0) {
+                            $present += $attrName
+                        }
+                    }
+                    $actual = ($present -join ',')
+                }
+                else {
+                    $actual = '<missing>'
+                }
+            }
             default {
                 $target = '<unknown-probe>'
                 $expected = '?'
