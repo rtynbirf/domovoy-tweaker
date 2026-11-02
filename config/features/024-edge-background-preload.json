@@ -1,0 +1,42 @@
+{
+  "id": "policy.edge.background.disabled",
+  "title": "Disable Microsoft Edge startup boost and background mode (documented policies)",
+  "version": "1.0.0",
+  "category": "apps",
+  "risk": "low",
+  "description": "Sets two documented Microsoft Edge group policies under HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge: StartupBoostEnabled=0 (no Edge preload at boot) and BackgroundModeEnabled=0 (Edge stops running in the background after the last window closes). Catalog 18 keeps Edge operations to documented mechanisms only; uninstalls or hacks are out of scope by design. The previous values and their types are captured in a snapshot and restored by per-feature undo.",
+  "ops": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Edge",
+      "name": "StartupBoostEnabled",
+      "value": 0,
+      "valueType": "DWord"
+    },
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Edge",
+      "name": "BackgroundModeEnabled",
+      "value": 0,
+      "valueType": "DWord"
+    }
+  ],
+  "undo": { "mode": "snapshot" },
+  "verify": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Edge",
+      "name": "StartupBoostEnabled",
+      "value": 0
+    },
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Edge",
+      "name": "BackgroundModeEnabled",
+      "value": 0
+    }
+  ],
+  "references": [
+    "https://learn.microsoft.com/deployedge/microsoft-edge-policies"
+  ]
+}

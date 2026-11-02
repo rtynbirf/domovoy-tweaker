@@ -87,16 +87,23 @@ function Undo-DomovoyFeature {
                 'appx.remove' {
                     # Re-register the package from its install location when the
                     # files are still on disk (documented mechanism, no network - I4).
+                    $reRegistered = $false
                     if ($state.PSObject.Properties['installLocation']) {
                         $location = $state.installLocation
                         if ($location -and $location -ne '<missing>') {
                             $manifestPath = Join-Path -Path $location -ChildPath 'AppxManifest.xml'
                             if (Test-Path -LiteralPath $manifestPath) {
                                 $null = Add-AppxPackage -Register $manifestPath -DisableDevelopmentMode -ErrorAction SilentlyContinue
+                                $reRegistered = $true
                             }
                         }
                     }
-                    # Provisioned removal is not restored in v0.3; the post-undo
+                    if (-not $reRegistered) {
+                        # Catalog 20: say honestly which documented source can
+                        # restore the package. Domovoy itself stays offline (I4).
+                        Write-Warning ("appx.remove undo for '{0}': the package files are no longer on disk, so re-registering is not possible. Documented recovery: reinstall the app from Microsoft Store or winget." -f $state.name)
+                    }
+                    # Provisioned removal is not restored; the post-undo
                     # verification reports this honestly instead of pretending.
                 }
                 'file.attribute' {
@@ -140,6 +147,16 @@ function Undo-DomovoyFeature {
                         $current = Get-Service -Name $state.name -ErrorAction SilentlyContinue
                         if ($current -and $current.Status -eq 'Running') {
                             Stop-Service -Name $state.name -Force -ErrorAction SilentlyContinue
+                        }
+                    }
+                }
+                'scheduler.task' {
+                    # The task is only re-enabled if it was enabled before the
+                    # tweak; a task deleted by someone else is not recreated.
+                    if ($state.previousState -ne '<missing>' -and $state.previousState -ne 'Disabled') {
+                        $task = Get-ScheduledTask -TaskPath $state.taskPath -TaskName $state.taskName -ErrorAction SilentlyContinue
+                        if ($task -and $task.State -eq 'Disabled') {
+                            $null = Enable-ScheduledTask -TaskPath $state.taskPath -TaskName $state.taskName -ErrorAction SilentlyContinue
                         }
                     }
                 }

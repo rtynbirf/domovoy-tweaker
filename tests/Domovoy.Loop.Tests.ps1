@@ -103,6 +103,33 @@ BeforeAll {
         verify = @(@{ type = 'appx.absent'; name = 'Domovoy.Test.NonexistentPackage' })
         references = @($script:registryRef)
     } | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $appxManifest -Encoding UTF8
+
+    # Fixture scheduled task for the v0.4 scheduler.task roundtrip.
+    $script:taskName = 'DomovoyCI-' + [guid]::NewGuid().ToString('N').Substring(0, 8)
+    $script:taskFixture = $false
+    try {
+        $action = New-ScheduledTaskAction -Execute 'cmd.exe' -Argument '/c exit 0'
+        $trigger = New-ScheduledTaskTrigger -Once -At ((Get-Date).AddDays(365))
+        $null = Register-ScheduledTask -TaskName $script:taskName -Action $action -Trigger $trigger -ErrorAction Stop
+        $script:taskFixture = $true
+    }
+    catch {
+        Write-Warning ("Scheduled task fixture was not registered: {0}" -f $_.Exception.Message)
+    }
+
+    $schedulerManifest = Join-Path -Path $script:manifestDir -ChildPath 'test-scheduler.json'
+    @{
+        id = 'test.scheduler.disable'
+        title = 'Test fixture: disable a scheduled task'
+        version = '1.0.0'
+        category = 'core'
+        risk = 'medium'
+        description = 'Test fixture: disables a task created by the test run itself.'
+        ops = @(@{ type = 'scheduler.task'; taskPath = '\'; taskName = $script:taskName })
+        undo = @{ mode = 'snapshot' }
+        verify = @(@{ type = 'scheduler.taskState'; taskPath = '\'; taskName = $script:taskName; expected = 'Disabled' })
+        references = @($script:registryRef)
+    } | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $schedulerManifest -Encoding UTF8
 }
 
 AfterAll {
@@ -115,6 +142,9 @@ AfterAll {
     }
     if (Test-Path -LiteralPath $script:testFile) {
         Remove-Item -LiteralPath $script:testFile -Force -ErrorAction SilentlyContinue
+    }
+    if ($script:taskFixture) {
+        Unregister-ScheduledTask -TaskName $script:taskName -Confirm:$false -ErrorAction SilentlyContinue
     }
     if ($env:DOMOVOY_STORE -and (Test-Path -LiteralPath $env:DOMOVOY_STORE)) {
         Remove-Item -LiteralPath $env:DOMOVOY_STORE -Recurse -Force -ErrorAction SilentlyContinue
@@ -243,9 +273,114 @@ Describe 'v0.2 ledger loop (apply - verify - undo)' {
 
     It 'drift scan resolves manifests from featureSource after a rename' {
         # Simulate a moved manifest: the ledger points at the temp manifest dir,
-        # which is not the feature directory.
+        # which is not the feature directory. A currently-applied feature is
+        # required, because features whose newest ledger event is an undo are
+        # not scanned since v0.4.
+        $applied = Invoke-DomovoyFeature -ManifestFile (Join-Path $script:manifestDir 'test-set.json') -Apply -SkipRestorePoint
+        $applied.Verification.AllPass | Should -BeTrue
+
         $scan = Invoke-DomovoyDriftScan
         $scan.Scanned | Should -BeGreaterThan 0
         $scan.Report | Should -Not -BeNullOrEmpty
+    }
+}
+
+Describe 'v0.4 drift sentinel' {
+
+    It 'scan catches a value reverted after apply; the report carries dates and the verified baseline' {
+        $applied = Invoke-DomovoyFeature -ManifestFile (Join-Path $script:manifestDir 'test-set.json') -Apply -SkipRestorePoint
+        $applied.Verification.AllPass | Should -BeTrue
+
+        # Simulate a Windows update rolling the policy back.
+        Set-ItemProperty -LiteralPath $script:testRoot -Name 'TestValue' -Value 43 -Type DWord
+
+        $scan = Invoke-DomovoyDriftScan -FeatureId 'test.set.value'
+        $scan.Scanned | Should -Be 1
+        $scan.Drifted | Should -Be 1
+        $row = @($scan.Report)[0]
+        $row.FeatureId | Should -Be 'test.set.value'
+        $row.AppliedAt | Should -Not -BeNullOrEmpty
+        $row.DetectedAt | Should -Not -BeNullOrEmpty
+        $detail = @($row.Details | Where-Object { $_.Target -like '*TestValue' })[0]
+        $detail.Verified | Should -Be '42'
+        $detail.Expected | Should -Be '42'
+        $detail.Actual | Should -Be '43'
+        $detail.Pass | Should -BeFalse
+
+        # Restore the verified state, then undo cleanly.
+        Set-ItemProperty -LiteralPath $script:testRoot -Name 'TestValue' -Value 42 -Type DWord
+        $undo = Undo-DomovoyFeature -Id 'test.set.value' -Apply
+        $undo.Mode | Should -Be 'Undo'
+    }
+
+    It 'scan skips features whose latest ledger event is an undo' {
+        $scan = Invoke-DomovoyDriftScan -FeatureId 'test.set.value'
+        $scan.Scanned | Should -Be 0
+        $scan.Drifted | Should -Be 0
+    }
+
+    It '-Since limits the scan to features applied after the given moment' {
+        $applied = Invoke-DomovoyFeature -ManifestFile (Join-Path $script:manifestDir 'test-set.json') -Apply -SkipRestorePoint
+        $applied.Verification.AllPass | Should -BeTrue
+
+        $recent = Invoke-DomovoyDriftScan -Since (Get-Date).AddMinutes(-5)
+        $recent.Scanned | Should -BeGreaterThan 0
+
+        $future = Invoke-DomovoyDriftScan -Since (Get-Date).AddMinutes(5)
+        $future.Scanned | Should -Be 0
+    }
+}
+
+Describe 'v0.4 scheduler.task roundtrip' {
+
+    It 'dry-run builds a plan without touching the task' -Skip:(-not $script:taskFixture) {
+        $dry = Invoke-DomovoyFeature -ManifestFile (Join-Path $script:manifestDir 'test-scheduler.json')
+        $dry.Mode | Should -Be 'DryRun'
+        $dry.Plan[0].Op | Should -Be 'scheduler.task'
+        $dry.Plan[0].Current | Should -Be 'Ready'
+        $dry.Plan[0].New | Should -Be 'Disabled'
+        (Get-ScheduledTask -TaskPath '\' -TaskName $script:taskName).State | Should -Be 'Ready'
+    }
+
+    It 'apply disables the task; undo returns the previous state' -Skip:(-not $script:taskFixture) {
+        $applied = Invoke-DomovoyFeature -ManifestFile (Join-Path $script:manifestDir 'test-scheduler.json') -Apply -SkipRestorePoint
+        $applied.Mode | Should -Be 'Apply'
+        $applied.Verification.AllPass | Should -BeTrue
+        (Get-ScheduledTask -TaskPath '\' -TaskName $script:taskName).State | Should -Be 'Disabled'
+
+        $undo = Undo-DomovoyFeature -Id 'test.scheduler.disable' -Apply
+        $undo.Mode | Should -Be 'Undo'
+        (Get-ScheduledTask -TaskPath '\' -TaskName $script:taskName).State | Should -Be 'Ready'
+    }
+}
+
+Describe 'v0.4 temp cleanup' {
+
+    It 'dry-run reports volume without deleting; apply removes old files and records the ledger event' {
+        $fixture = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ("domovoy-cleanup-" + [guid]::NewGuid().ToString('N') + ".txt")
+        Set-Content -LiteralPath $fixture -Value 'domovoy-cleanup-fixture' -Encoding ASCII
+        (Get-Item -LiteralPath $fixture).LastWriteTime = (Get-Date).AddDays(-400)
+
+        try {
+            $dry = Invoke-DomovoyCleanup -Target Temp -OlderThanDays 365
+            $dry.Mode | Should -Be 'DryRun'
+            $dry.Files | Should -BeGreaterThan 0
+            $dry.Bytes | Should -BeGreaterThan 0
+            Test-Path -LiteralPath $fixture | Should -BeTrue
+
+            $applied = Invoke-DomovoyCleanup -Target Temp -OlderThanDays 365 -Apply
+            $applied.Mode | Should -Be 'Apply'
+            $applied.FilesRemoved | Should -BeGreaterThan 0
+            Test-Path -LiteralPath $fixture | Should -BeFalse
+
+            $events = @(Get-DomovoyLedger -Event 'cleanup.apply' -Last 10)
+            $events.Count | Should -BeGreaterThan 0
+            $events[-1].irreversible | Should -BeTrue
+        }
+        finally {
+            if (Test-Path -LiteralPath $fixture) {
+                Remove-Item -LiteralPath $fixture -Force -ErrorAction SilentlyContinue
+            }
+        }
     }
 }

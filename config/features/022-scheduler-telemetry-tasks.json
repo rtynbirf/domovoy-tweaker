@@ -1,0 +1,50 @@
+{
+  "id": "scheduler.telemetry-tasks.disabled",
+  "title": "Disable telemetry-related scheduled tasks (Compatibility Appraiser, CEIP)",
+  "version": "1.0.0",
+  "category": "privacy",
+  "risk": "medium",
+  "description": "Disables documented Windows scheduled tasks that collect and upload diagnostic and compatibility data: Microsoft Compatibility Appraiser and the Customer Experience Improvement Program tasks (Consolidator, UsbCeip). Only the task state changes to Disabled; the task definitions themselves are not touched, and undo re-enables a task only when it was enabled before the tweak.",
+  "ops": [
+    {
+      "type": "scheduler.task",
+      "taskPath": "\\Microsoft\\Windows\\Application Experience\\",
+      "taskName": "Microsoft Compatibility Appraiser"
+    },
+    {
+      "type": "scheduler.task",
+      "taskPath": "\\Microsoft\\Windows\\Customer Experience Improvement Program\\",
+      "taskName": "Consolidator"
+    },
+    {
+      "type": "scheduler.task",
+      "taskPath": "\\Microsoft\\Windows\\Customer Experience Improvement Program\\",
+      "taskName": "UsbCeip"
+    }
+  ],
+  "undo": { "mode": "snapshot" },
+  "verify": [
+    {
+      "type": "scheduler.taskState",
+      "taskPath": "\\Microsoft\\Windows\\Application Experience\\",
+      "taskName": "Microsoft Compatibility Appraiser",
+      "expected": "Disabled"
+    },
+    {
+      "type": "scheduler.taskState",
+      "taskPath": "\\Microsoft\\Windows\\Customer Experience Improvement Program\\",
+      "taskName": "Consolidator",
+      "expected": "Disabled"
+    },
+    {
+      "type": "scheduler.taskState",
+      "taskPath": "\\Microsoft\\Windows\\Customer Experience Improvement Program\\",
+      "taskName": "UsbCeip",
+      "expected": "Disabled"
+    }
+  ],
+  "references": [
+    "https://learn.microsoft.com/windows/privacy/configure-windows-telemetry-in-your-organization",
+    "https://learn.microsoft.com/windows/privacy/manage-connections-from-windows-operating-system-components-to-microsoft-services"
+  ]
+}

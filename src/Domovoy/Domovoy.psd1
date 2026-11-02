@@ -3,7 +3,7 @@
 #
 @{
     RootModule = 'Domovoy.psm1'
-    ModuleVersion = '0.3.1'
+    ModuleVersion = '0.4.0'
     GUID = '8546e1cf-4418-4133-92f4-4adcb7897011'
     Author = 'rtynbirf'
     CompanyName = 'Domovoy contributors'
@@ -25,6 +25,7 @@
         'Backup-DomovoyServiceState',
         'Get-DomovoyProfile',
         'Invoke-DomovoyProfile',
+        'Invoke-DomovoyCleanup',
         'New-DomovoyRestorePoint'
     )
     CmdletsToExport = @()
@@ -36,7 +37,7 @@
             Tags = @('Windows', 'Tweaker', 'Privacy', 'Telemetry', 'Debloat', 'Undo', 'Ledger', 'Drift')
             LicenseUri = 'https://github.com/rtynbirf/domovoy-tweaker/blob/main/LICENSE'
             ProjectUri = 'https://github.com/rtynbirf/domovoy-tweaker'
-            ReleaseNotes = 'v0.3.1: file.attribute apply, verify and undo see hidden files again (Get-Item -Force). Patch release, no behavior changes beyond the fix.'
+            ReleaseNotes = 'v0.4.0: drift sentinel with a baseline from the last verified snapshot (dates, -Since, undone features skipped), scheduler.task op with full projections, temp cleanup with an honest volume report, five documented features (26 total).'
         }
     }
 }

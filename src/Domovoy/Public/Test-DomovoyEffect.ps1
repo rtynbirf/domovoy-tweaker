@@ -95,6 +95,12 @@ function Test-DomovoyEffect {
                     $actual = '<missing>'
                 }
             }
+            'scheduler.taskState' {
+                $target = '{0}{1}' -f $probe.taskPath, $probe.taskName
+                $expected = [string]$probe.expected
+                $task = Get-ScheduledTask -TaskPath $probe.taskPath -TaskName $probe.taskName -ErrorAction SilentlyContinue
+                $actual = if ($task) { [string]$task.State } else { '<missing>' }
+            }
             default {
                 $target = '<unknown-probe>'
                 $expected = '?'

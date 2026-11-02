@@ -14,8 +14,8 @@ AfterAll {
 
 Describe 'Module Domovoy' {
 
-    It 'exports exactly 12 public commands' {
-        @(Get-Command -Module Domovoy).Count | Should -Be 12
+    It 'exports exactly 13 public commands' {
+        @(Get-Command -Module Domovoy).Count | Should -Be 13
     }
 
     It 'parses every source file without syntax errors' {
@@ -57,7 +57,7 @@ Describe 'Module Domovoy' {
 
     It 'Get-DomovoyFeature lists the reference manifests' {
         $features = @(Get-DomovoyFeature)
-        $features.Count | Should -Be 21
+        $features.Count | Should -Be 26
         $features.Id | Should -Contain 'services.diagtrack.disabled'
         $features.Id | Should -Contain 'policy.telemetry.level0'
         $features.Id | Should -Contain 'services.dmwappush.disabled'
@@ -79,6 +79,11 @@ Describe 'Module Domovoy' {
         $features.Id | Should -Contain 'ui.widgets.panel.disabled'
         $features.Id | Should -Contain 'policy.input.personalization.disabled'
         $features.Id | Should -Contain 'policy.search.cloudsearch.disabled'
+        $features.Id | Should -Contain 'scheduler.telemetry-tasks.disabled'
+        $features.Id | Should -Contain 'policy.diagnostics.sending.blocked'
+        $features.Id | Should -Contain 'policy.edge.background.disabled'
+        $features.Id | Should -Contain 'ui.taskbar.cleanup'
+        $features.Id | Should -Contain 'policy.windows-tips.disabled'
     }
 
     It 'Get-DomovoyFeature -Id filters to a single feature' {

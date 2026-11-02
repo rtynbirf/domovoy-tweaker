@@ -1,0 +1,68 @@
+{
+  "id": "policy.diagnostics.sending.blocked",
+  "title": "Block diagnostic data sending at the policy level (aggregate)",
+  "version": "1.0.0",
+  "category": "privacy",
+  "risk": "medium",
+  "description": "Aggregate feature (catalog 14) over the telemetry policies: AllowTelemetry=0 (the same documented value as policy.telemetry.level0, kept here so this single manifest blocks sending on its own), plus LimitDiagnosticLogCollection=1, DisableOneSettingsDownloads=1 and AllowDeviceNameInTelemetry=0 under the documented HKLM DataCollection policies key. The previous values and their types are captured in a snapshot before the change and restored by per-feature undo.",
+  "ops": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection",
+      "name": "AllowTelemetry",
+      "value": 0,
+      "valueType": "DWord"
+    },
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection",
+      "name": "LimitDiagnosticLogCollection",
+      "value": 1,
+      "valueType": "DWord"
+    },
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection",
+      "name": "DisableOneSettingsDownloads",
+      "value": 1,
+      "valueType": "DWord"
+    },
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection",
+      "name": "AllowDeviceNameInTelemetry",
+      "value": 0,
+      "valueType": "DWord"
+    }
+  ],
+  "undo": { "mode": "snapshot" },
+  "verify": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection",
+      "name": "AllowTelemetry",
+      "value": 0
+    },
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection",
+      "name": "LimitDiagnosticLogCollection",
+      "value": 1
+    },
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection",
+      "name": "DisableOneSettingsDownloads",
+      "value": 1
+    },
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection",
+      "name": "AllowDeviceNameInTelemetry",
+      "value": 0
+    }
+  ],
+  "references": [
+    "https://learn.microsoft.com/windows/privacy/configure-windows-telemetry-in-your-organization"
+  ]
+}

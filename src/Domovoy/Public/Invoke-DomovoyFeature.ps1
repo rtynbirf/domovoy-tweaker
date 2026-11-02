@@ -135,6 +135,17 @@ function Invoke-DomovoyFeature {
                     NewType = $null
                 }
             }
+            'scheduler.task' {
+                $task = Get-ScheduledTask -TaskPath $op.taskPath -TaskName $op.taskName -ErrorAction SilentlyContinue
+                $plan += [pscustomobject]@{
+                    Op = 'scheduler.task'
+                    Target = '{0}{1}' -f $op.taskPath, $op.taskName
+                    Current = if ($task) { [string]$task.State } else { '<missing>' }
+                    CurrentType = $null
+                    New = 'Disabled'
+                    NewType = $null
+                }
+            }
             default {
                 throw "Unsupported op type: $($op.type)"
             }
@@ -253,6 +264,15 @@ function Invoke-DomovoyFeature {
                         previousAttributes = $previousAttributes
                     }
                 }
+                'scheduler.task' {
+                    $task = Get-ScheduledTask -TaskPath $op.taskPath -TaskName $op.taskName -ErrorAction SilentlyContinue
+                    $snapshot += @{
+                        op = 'scheduler.task'
+                        taskPath = $op.taskPath
+                        taskName = $op.taskName
+                        previousState = if ($task) { [string]$task.State } else { '<missing>' }
+                    }
+                }
             }
         }
 
@@ -303,6 +323,12 @@ function Invoke-DomovoyFeature {
                             $newAttributes = $newAttributes -bor [System.IO.FileAttributes]::$attrName
                         }
                         $item.Attributes = $newAttributes
+                    }
+                }
+                'scheduler.task' {
+                    $task = Get-ScheduledTask -TaskPath $op.taskPath -TaskName $op.taskName -ErrorAction SilentlyContinue
+                    if ($task -and $task.State -ne 'Disabled') {
+                        $null = Disable-ScheduledTask -TaskPath $op.taskPath -TaskName $op.taskName -ErrorAction Stop
                     }
                 }
             }

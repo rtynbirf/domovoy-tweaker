@@ -1,0 +1,68 @@
+{
+  "id": "ui.taskbar.cleanup",
+  "title": "Windows 11 taskbar: left alignment, hide widgets and chat, compact search",
+  "version": "1.0.0",
+  "category": "ui",
+  "risk": "low",
+  "description": "Sets the well-known Windows 11 Explorer values under HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced: TaskbarAl=0 (left taskbar alignment), TaskbarDa=0 (hide the Widgets button), TaskbarMn=0 (hide the Chat button), and SearchboxTaskbarMode=1 under the Search key (search icon instead of the search box). These are per-user settings rather than official Group Policy values; each previous value and its type are captured in a snapshot and restored by per-feature undo.",
+  "ops": [
+    {
+      "type": "registry.set",
+      "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+      "name": "TaskbarAl",
+      "value": 0,
+      "valueType": "DWord"
+    },
+    {
+      "type": "registry.set",
+      "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+      "name": "TaskbarDa",
+      "value": 0,
+      "valueType": "DWord"
+    },
+    {
+      "type": "registry.set",
+      "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+      "name": "TaskbarMn",
+      "value": 0,
+      "valueType": "DWord"
+    },
+    {
+      "type": "registry.set",
+      "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Search",
+      "name": "SearchboxTaskbarMode",
+      "value": 1,
+      "valueType": "DWord"
+    }
+  ],
+  "undo": { "mode": "snapshot" },
+  "verify": [
+    {
+      "type": "registry.set",
+      "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+      "name": "TaskbarAl",
+      "value": 0
+    },
+    {
+      "type": "registry.set",
+      "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+      "name": "TaskbarDa",
+      "value": 0
+    },
+    {
+      "type": "registry.set",
+      "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+      "name": "TaskbarMn",
+      "value": 0
+    },
+    {
+      "type": "registry.set",
+      "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Search",
+      "name": "SearchboxTaskbarMode",
+      "value": 1
+    }
+  ],
+  "references": [
+    "https://learn.microsoft.com/windows/configuration/customize-taskbar-windows-11"
+  ]
+}

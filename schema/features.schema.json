@@ -185,6 +185,20 @@
               "description": "When true, a missing path is skipped instead of failing the apply."
             }
           }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "taskPath", "taskName"],
+          "properties": {
+            "type": { "const": "scheduler.task" },
+            "taskPath": {
+              "type": "string",
+              "pattern": "^\\\\.*\\\\$",
+              "description": "Task path with a leading and a trailing backslash, e.g. \\Microsoft\\Windows\\Application Experience\\."
+            },
+            "taskName": { "type": "string", "minLength": 1 }
+          }
         }
       ]
     },
@@ -271,6 +285,22 @@
               "items": {
                 "enum": ["ReadOnly", "Hidden", "System", "Archive", "NotContentIndexed"]
               }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "taskPath", "taskName", "expected"],
+          "properties": {
+            "type": { "const": "scheduler.taskState" },
+            "taskPath": {
+              "type": "string",
+              "pattern": "^\\\\.*\\\\$"
+            },
+            "taskName": { "type": "string", "minLength": 1 },
+            "expected": {
+              "enum": ["Disabled", "Ready", "Running", "Queued"]
             }
           }
         }

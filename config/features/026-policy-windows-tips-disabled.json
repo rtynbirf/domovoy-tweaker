@@ -1,0 +1,29 @@
+{
+  "id": "policy.windows-tips.disabled",
+  "title": "Turn off Windows tips and promotional toasts (DisableSoftLanding)",
+  "version": "1.0.0",
+  "category": "privacy",
+  "risk": "low",
+  "description": "Sets the documented CloudContent policy value DisableSoftLanding=1 under HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\CloudContent so Windows stops showing tips, suggestions and promotional toast notifications. The previous value and its type are captured in a snapshot before the change and restored by per-feature undo.",
+  "ops": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\CloudContent",
+      "name": "DisableSoftLanding",
+      "value": 1,
+      "valueType": "DWord"
+    }
+  ],
+  "undo": { "mode": "snapshot" },
+  "verify": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\CloudContent",
+      "name": "DisableSoftLanding",
+      "value": 1
+    }
+  ],
+  "references": [
+    "https://learn.microsoft.com/windows/client-management/mdm/policy-csp-admx-cloudcontent"
+  ]
+}
