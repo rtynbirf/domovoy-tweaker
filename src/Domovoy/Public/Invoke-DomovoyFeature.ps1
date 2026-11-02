@@ -120,9 +120,11 @@ function Invoke-DomovoyFeature {
                 }
             }
             'file.attribute' {
+                # -Force: files with the Hidden attribute are invisible to
+                # Get-Item/Test-Path without it (PowerShell provider filter).
                 $current = '<missing>'
-                if (Test-Path -LiteralPath $op.path) {
-                    $current = [string](Get-Item -LiteralPath $op.path).Attributes
+                if (Test-Path -LiteralPath $op.path -Force) {
+                    $current = [string](Get-Item -LiteralPath $op.path -Force).Attributes
                 }
                 $plan += [pscustomobject]@{
                     Op = 'file.attribute'
@@ -240,9 +242,10 @@ function Invoke-DomovoyFeature {
                     }
                 }
                 'file.attribute' {
+                    # -Force: the target file may already carry the Hidden attribute.
                     $previousAttributes = '<missing>'
-                    if (Test-Path -LiteralPath $op.path) {
-                        $previousAttributes = [string](Get-Item -LiteralPath $op.path).Attributes
+                    if (Test-Path -LiteralPath $op.path -Force) {
+                        $previousAttributes = [string](Get-Item -LiteralPath $op.path -Force).Attributes
                     }
                     $snapshot += @{
                         op = 'file.attribute'
@@ -288,13 +291,13 @@ function Invoke-DomovoyFeature {
                     }
                 }
                 'file.attribute' {
-                    if (-not (Test-Path -LiteralPath $op.path)) {
+                    if (-not (Test-Path -LiteralPath $op.path -Force)) {
                         if (-not $op.allowMissing) {
                             throw ("Path not found for file.attribute: {0}" -f $op.path)
                         }
                     }
                     else {
-                        $item = Get-Item -LiteralPath $op.path
+                        $item = Get-Item -LiteralPath $op.path -Force
                         $newAttributes = $item.Attributes
                         foreach ($attrName in @($op.attributes)) {
                             $newAttributes = $newAttributes -bor [System.IO.FileAttributes]::$attrName
