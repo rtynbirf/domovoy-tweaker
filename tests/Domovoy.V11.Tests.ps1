@@ -73,10 +73,10 @@ Describe 'Second service wave (catalog 65)' {
         $undo = Undo-DomovoyFeature -Id services.fax.disabled -Apply
         $undo.Mode | Should -Be 'Undo'
         InModuleScope Domovoy {
-            # The undo restores the exact previous value and restarts the
-            # service that was running before the tweak.
-            Assert-MockCalled Set-Service -Exactly 2 -ParameterFilter { $StartupType -eq 'Automatic' }
-            Assert-MockCalled Start-Service -Exactly 1
+            # The undo restores the exact previous startup type; the
+            # service.startup snapshot records the type only, so nothing is
+            # restarted behind the user's back.
+            Assert-MockCalled Set-Service -Exactly 1 -ParameterFilter { $StartupType -eq 'Automatic' }
         }
     }
 }
@@ -196,7 +196,7 @@ Describe 'Task state export (catalog 66)' {
         $payload = Get-Content -LiteralPath $out -Raw | ConvertFrom-Json
         $payload.kind | Should -Be 'domovoy-task-state'
         $payload.count | Should -Be 2
-        $payload.tasks[0].TaskName | Should -Be 'A'
+        $payload.tasks[0].TaskName | Should -Be 'DriftWatchdog'
     }
 }
 
@@ -286,9 +286,9 @@ Describe 'Batch policy export for profiles (catalog 100)' {
         $env:DOMOVOY_FEATURES_DIR = $script:v11Features
 
         foreach ($spec in @(
-            @{ Id = 'v11.export.machine'; Name = 'Value'; Value = 0; Path = 'HKLM:\SOFTWARE\Policies\DomovoyExport' }
-            @{ Id = 'v11.export.user'; Name = 'Label'; Value = 'hello'; Path = 'HKCU:\Software\DomovoyExport' }
-            @{ Id = 'v11.export.outsider'; Name = 'Outsider'; Value = 7; Path = 'HKLM:\SOFTWARE\Policies\DomovoyExport' }
+            @{ Id = 'v11.export.machine'; Name = 'Value'; Value = 0; ValueType = 'DWord'; Path = 'HKLM:\SOFTWARE\Policies\DomovoyExport' }
+            @{ Id = 'v11.export.user'; Name = 'Label'; Value = 'hello'; ValueType = 'String'; Path = 'HKCU:\Software\DomovoyExport' }
+            @{ Id = 'v11.export.outsider'; Name = 'Outsider'; Value = 7; ValueType = 'DWord'; Path = 'HKLM:\SOFTWARE\Policies\DomovoyExport' }
         )) {
             @{
                 id = $spec.Id
@@ -297,7 +297,7 @@ Describe 'Batch policy export for profiles (catalog 100)' {
                 category = 'privacy'
                 risk = 'low'
                 description = "Test fixture: $([string]$spec.Id)."
-                ops = @(@{ type = 'registry.set'; path = $spec.Path; name = $spec.Name; value = $spec.Value; valueType = 'DWord' })
+                ops = @(@{ type = 'registry.set'; path = $spec.Path; name = $spec.Name; value = $spec.Value; valueType = $spec.ValueType })
                 undo = @{ mode = 'snapshot' }
                 verify = @(@{ type = 'registry.set'; path = $spec.Path; name = $spec.Name; value = $spec.Value })
                 references = @($script:registryRef)

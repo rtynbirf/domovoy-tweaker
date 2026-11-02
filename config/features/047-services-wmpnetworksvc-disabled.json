@@ -4,7 +4,7 @@
   "version": "1.1.0",
   "category": "services",
   "risk": "low",
-  "description": "Sets the WMPNetworkSvc service startup type to Disabled. The service shares Windows Media Player libraries over the network (UPnP) and is not needed unless media streaming to other devices is used. The previous startup type and the running state are captured in a snapshot before the change and restored by per-feature undo. On builds where Windows Media Player was removed the plan reports the service honestly.",
+  "description": "Sets the WMPNetworkSvc service startup type to Disabled. The service shares Windows Media Player libraries over the network (UPnP) and is not needed unless media streaming to other devices is used. The previous startup type is captured in a snapshot before the change and restored by per-feature undo. On builds where Windows Media Player was removed the plan reports the service honestly.",
   "ops": [
     {
       "type": "service.startup",
