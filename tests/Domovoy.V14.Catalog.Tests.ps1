@@ -1,14 +1,19 @@
 # Domovoy v1.4.0 catalog tests: the read-only SmartScreen and SMB signing
 # audit (catalog 95) and the Edge Update service manifests (catalog 77).
+
+# NOTE: the variable must not be named *isWindows* - that name collides
+# with the read-only automatic $IsWindows (names are case-insensitive).
+# Pester 5 evaluates -Skip during DISCOVERY, before BeforeAll runs - the
+# flag must be a file-level assignment, or every platform gate reads an
+# undefined variable and silently loses its meaning.
+$script:isWindowsPlatform = ($PSVersionTable.PSVersion.Major -lt 6) -or $IsWindows
+
 BeforeAll {
     $repoRoot = Split-Path -Parent $PSScriptRoot
     $env:DOMOVOY_STORE = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ("domovoy-v14-catalog-" + [guid]::NewGuid().ToString('N'))
     $env:DOMOVOY_FEATURES_DIR = Join-Path -Path $repoRoot -ChildPath 'config/features'
     Import-Module (Join-Path -Path $repoRoot -ChildPath 'src/Domovoy/Domovoy.psd1') -Force
 
-    # NOTE: the variable must not be named *isWindows* - that name collides
-    # with the read-only automatic $IsWindows (names are case-insensitive).
-    $script:isWindowsPlatform = ($PSVersionTable.PSVersion.Major -lt 6) -or $IsWindows
     $script:v14RepoRoot = $repoRoot
 }
 

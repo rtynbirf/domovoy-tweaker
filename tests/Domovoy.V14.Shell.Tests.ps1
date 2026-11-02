@@ -5,15 +5,20 @@
 # synthetic per-user keys created for the test and cleaned up afterwards;
 # the HKLM Blocked list is only touched with a synthetic CLSID whose
 # previous state is restored - the registration itself is never touched.
+
+# NOTE: the variable must not be named *isWindows* - that name collides
+# with the read-only automatic $IsWindows (names are case-insensitive).
+# Pester 5 evaluates -Skip during DISCOVERY, before BeforeAll runs - the
+# flag must be a file-level assignment, or every platform gate reads an
+# undefined variable and silently loses its meaning.
+$script:isWindowsPlatform = ($PSVersionTable.PSVersion.Major -lt 6) -or $IsWindows
+
 BeforeAll {
     $repoRoot = Split-Path -Parent $PSScriptRoot
     $env:DOMOVOY_STORE = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ("domovoy-v14-shell-" + [guid]::NewGuid().ToString('N'))
     $env:DOMOVOY_FEATURES_DIR = Join-Path -Path $repoRoot -ChildPath 'config/features'
     Import-Module (Join-Path -Path $repoRoot -ChildPath 'src/Domovoy/Domovoy.psd1') -Force
 
-    # NOTE: the variable must not be named *isWindows* - that name collides
-    # with the read-only automatic $IsWindows (names are case-insensitive).
-    $script:isWindowsPlatform = ($PSVersionTable.PSVersion.Major -lt 6) -or $IsWindows
     $script:v14RepoRoot = $repoRoot
     $script:v14ManifestDir = Join-Path -Path $env:DOMOVOY_STORE -ChildPath 'manifests'
     New-Item -Path $script:v14ManifestDir -ItemType Directory -Force | Out-Null
