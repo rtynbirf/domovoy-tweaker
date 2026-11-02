@@ -53,6 +53,9 @@ function Undo-DomovoyFeature {
     }
 
     if ($PSCmdlet.ShouldProcess($Id, 'Restore snapshot')) {
+        # Catalog 75: machine-readable winget hints collected while undoing
+        # appx packages whose files are gone (additive result field).
+        $wingetHints = [System.Collections.Generic.List[object]]::new()
         foreach ($state in @($entry.snapshot)) {
             switch ($state.op) {
                 'registry.set' {
@@ -99,9 +102,21 @@ function Undo-DomovoyFeature {
                         }
                     }
                     if (-not $reRegistered) {
-                        # Catalog 20: say honestly which documented source can
-                        # restore the package. Domovoy itself stays offline (I4).
-                        Write-Warning ("appx.remove undo for '{0}': the package files are no longer on disk, so re-registering is not possible. Documented recovery: reinstall the app from Microsoft Store or winget." -f $state.name)
+                        # Catalog 20 + 75: say honestly which documented source
+                        # can restore the package, machine-readable when a
+                        # confident winget id exists. Domovoy itself stays
+                        # offline (I4).
+                        $hint = Get-DomovoyWingetHint -PackageName $state.name
+                        $wingetHints.Add(@{
+                            Package = [string]$state.name
+                            WingetId = $hint
+                        })
+                        if ($hint) {
+                            Write-Warning ("appx.remove undo for '{0}': the package files are no longer on disk, so re-registering is not possible. Documented recovery: reinstall the app from Microsoft Store or winget (winget install --id '{1}')." -f $state.name, $hint)
+                        }
+                        else {
+                            Write-Warning ("appx.remove undo for '{0}': the package files are no longer on disk, so re-registering is not possible. Documented recovery: reinstall the app from Microsoft Store or winget." -f $state.name)
+                        }
                     }
                     # Provisioned removal is not restored; the post-undo
                     # verification reports this honestly instead of pretending.
@@ -213,6 +228,7 @@ function Undo-DomovoyFeature {
             Feature = $Id
             Mode = 'Undo'
             Verification = $verification
+            WingetHints = @($wingetHints)
             LedgerTimestamp = $written['timestamp']
         }
     }

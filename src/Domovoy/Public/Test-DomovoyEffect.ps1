@@ -32,6 +32,7 @@ function Test-DomovoyEffect {
     $results = @()
     foreach ($probe in @($Manifest.verify)) {
         $target = $null
+        $passOverride = $null
         $expected = $null
         $actual = $null
 
@@ -123,11 +124,28 @@ function Test-DomovoyEffect {
             'network.proxy' {
                 $proxyKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings'
                 $target = 'WinINET (current user)'
-                # The probe pins the whole triple, so plain string equality
-                # stays the single Pass rule; '<unset>' is the documented
-                # spelling of "the value does not exist".
-                $expected = 'enable={0};server={1};pac={2}' -f [string]$probe.proxyEnable, [string]$probe.proxyServer, [string]$probe.autoConfigUrl
-                $actual = 'enable={0};server={1};pac={2}' -f (Get-RegistryValueSafe -Path $proxyKey -Name 'ProxyEnable'), (Get-RegistryValueSafe -Path $proxyKey -Name 'ProxyServer'), (Get-RegistryValueSafe -Path $proxyKey -Name 'AutoConfigURL')
+                # The probe pins ProxyEnable and, when the manifest asks for a
+                # concrete value, the server/PAC values too. '<unset>' is the
+                # documented spelling of "the value does not exist"; '<any>'
+                # (catalog 85) means "this dimension is not pinned".
+                $triple = @{
+                    enable = (Get-RegistryValueSafe -Path $proxyKey -Name 'ProxyEnable')
+                    server = (Get-RegistryValueSafe -Path $proxyKey -Name 'ProxyServer')
+                    pac = (Get-RegistryValueSafe -Path $proxyKey -Name 'AutoConfigURL')
+                }
+                $pins = @{
+                    enable = [string]$probe.proxyEnable
+                    server = [string]$probe.proxyServer
+                    pac = [string]$probe.autoConfigUrl
+                }
+                $expected = 'enable={0};server={1};pac={2}' -f $pins.enable, $pins.server, $pins.pac
+                $actual = 'enable={0};server={1};pac={2}' -f $triple.enable, $triple.server, $triple.pac
+                $passOverride = $true
+                foreach ($part in @('enable', 'server', 'pac')) {
+                    if ($pins[$part] -ne '<any>' -and $pins[$part] -ne [string]$triple[$part]) {
+                        $passOverride = $false
+                    }
+                }
             }
             default {
                 $target = '<unknown-probe>'
@@ -136,12 +154,14 @@ function Test-DomovoyEffect {
             }
         }
 
+        $pass = if ($null -ne $passOverride) { $passOverride } else { ($actual -eq $expected) }
+
         $results += [pscustomobject]@{
             Probe = $probe.type
             Target = $target
             Expected = $expected
             Actual = $actual
-            Pass = ($actual -eq $expected)
+            Pass = $pass
         }
     }
 

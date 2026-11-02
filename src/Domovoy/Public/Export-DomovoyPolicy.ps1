@@ -34,6 +34,11 @@ function Export-DomovoyPolicy {
     .PARAMETER IncludeUnverified
     Also export features whose latest apply did not verify.
 
+    .PARAMETER ProfileId
+    Only export features that belong to the given bundled profile
+    (catalog 100); the journal stays the source of truth for what was
+    actually applied on this machine.
+
     .PARAMETER Force
     Overwrite an existing output directory.
 
@@ -47,6 +52,8 @@ function Export-DomovoyPolicy {
     [OutputType([pscustomobject])]
     param(
         [string]$OutputDir,
+
+        [string]$ProfileId,
 
         [switch]$IncludeUnverified,
 
@@ -79,6 +86,20 @@ function Export-DomovoyPolicy {
     # Oldest first, so that a newer feature overwrites a value shared with an
     # older one - the same order in which they were applied to this machine.
     $ordered = @($latest.Values | Sort-Object -Property timestamp)
+
+    if (-not [string]::IsNullOrWhiteSpace($ProfileId)) {
+        # Catalog 100: batch export of one profile. The profile list is the
+        # filter; the journal is still what decides "applied and verified".
+        $profileDef = @(Get-DomovoyProfile -Id $ProfileId)
+        if ($profileDef.Count -eq 0) {
+            throw ("Profile not found: {0}" -f $ProfileId)
+        }
+        $profileFeatures = @($profileDef[0].Features)
+        $ordered = @($ordered | Where-Object { $profileFeatures -contains [string]$_.featureId })
+        if ($ordered.Count -eq 0) {
+            throw ("No applied features of profile '{0}' in the journal - nothing to export." -f $ProfileId)
+        }
+    }
 
     # One Registry.pol entry per (class, key, valueName): a shared value is
     # written ONCE, from the feature that was applied last. [ordered] keeps
@@ -419,6 +440,7 @@ function Export-DomovoyPolicy {
 
     [pscustomobject]@{
         OutputDir = $OutputDir
+        ProfileId = $ProfileId
         MachineEntries = $machineCount
         UserEntries = $userCount
         AdmxPolicies = $admxFeatures.Count

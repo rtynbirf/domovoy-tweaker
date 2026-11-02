@@ -5,12 +5,41 @@
 
 ## [Unreleased]
 
-### Planned (v1.1.0)
-- Каталог: второй набор служб, экспорт задач планировщика, winget-подсказки
-  в undo, вторая волна безопасных UWP-пакетов, прокси-профили на
-  `network.proxy`, плановый dry-run-отчёт очистки, аудит LSA (только чтение),
-  пакетный экспорт профилей в политики (№100).
+### Planned (v1.2.0)
+- Каталог: телеметрия Office, DoH-политики, VisualFX-профили, DISM
+  Component Store cleanup, штампы времени файлов, отчёт отката драйверов,
+  TaskbarAl для Windows 10 (№80, 88–91 и соседи), хеш-цепочка журнала (№103).
 
+## [1.1.0] — 2026-11-02
+
+### Added
+- Вторая волна документированных служб (№65): `services.fax.disabled`,
+  `services.retaildemo.disabled`, `services.wmpnetworksvc.disabled`.
+- Экспорт таблицы задач планировщика (№66): `Backup-DomovoyTaskState` —
+  только чтение, JSON-снимок в `backups/tasks-*.json`.
+- Winget-подсказки в undo (№75): результат `Undo-DomovoyFeature` несёт
+  `WingetHints` (Package + WingetId) для пакетов с уверенным маппингом;
+  текст предупреждения называет команду `winget install --id`.
+- Вторая волна безопасных UWP-пакетов (№76): News, Feedback Hub,
+  Solitaire Collection — все переустанавливаются из Store.
+- Прокси-профиль (№85): `network.proxy.off` — ProxyEnable=0, серверные
+  значения сохраняются по контракту op; проба `network.proxy` понимает
+  документированный сентинел `<any>` («размерность не пиннится») —
+  аддитивно, старые манифесты не затронуты.
+- Плановый отчёт очистки в дозоре (№87): `Register-DomovoyWatchdog
+  -IncludeCleanupReport` — runner делает измеримый dry-run temp-очистки и
+  пишет в `watchdog-cleanup-report.jsonl`; сам runner ничего не удаляет.
+- Очистка кэша эскизов (№89): `Invoke-DomovoyCleanup -Target ThumbCache` —
+  только `thumbcache_*.db`, тот же измеримый контур с журналом.
+- Аудит LSA (№94): `Get-DomovoyLsaStatus` — RunAsPPL, RunAsPPLBootStart,
+  LsaCfgFlags+VBS, NTLM-ограничения; только чтение.
+- Пакетный экспорт профилей (№100): `Export-DomovoyPolicy -ProfileId` —
+  экспортируются только фичи профиля из журнала; чужие фичи не утекают.
+- 7 новых манифестов (44 → 51): все на существующих op-типах с полными
+  4 проекциями; две публичные команды (43 всего).
+
+### Changed
+- Каталог честен: №80 и №90 перенесены из v1.1 в v1.2 с пометкой о переносе.
 ## [1.0.0] — 2026-11-02
 
 ### Added

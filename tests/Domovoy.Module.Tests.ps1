@@ -15,7 +15,7 @@ AfterAll {
 Describe 'Module Domovoy' {
 
     It 'exports exactly 41 public commands' {
-        @(Get-Command -Module Domovoy).Count | Should -Be 41
+        @(Get-Command -Module Domovoy).Count | Should -Be 43
     }
 
     It 'parses every source file without syntax errors' {
@@ -57,7 +57,7 @@ Describe 'Module Domovoy' {
 
     It 'Get-DomovoyFeature lists the reference manifests' {
         $features = @(Get-DomovoyFeature)
-        $features.Count | Should -Be 44
+        $features.Count | Should -Be 51
         $features.Id | Should -Contain 'services.diagtrack.disabled'
         $features.Id | Should -Contain 'policy.telemetry.level0'
         $features.Id | Should -Contain 'services.dmwappush.disabled'

@@ -1,0 +1,28 @@
+{
+  "id": "network.proxy.off",
+  "title": "Turn off the WinINET proxy for the current user",
+  "version": "1.1.0",
+  "category": "network",
+  "risk": "medium",
+  "description": "Sets ProxyEnable to 0 under the documented HKCU Internet Settings key: the configured WinINET proxy stops being used by the current user. ProxyServer, AutoConfigURL and ProxyOverride are deliberately kept in place (the mode=off contract of the network.proxy op), so re-enabling or undo restores the exact previous triple. Machines behind a corporate proxy lose connectivity while this feature is applied - do not use it there. The probe pins ProxyEnable and leaves the server values unverified with the documented <any> sentinel.",
+  "ops": [
+    {
+      "type": "network.proxy",
+      "mode": "off"
+    }
+  ],
+  "undo": {
+    "mode": "snapshot"
+  },
+  "verify": [
+    {
+      "type": "network.proxy",
+      "proxyEnable": 0,
+      "proxyServer": "<any>",
+      "autoConfigUrl": "<any>"
+    }
+  ],
+  "references": [
+    "https://learn.microsoft.com/windows/win32/wininet/proxy-server-configuration"
+  ]
+}

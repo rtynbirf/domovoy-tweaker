@@ -1,0 +1,18 @@
+{
+  "id": "packages.feedbackhub.removed",
+  "title": "Remove the Feedback Hub app (Store package Microsoft.FeedbackHub)",
+  "version": "1.1.0",
+  "category": "apps",
+  "risk": "medium",
+  "description": "Removes the Feedback Hub Store package (Microsoft.FeedbackHub) for the current user. The package is reinstallable from the Microsoft Store. On undo the package is re-registered from its install location when the files are still on disk; if they are gone, the undo result carries the documented winget identifier and the post-undo verification reports honestly that restoration was not possible.",
+  "ops": [
+    { "type": "appx.remove", "name": "Microsoft.FeedbackHub" }
+  ],
+  "undo": { "mode": "snapshot" },
+  "verify": [
+    { "type": "appx.absent", "name": "Microsoft.FeedbackHub" }
+  ],
+  "references": [
+    "https://learn.microsoft.com/windows/application-management/apps-in-windows-10"
+  ]
+}

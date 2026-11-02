@@ -21,11 +21,14 @@ function Invoke-DomovoyCleanup {
 
     .EXAMPLE
     Invoke-DomovoyCleanup -Target Temp -OlderThanDays 7 -Apply
+
+    .EXAMPLE
+    Invoke-DomovoyCleanup -Target ThumbCache
     #>
     [CmdletBinding(SupportsShouldProcess)]
     [OutputType([pscustomobject])]
     param(
-        [ValidateSet('Temp')]
+        [ValidateSet('Temp', 'ThumbCache')]
         [string]$Target = 'Temp',
 
         [ValidateRange(0, 3650)]
@@ -34,14 +37,22 @@ function Invoke-DomovoyCleanup {
         [switch]$Apply
     )
 
+    $fileFilter = $null
     if ($Target -eq 'Temp') {
         $paths = @([System.IO.Path]::GetTempPath())
+    }
+    elseif ($Target -eq 'ThumbCache') {
+        # Catalog 89: the Explorer thumbnail cache directory. Only the
+        # documented thumbcache_*.db files belong to the cache; everything
+        # else in the directory stays untouched.
+        $paths = @(Join-Path -Path $env:LOCALAPPDATA -ChildPath 'Microsoft\Windows\Explorer')
+        $fileFilter = 'thumbcache_*.db'
     }
 
     $cutoff = (Get-Date).AddDays(-1 * $OlderThanDays)
 
     $candidates = @(Get-ChildItem -LiteralPath $paths -Recurse -File -Force -ErrorAction SilentlyContinue |
-        Where-Object { $_.LastWriteTime -lt $cutoff })
+        Where-Object { ($_.LastWriteTime -lt $cutoff) -and ((-not $fileFilter) -or ($_.Name -like $fileFilter)) })
 
     $bytes = [long]0
     foreach ($file in $candidates) {
@@ -80,7 +91,7 @@ function Invoke-DomovoyCleanup {
         # Measured "after": re-scan what is left instead of deriving it from
         # arithmetic (catalog feature 44 - the report must be measurable).
         $remaining = @(Get-ChildItem -LiteralPath $paths -Recurse -File -Force -ErrorAction SilentlyContinue |
-            Where-Object { $_.LastWriteTime -lt $cutoff })
+            Where-Object { ($_.LastWriteTime -lt $cutoff) -and ((-not $fileFilter) -or ($_.Name -like $fileFilter)) })
         $bytesAfter = [long]0
         foreach ($file in $remaining) {
             $bytesAfter += [long]$file.Length

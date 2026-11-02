@@ -1,0 +1,28 @@
+{
+  "id": "services.fax.disabled",
+  "title": "Disable the Fax service (documented service)",
+  "version": "1.1.0",
+  "category": "services",
+  "risk": "low",
+  "description": "Sets the Fax service startup type to Disabled. The service is only useful with fax hardware or a fax modem; machines without them never use it. The previous startup type and the running state are captured in a snapshot before the change and restored by per-feature undo. On builds without the service the plan reports it honestly.",
+  "ops": [
+    {
+      "type": "service.startup",
+      "name": "Fax",
+      "startupType": "Disabled"
+    }
+  ],
+  "undo": {
+    "mode": "snapshot"
+  },
+  "verify": [
+    {
+      "type": "service.startup",
+      "name": "Fax",
+      "startupType": "Disabled"
+    }
+  ],
+  "references": [
+    "https://learn.microsoft.com/windows-server/security/windows-services/security-guidelines-for-disabling-system-services-in-windows-server"
+  ]
+}

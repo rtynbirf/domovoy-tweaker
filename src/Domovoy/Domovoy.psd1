@@ -3,7 +3,7 @@
 #
 @{
     RootModule = 'Domovoy.psm1'
-    ModuleVersion = '1.0.0'
+    ModuleVersion = '1.1.0'
     GUID = '8546e1cf-4418-4133-92f4-4adcb7897011'
     Author = 'rtynbirf'
     CompanyName = 'Domovoy contributors'
@@ -26,6 +26,7 @@
         'Test-DomovoyEffect',
         'Backup-DomovoySnapshot',
         'Backup-DomovoyServiceState',
+        'Backup-DomovoyTaskState',
         'Get-DomovoyProfile',
         'Invoke-DomovoyProfile',
         'Invoke-DomovoyCleanup',
@@ -33,6 +34,7 @@
         'Get-DomovoyTelemetryReport',
         'Get-DomovoyStartupInventory',
         'Get-DomovoyDriverInventory',
+        'Get-DomovoyLsaStatus',
         'Get-DomovoyBitLockerStatus',
         'Get-DomovoyChangeReport',
         'Invoke-DomovoyNetworkReset',
