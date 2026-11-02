@@ -40,8 +40,10 @@ jobs:
           $result = Invoke-Pester -Configuration $config
           foreach ($test in @($result.Failed)) {
             foreach ($err in @($test.ErrorRecord)) {
-              Write-Host ("##[error]{0} :: {1}" -f $test.Path, $err.Exception.Message)
-              Write-Host ("##[error]{0} :: {1}" -f $test.Path, ($err.ScriptStackTrace -replace '\r?\n', ' | '))
+              $msg = ($err.Exception.Message -replace "`r?`n", ' ')
+              Write-Host ("::error::{0} :: {1}" -f $test.Path, $msg)
+              $summary = "### FAILED: {0}`n`n``````text`n{1}`n{2}`n```````n" -f $test.Path, $msg, ($err.ScriptStackTrace -replace "`r?`n", "`n")
+              Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value $summary
             }
           }
           Write-Host ("Tests passed: {0}, failed: {1}" -f $result.PassedCount, $result.FailedCount)
