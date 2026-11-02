@@ -26,6 +26,9 @@ Describe 'Ledger hash chain (catalog 103)' {
         # A virgin store per test: the chain assertions count lines.
         $script:v12Store = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ("domovoy-v12-chain-" + [guid]::NewGuid().ToString('N'))
         $env:DOMOVOY_STORE = $script:v12Store
+        # The legacy-journal tests write the ledger file directly, so the
+        # store directory must exist before the first Set-Content.
+        New-Item -Path $script:v12Store -ItemType Directory -Force | Out-Null
     }
 
     AfterAll {
@@ -103,7 +106,7 @@ Describe 'Ledger hash chain (catalog 103)' {
         $integrity = Test-DomovoyLedgerIntegrity
         $integrity.ChainState | Should -Be 'absent'
         $integrity.UnchainedEntries | Should -Be 2
-        $integrity.Note | Should -BeLike '*predates v1.2*'
+        $integrity.Note | Should -BeLike '*predate v1.2*'
     }
 
     It 'a mixed journal verifies the hashed tail and counts the head' {
@@ -296,7 +299,7 @@ Describe 'Documented catalog wave (80/82/86/74)' {
     }
 }
 
-Describe 'Driver rollback report (catalog 90)' {
+Describe 'Driver rollback report (catalog 90)' -Skip:(-not $script:isWindowsPlatform) {
     It 'flags drivers with an older package in the store and is honest about the rest' {
         InModuleScope Domovoy {
             Mock Get-WindowsDriver {

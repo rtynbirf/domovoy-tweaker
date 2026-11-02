@@ -55,8 +55,17 @@ function Write-DomovoyLedgerEntry {
     $Entry['prevHash'] = $previousHash
 
     # The hash covers everything the entry will store except 'hash' itself.
+    # It is computed over the PARSED-BACK form of the line, not over the
+    # in-memory hashtable: ConvertFrom-Json on the verify side coerces values
+    # (an ISO timestamp string becomes a DateTime object, JSON numbers become
+    # Int64), and the verifier sees exactly those coerced values. Hashing the
+    # same coerced form on both sides is what makes the chain verifiable.
+    $probeLine = $Entry | ConvertTo-Json -Depth 12 -Compress
+    $probeEntry = $probeLine | ConvertFrom-Json
     $canonicalInput = @{}
-    foreach ($key in @($Entry.Keys)) { $canonicalInput[$key] = $Entry[$key] }
+    foreach ($prop in @($probeEntry.PSObject.Properties)) {
+        if ($prop.Name -ne 'hash') { $canonicalInput[$prop.Name] = $prop.Value }
+    }
     $canonical = Get-DomovoyCanonicalJson -Value $canonicalInput
     $sha = [System.Security.Cryptography.SHA256]::Create()
     try {

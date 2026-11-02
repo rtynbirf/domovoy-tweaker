@@ -165,6 +165,7 @@ function Test-DomovoyLedgerIntegrity {
         $result.Note = ('The chain is broken: {0} hash mismatch(es), {1} predecessor mismatch(es), first problem at line {2}. The journal was edited or reordered after the fact.' -f $result.HashMismatches, $result.PrevHashMismatches, $result.FirstBrokenLine)
     }
     else {
+        $result.ChainState = 'ok'
         $result.Note = ('Hash chain verified: {0} of {1} entries bound (the rest predate v1.2 and are counted as unchained).' -f $result.HashedEntries, $result.TotalEntries)
     }
 
