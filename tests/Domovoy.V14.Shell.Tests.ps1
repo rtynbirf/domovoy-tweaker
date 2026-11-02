@@ -23,6 +23,28 @@ BeforeAll {
     $script:v14ManifestDir = Join-Path -Path $env:DOMOVOY_STORE -ChildPath 'manifests'
     New-Item -Path $script:v14ManifestDir -ItemType Directory -Force | Out-Null
 
+    function New-V14ShellManifest {
+        param(
+            [string]$Id,
+            [object[]]$Ops,
+            [object[]]$Verify
+        )
+        $path = Join-Path -Path $script:v14ManifestDir -ChildPath ($Id + '.json')
+        @{
+            id = $Id
+            title = "Test fixture: $Id"
+            version = '1.0.0'
+            category = 'core'
+            risk = 'medium'
+            description = "Test fixture for the v1.4 shell operation set: synthetic per-user registrations only; $Id."
+            ops = $Ops
+            undo = @{ mode = 'snapshot' }
+            verify = $Verify
+            references = @('https://learn.microsoft.com/windows/win32/shell/context-menu-handlers')
+        } | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $path -Encoding UTF8
+        return $path
+    }
+
     # Synthetic, fully documented registrations under HKCU.
     $script:v14Class = '.domovoyv14e2e'
     $script:v14Handler = 'DvmE2EHandler'
@@ -54,27 +76,6 @@ AfterAll {
     }
 }
 
-function New-V14ShellManifest {
-    param(
-        [string]$Id,
-        [object[]]$Ops,
-        [object[]]$Verify
-    )
-    $path = Join-Path -Path $script:v14ManifestDir -ChildPath ($Id + '.json')
-    @{
-        id = $Id
-        title = "Test fixture: $Id"
-        version = '1.0.0'
-        category = 'core'
-        risk = 'medium'
-        description = "Test fixture for the v1.4 shell operation set: synthetic per-user registrations only; $Id."
-        ops = $Ops
-        undo = @{ mode = 'snapshot' }
-        verify = $Verify
-        references = @('https://learn.microsoft.com/windows/win32/shell/context-menu-handlers')
-    } | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $path -Encoding UTF8
-    return $path
-}
 
 Describe 'Shell handler removal (catalog 81)' -Skip:(-not $script:isWindowsPlatform) {
 
