@@ -178,6 +178,31 @@ function Invoke-DomovoyFeature {
                     }
                 }
             }
+            'network.proxy' {
+                if ($op.mode -eq 'server' -and [string]::IsNullOrWhiteSpace([string]$op.proxyServer)) {
+                    throw 'network.proxy: mode "server" requires the proxyServer field.'
+                }
+                if ($op.mode -eq 'pac' -and [string]::IsNullOrWhiteSpace([string]$op.autoConfigUrl)) {
+                    throw 'network.proxy: mode "pac" requires the autoConfigUrl field.'
+                }
+                $proxyKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings'
+                $curEnable = [string](Get-RegistryValueSafe -Path $proxyKey -Name 'ProxyEnable')
+                $curServer = [string](Get-RegistryValueSafe -Path $proxyKey -Name 'ProxyServer')
+                $curPac = [string](Get-RegistryValueSafe -Path $proxyKey -Name 'AutoConfigURL')
+                $newState = switch ($op.mode) {
+                    'off' { 'enable=0' }
+                    'server' { 'enable=1;server={0}' -f $op.proxyServer }
+                    'pac' { 'pac={0}' -f $op.autoConfigUrl }
+                }
+                $plan += [pscustomobject]@{
+                    Op = 'network.proxy'
+                    Target = 'WinINET (current user)'
+                    Current = 'enable={0};server={1};pac={2}' -f $curEnable, $curServer, $curPac
+                    CurrentType = $null
+                    New = $newState
+                    NewType = $null
+                }
+            }
             default {
                 throw "Unsupported op type: $($op.type)"
             }
@@ -315,6 +340,17 @@ function Invoke-DomovoyFeature {
                         }
                     }
                 }
+                'network.proxy' {
+                    $proxyKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings'
+                    $snapshot += @{
+                        op = 'network.proxy'
+                        target = 'WinINET (current user)'
+                        previousProxyEnable = (Get-RegistryValueSafe -Path $proxyKey -Name 'ProxyEnable')
+                        previousProxyServer = (Get-RegistryValueSafe -Path $proxyKey -Name 'ProxyServer')
+                        previousAutoConfigUrl = (Get-RegistryValueSafe -Path $proxyKey -Name 'AutoConfigURL')
+                        previousProxyOverride = (Get-RegistryValueSafe -Path $proxyKey -Name 'ProxyOverride')
+                    }
+                }
             }
         }
 
@@ -376,6 +412,27 @@ function Invoke-DomovoyFeature {
                 'network.dns' {
                     foreach ($alias in @(Get-DomovoyDnsTargets -InterfaceAlias $op.interfaceAlias)) {
                         $null = Set-DnsClientServerAddress -InterfaceAlias $alias -ServerAddresses @($op.servers) -ErrorAction Stop
+                    }
+                }
+                'network.proxy' {
+                    $proxyKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings'
+                    if (-not (Test-Path -LiteralPath $proxyKey)) {
+                        $null = New-Item -Path $proxyKey -ItemType Directory -Force
+                    }
+                    switch ($op.mode) {
+                        'off' {
+                            $null = New-ItemProperty -LiteralPath $proxyKey -Name 'ProxyEnable' -Value 0 -PropertyType DWord -Force
+                        }
+                        'server' {
+                            $null = New-ItemProperty -LiteralPath $proxyKey -Name 'ProxyEnable' -Value 1 -PropertyType DWord -Force
+                            $null = New-ItemProperty -LiteralPath $proxyKey -Name 'ProxyServer' -Value ([string]$op.proxyServer) -PropertyType String -Force
+                            if ($op.PSObject.Properties['bypassLocal'] -and $op.bypassLocal) {
+                                $null = New-ItemProperty -LiteralPath $proxyKey -Name 'ProxyOverride' -Value '<local>' -PropertyType String -Force
+                            }
+                        }
+                        'pac' {
+                            $null = New-ItemProperty -LiteralPath $proxyKey -Name 'AutoConfigURL' -Value ([string]$op.autoConfigUrl) -PropertyType String -Force
+                        }
                     }
                 }
             }

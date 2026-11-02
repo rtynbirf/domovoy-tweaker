@@ -1,0 +1,44 @@
+{
+  "id": "theme.light",
+  "title": "Windows theme: light mode for apps and system",
+  "version": "1.0.0",
+  "category": "ui",
+  "risk": "low",
+  "description": "Switches the documented Windows personalization policy values AppsUseLightTheme and SystemUsesLightTheme to 1, which returns the light theme for both apps and the system shell (the Windows default). The previous values are captured in a snapshot before the change and restored by per-feature undo; Switch-DomovoyTheme drives these two manifests as one switch with theme.dark.",
+  "ops": [
+    {
+      "type": "registry.set",
+      "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+      "name": "AppsUseLightTheme",
+      "value": 1,
+      "valueType": "DWord"
+    },
+    {
+      "type": "registry.set",
+      "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+      "name": "SystemUsesLightTheme",
+      "value": 1,
+      "valueType": "DWord"
+    }
+  ],
+  "undo": {
+    "mode": "snapshot"
+  },
+  "verify": [
+    {
+      "type": "registry.set",
+      "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+      "name": "AppsUseLightTheme",
+      "value": 1
+    },
+    {
+      "type": "registry.set",
+      "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+      "name": "SystemUsesLightTheme",
+      "value": 1
+    }
+  ],
+  "references": [
+    "https://learn.microsoft.com/windows/win32/sysinfo/registry"
+  ]
+}

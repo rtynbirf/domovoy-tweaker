@@ -1,0 +1,44 @@
+{
+  "id": "theme.dark",
+  "title": "Windows theme: dark mode for apps and system",
+  "version": "1.0.0",
+  "category": "ui",
+  "risk": "low",
+  "description": "Switches the documented Windows personalization policy values AppsUseLightTheme and SystemUsesLightTheme to 0, which turns the dark theme on for both apps and the system shell. The previous values are captured in a snapshot before the change and restored by per-feature undo (catalog 29, one-switch theme toggle; Switch-DomovoyTheme drives these two manifests).",
+  "ops": [
+    {
+      "type": "registry.set",
+      "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+      "name": "AppsUseLightTheme",
+      "value": 0,
+      "valueType": "DWord"
+    },
+    {
+      "type": "registry.set",
+      "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+      "name": "SystemUsesLightTheme",
+      "value": 0,
+      "valueType": "DWord"
+    }
+  ],
+  "undo": {
+    "mode": "snapshot"
+  },
+  "verify": [
+    {
+      "type": "registry.set",
+      "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+      "name": "AppsUseLightTheme",
+      "value": 0
+    },
+    {
+      "type": "registry.set",
+      "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+      "name": "SystemUsesLightTheme",
+      "value": 0
+    }
+  ],
+  "references": [
+    "https://learn.microsoft.com/windows/win32/sysinfo/registry"
+  ]
+}

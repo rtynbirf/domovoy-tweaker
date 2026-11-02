@@ -160,6 +160,28 @@ function Undo-DomovoyFeature {
                         $null = Set-DnsClientServerAddress -InterfaceAlias $state.interfaceAlias -ResetServerAddresses -ErrorAction SilentlyContinue
                     }
                 }
+                'network.proxy' {
+                    # Restore the four WinINET values exactly as captured;
+                    # '<unset>' means the value did not exist before the apply.
+                    $proxyKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings'
+                    if (-not (Test-Path -LiteralPath $proxyKey)) {
+                        $null = New-Item -Path $proxyKey -ItemType Directory -Force
+                    }
+                    $undoValues = @(
+                        @{ Name = 'ProxyEnable';   Previous = $state.previousProxyEnable;   Type = 'DWord' }
+                        @{ Name = 'ProxyServer';   Previous = $state.previousProxyServer;   Type = 'String' }
+                        @{ Name = 'AutoConfigURL'; Previous = $state.previousAutoConfigUrl; Type = 'String' }
+                        @{ Name = 'ProxyOverride'; Previous = $state.previousProxyOverride; Type = 'String' }
+                    )
+                    foreach ($value in $undoValues) {
+                        if ($value.Previous -eq '<unset>') {
+                            Remove-ItemProperty -LiteralPath $proxyKey -Name $value.Name -ErrorAction SilentlyContinue
+                        }
+                        else {
+                            $null = New-ItemProperty -LiteralPath $proxyKey -Name $value.Name -Value $value.Previous -PropertyType $value.Type -Force
+                        }
+                    }
+                }
                 'scheduler.task' {
                     # The task is only re-enabled if it was enabled before the
                     # tweak; a task deleted by someone else is not recreated.

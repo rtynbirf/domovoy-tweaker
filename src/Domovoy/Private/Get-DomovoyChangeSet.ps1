@@ -73,6 +73,21 @@ function Get-DomovoyChangeSet {
                 $key = 'scheduler.taskState|{0}{1}' -f $item.taskPath, $item.taskName
                 $value = $item.previousState
             }
+            'network.dns' {
+                # v0.7: the v0.6.0 report showed Before='<unknown>' for DNS
+                # probes - the per-adapter snapshot was never keyed. Explicit
+                # adapter aliases match probe targets 1:1; the '*' selector
+                # merges adapters, so it stays '<unknown>' by design.
+                $key = 'network.dns|{0}' -f $item.interfaceAlias
+                $value = (@($item.previousServers) -join ',')
+                if ([string]::IsNullOrEmpty($value)) {
+                    $value = '<unset>'
+                }
+            }
+            'network.proxy' {
+                $key = 'network.proxy|{0}' -f $item.target
+                $value = 'enable={0};server={1};pac={2}' -f $item.previousProxyEnable, $item.previousProxyServer, $item.previousAutoConfigUrl
+            }
         }
         if ($key) {
             $before[$key] = [string]$value

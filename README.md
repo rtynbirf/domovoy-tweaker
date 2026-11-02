@@ -61,7 +61,7 @@ domovoy-tweaker/
 ├── config/
 │   ├── features/                 # манифесты функций (29: службы, приватность, debloat, интерфейс, сеть, планировщик)
 │   └── profiles/                 # профили cautious / standard (JSON, не скрипты)
-├── src/Domovoy/                  # модуль PowerShell (35 публичных команд)
+├── src/Domovoy/                  # модуль PowerShell (41 публичная команда)
 ├── packaging/winget/             # шаблоны winget-манифестов + генератор
 └── tests/                        # Pester
 ```

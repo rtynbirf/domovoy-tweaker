@@ -3,7 +3,7 @@
 #
 @{
     RootModule = 'Domovoy.psm1'
-    ModuleVersion = '0.6.0'
+    ModuleVersion = '0.7.0'
     GUID = '8546e1cf-4418-4133-92f4-4adcb7897011'
     Author = 'rtynbirf'
     CompanyName = 'Domovoy contributors'
@@ -48,7 +48,13 @@
         'Invoke-DomovoyFileAttributeClear',
         'Undo-DomovoyFileAttributeClear',
         'Backup-DomovoyBitLockerKey',
-        'Invoke-DomovoyDriverDedup'
+        'Invoke-DomovoyDriverDedup',
+        'Switch-DomovoyTheme',
+        'Get-DomovoyNetworkReport',
+        'Export-DomovoyNetworkState',
+        'Restore-DomovoyNetworkState',
+        'Export-DomovoyPolicy',
+        'Show-Domovoy'
     )
     CmdletsToExport = @()
     VariablesToExport = @()

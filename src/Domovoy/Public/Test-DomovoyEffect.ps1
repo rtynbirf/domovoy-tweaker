@@ -120,6 +120,15 @@ function Test-DomovoyEffect {
                 $pkg = Get-AppxPackage -Name $probe.name -ErrorAction SilentlyContinue
                 $actual = if ($pkg) { '<present>' } else { '<absent>' }
             }
+            'network.proxy' {
+                $proxyKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings'
+                $target = 'WinINET (current user)'
+                # The probe pins the whole triple, so plain string equality
+                # stays the single Pass rule; '<unset>' is the documented
+                # spelling of "the value does not exist".
+                $expected = 'enable={0};server={1};pac={2}' -f [string]$probe.proxyEnable, [string]$probe.proxyServer, [string]$probe.autoConfigUrl
+                $actual = 'enable={0};server={1};pac={2}' -f (Get-RegistryValueSafe -Path $proxyKey -Name 'ProxyEnable'), (Get-RegistryValueSafe -Path $proxyKey -Name 'ProxyServer'), (Get-RegistryValueSafe -Path $proxyKey -Name 'AutoConfigURL')
+            }
             default {
                 $target = '<unknown-probe>'
                 $expected = '?'
