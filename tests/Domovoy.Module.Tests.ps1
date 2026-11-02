@@ -44,6 +44,11 @@ Describe 'Module Domovoy' {
         Get-Content -LiteralPath $init.Ledger -Raw | Should -Match 'ledger.init'
     }
 
+    It 'genesis ledger entry records the module version' {
+        $first = (Get-Content -LiteralPath (Initialize-Domovoy).Ledger -TotalCount 1) | ConvertFrom-Json
+        $first.toolVersion | Should -Be ((Get-Module -Name Domovoy).Version.ToString())
+    }
+
     It 'Initialize-Domovoy is idempotent' {
         $second = Initialize-Domovoy
         $second.GenesisCreated | Should -BeFalse
@@ -52,9 +57,17 @@ Describe 'Module Domovoy' {
 
     It 'Get-DomovoyFeature lists the reference manifests' {
         $features = @(Get-DomovoyFeature)
-        $features.Count | Should -Be 2
+        $features.Count | Should -Be 10
         $features.Id | Should -Contain 'services.diagtrack.disabled'
         $features.Id | Should -Contain 'policy.telemetry.level0'
+        $features.Id | Should -Contain 'services.dmwappush.disabled'
+        $features.Id | Should -Contain 'services.remoteregistry.disabled'
+        $features.Id | Should -Contain 'policy.feedback.notifications.hidden'
+        $features.Id | Should -Contain 'privacy.advertisinginfo.disabled'
+        $features.Id | Should -Contain 'privacy.tailoredexperiences.disabled'
+        $features.Id | Should -Contain 'privacy.consumerfeatures.disabled'
+        $features.Id | Should -Contain 'privacy.cortana.disabled'
+        $features.Id | Should -Contain 'privacy.onedrive.filesync.disabled'
     }
 
     It 'Get-DomovoyFeature -Id filters to a single feature' {

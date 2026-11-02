@@ -37,7 +37,7 @@ Describe 'Feature manifests' {
         foreach ($file in $featureFiles) {
             $m = Get-Content -LiteralPath $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
             foreach ($op in @($m.ops)) {
-                $op.type | Should -BeIn @('registry.set', 'service.startup') -Because "$file.Name op $($op.type)"
+                $op.type | Should -BeIn @('registry.set', 'registry.delete', 'service.startup', 'service.stop') -Because "$file.Name op $($op.type)"
             }
         }
     }
