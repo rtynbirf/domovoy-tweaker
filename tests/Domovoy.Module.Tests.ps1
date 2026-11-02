@@ -57,7 +57,7 @@ Describe 'Module Domovoy' {
 
     It 'Get-DomovoyFeature lists the reference manifests' {
         $features = @(Get-DomovoyFeature)
-        $features.Count | Should -Be 31
+        $features.Count | Should -Be 44
         $features.Id | Should -Contain 'services.diagtrack.disabled'
         $features.Id | Should -Contain 'policy.telemetry.level0'
         $features.Id | Should -Contain 'services.dmwappush.disabled'
