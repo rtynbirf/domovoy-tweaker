@@ -334,8 +334,9 @@ function Invoke-DomovoyFeature {
             }
         }
 
-        # Verify and record.
+        # Verify, diff against the snapshot and record.
         $verification = Test-DomovoyEffect -Manifest $manifest
+        $changes = Get-DomovoyChangeSet -Manifest $manifest -Snapshot $snapshot -Verification $verification
         $written = Write-DomovoyLedgerEntry -Entry @{
             event = 'feature.apply'
             featureId = $manifest.id
@@ -349,6 +350,7 @@ function Invoke-DomovoyFeature {
             Feature = $manifest.id
             Mode = 'Apply'
             Verification = $verification
+            Changes = $changes
             LedgerTimestamp = $written['timestamp']
         }
     }

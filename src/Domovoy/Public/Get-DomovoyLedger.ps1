@@ -23,7 +23,7 @@ function Get-DomovoyLedger {
     param(
         [string]$FeatureId,
 
-        [ValidateSet('ledger.init', 'feature.apply', 'feature.undo', 'cleanup.apply', 'all')]
+        [ValidateSet('ledger.init', 'feature.apply', 'feature.undo', 'cleanup.apply', 'networkreset.apply', 'eventlog.cleanup.apply', 'memorytrim.apply', 'integritycheck.apply', 'all')]
         [string]$Event = 'all',
 
         [ValidateRange(1, 1000000)]

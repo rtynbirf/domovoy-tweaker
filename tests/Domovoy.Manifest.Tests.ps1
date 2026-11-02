@@ -58,6 +58,22 @@ Describe 'Feature manifests' {
         }
     }
 
+    It 'every verify probe type is implemented in Test-DomovoyEffect (100% coverage)' {
+        # Keep this list in sync with the switch statement in
+        # Test-DomovoyEffect. A new probe type must be implemented there and
+        # listed here in the same change.
+        $implemented = @(
+            'registry.set', 'registry.absent', 'service.startup', 'service.status',
+            'appx.absent', 'appx.present', 'file.attributes', 'scheduler.taskState'
+        )
+        foreach ($file in $featureFiles) {
+            $m = Get-Content -LiteralPath $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
+            foreach ($probe in @($m.verify)) {
+                $probe.type | Should -BeIn $implemented -Because "$file.Name probe $($probe.type)"
+            }
+        }
+    }
+
     It 'all references are https links' {
         foreach ($file in $featureFiles) {
             $m = Get-Content -LiteralPath $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json

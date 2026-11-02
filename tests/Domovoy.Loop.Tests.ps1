@@ -90,6 +90,20 @@ BeforeAll {
         references = @($script:registryRef)
     } | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $keyManifest -Encoding UTF8
 
+    $appxPresentManifest = Join-Path -Path $script:manifestDir -ChildPath 'test-appx-present.json'
+    @{
+        id = 'test.appx.present'
+        title = 'Test fixture: expect an appx package to be present'
+        version = '1.0.0'
+        category = 'core'
+        risk = 'low'
+        description = 'Test fixture: the appx.present probe against a package that does not exist.'
+        ops = @(@{ type = 'registry.set'; path = $script:testRoot; name = 'AppxProbeMarker'; value = 1; valueType = 'DWord' })
+        undo = @{ mode = 'snapshot' }
+        verify = @(@{ type = 'appx.present'; name = 'Domovoy.Test.NonexistentPackage' })
+        references = @($script:registryRef)
+    } | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $appxPresentManifest -Encoding UTF8
+
     $appxManifest = Join-Path -Path $script:manifestDir -ChildPath 'test-appx.json'
     @{
         id = 'test.appx.remove'
@@ -371,6 +385,11 @@ Describe 'v0.4 temp cleanup' {
             $applied = Invoke-DomovoyCleanup -Target Temp -OlderThanDays 365 -Apply
             $applied.Mode | Should -Be 'Apply'
             $applied.FilesRemoved | Should -BeGreaterThan 0
+            # v0.5: the apply report carries the measured before/after numbers.
+            $applied.FilesFound | Should -BeGreaterThan 0
+            $applied.BytesFound | Should -BeGreaterThan 0
+            $applied.FilesFound | Should -BeGreaterOrEqual $applied.FilesRemoved
+            $applied.BytesAfter | Should -BeLessThan $applied.BytesFound
             Test-Path -LiteralPath $fixture | Should -BeFalse
 
             $events = @(Get-DomovoyLedger -Event 'cleanup.apply' -Last 10)
@@ -381,6 +400,184 @@ Describe 'v0.4 temp cleanup' {
             if (Test-Path -LiteralPath $fixture) {
                 Remove-Item -LiteralPath $fixture -Force -ErrorAction SilentlyContinue
             }
+        }
+    }
+}
+
+Describe 'v0.5 effect reports' {
+
+    It 'apply reports what really changed: snapshot before vs probes after' {
+        $before = Get-ItemProperty -LiteralPath $script:testRoot -Name 'TestValue' -ErrorAction SilentlyContinue
+        $before | Should -BeNullOrEmpty
+
+        $applied = Invoke-DomovoyFeature -ManifestFile (Join-Path $script:manifestDir 'test-set.json') -Apply -SkipRestorePoint
+        $applied.Mode | Should -Be 'Apply'
+
+        @($applied.Changes).Count | Should -Be 1
+        $row = $applied.Changes[0]
+        $row.Probe | Should -Be 'registry.set'
+        $row.Before | Should -Be '<unset>'
+        $row.After | Should -Be '42'
+        $row.Changed | Should -BeTrue
+
+        # A second apply of the same manifest: nothing changes anymore.
+        $again = Invoke-DomovoyFeature -ManifestFile (Join-Path $script:manifestDir 'test-set.json') -Apply -SkipRestorePoint
+        $again.Changes[0].Before | Should -Be '42'
+        $again.Changes[0].After | Should -Be '42'
+        $again.Changes[0].Changed | Should -BeFalse
+
+        $undo = Undo-DomovoyFeature -Id 'test.set.value' -Apply
+        $undo.Mode | Should -Be 'Undo'
+    }
+
+    It 'appx.present probe answers honestly for a missing package' {
+        # The probe runs in the real apply/verify contour: the marker op is
+        # harmless, the probe fails honestly because the package is absent.
+        $applied = Invoke-DomovoyFeature -ManifestFile (Join-Path $script:manifestDir 'test-appx-present.json') -Apply -SkipRestorePoint
+        $applied.Mode | Should -Be 'Apply'
+        $applied.Verification.AllPass | Should -BeFalse
+        @($applied.Verification.Results).Count | Should -Be 1
+        $probe = $applied.Verification.Results[0]
+        $probe.Probe | Should -Be 'appx.present'
+        $probe.Expected | Should -Be '<present>'
+        $probe.Actual | Should -Be '<absent>'
+        $probe.Pass | Should -BeFalse
+
+        $undo = Undo-DomovoyFeature -Id 'test.appx.present' -Apply
+        $undo.Mode | Should -Be 'Undo'
+    }
+
+    It 'change report answers from the ledger with dates' {
+        $applied = Invoke-DomovoyFeature -ManifestFile (Join-Path $script:manifestDir 'test-set.json') -Apply -SkipRestorePoint
+        $applied.Mode | Should -Be 'Apply'
+
+        $report = Get-DomovoyChangeReport -Since (Get-Date).AddMinutes(-5)
+        $report.Events | Should -BeGreaterThan 0
+        $report.Counts['feature.apply'] | Should -BeGreaterThan 0
+        $row = @($report.Report | Where-Object { $_.Event -eq 'feature.apply' })[0]
+        $row.Timestamp | Should -Not -BeNullOrEmpty
+        $row.FeatureId | Should -Be 'test.set.value'
+        $row.Summary | Should -Match 'verified:'
+
+        $future = Get-DomovoyChangeReport -Since (Get-Date).AddMinutes(5)
+        $future.Events | Should -Be 0
+
+        $undo = Undo-DomovoyFeature -Id 'test.set.value' -Apply
+        $undo.Mode | Should -Be 'Undo'
+    }
+
+    It 'memory trim dry-run measures without touching anything' {
+        $dry = Invoke-DomovoyMemoryTrim -ProcessId $PID
+        $dry.Mode | Should -Be 'DryRun'
+        $dry.WorkingSetBytes | Should -BeGreaterThan 0
+        $dry.Note | Should -Match 'temporary'
+    }
+
+    It 'memory trim apply trims the current process and records measured bytes' {
+        $applied = Invoke-DomovoyMemoryTrim -ProcessId $PID -Apply
+        $applied.Mode | Should -Be 'Apply'
+        $applied.Trimmed | Should -Be 1
+        $applied.BytesBefore | Should -BeGreaterThan 0
+        $applied.BytesAfter | Should -BeGreaterThan 0
+        $applied.Note | Should -Match 'temporary'
+
+        $events = @(Get-DomovoyLedger -Event 'memorytrim.apply' -Last 10)
+        $events.Count | Should -BeGreaterThan 0
+        $events[-1].bytesBefore | Should -BeGreaterThan 0
+    }
+
+    It 'network reset dry-run shows the plan; undo without a reset fails honestly' {
+        $dry = Invoke-DomovoyNetworkReset -Target Winsock
+        $dry.Mode | Should -Be 'DryRun'
+        $dry.Commands | Should -Contain 'netsh winsock reset'
+        $dry.Note | Should -Match 'cannot be restored'
+
+        { Undo-DomovoyNetworkReset } | Should -Throw 'No network reset found in the ledger. Nothing to undo.'
+    }
+
+    It 'network reset undo restores nothing when nothing disappeared' {
+        # A snapshot with empty lists: recorded directly into the ledger the
+        # same way the module writes it (append-only JSONL).
+        $ledgerPath = Join-Path -Path $env:DOMOVOY_STORE -ChildPath 'ledger.jsonl'
+        $entry = @{
+            event = 'networkreset.apply'
+            featureId = 'network.winsock.reset'
+            target = 'Winsock'
+            commands = @()
+            snapshot = @{ staticIp = @(); dns = @() }
+            rebootRecommended = $true
+        } | ConvertTo-Json -Depth 6 -Compress
+        Add-Content -LiteralPath $ledgerPath -Value $entry -Encoding UTF8
+
+        $undo = Undo-DomovoyNetworkReset
+        $undo.RestoredIpAddresses | Should -Be 0
+        $undo.RestoredDnsLists | Should -Be 0
+        $undo.Note | Should -Match 'not restorable'
+    }
+
+    It 'event log cleanup dry-run counts records without clearing' {
+        $dry = Invoke-DomovoyEventLogCleanup
+        $dry.Mode | Should -Be 'DryRun'
+        $dry.EntriesBefore | Should -BeGreaterThan 0
+        $dry.Logs | Should -BeGreaterThan 0
+        $dry.Report[0].LogName | Should -Not -BeNullOrEmpty
+    }
+
+    It 'telemetry report lists actual policy values from privacy manifests' {
+        $rows = @(Get-DomovoyTelemetryReport)
+        $rows.Count | Should -BeGreaterThan 0
+        foreach ($row in $rows) {
+            $row.Path | Should -Not -BeNullOrEmpty
+            $row.Feature | Should -Not -BeNullOrEmpty
+        }
+        $rows.Feature | Should -Contain 'policy.telemetry.level0'
+    }
+
+    It 'startup inventory lists documented Run/RunOnce entries read-only' {
+        $rows = @(Get-DomovoyStartupInventory)
+        foreach ($row in $rows) {
+            $row.Hive | Should -BeIn @('HKCU', 'HKLM')
+            $row.Key | Should -Match 'CurrentVersion\\Run(Once)?$'
+            $row.Name | Should -Not -BeNullOrEmpty
+        }
+    }
+
+    It 'driver inventory lists drivers and exports a JSON snapshot' {
+        $rows = @(Get-DomovoyDriverInventory)
+        $rows.Count | Should -BeGreaterThan 0
+        $rows[0].DeviceName | Should -Not -BeNullOrEmpty
+
+        $export = Get-DomovoyDriverInventory -Export
+        $export.Count | Should -BeGreaterThan 0
+        Test-Path -LiteralPath $export.ExportedTo | Should -BeTrue
+        $parsed = Get-Content -LiteralPath $export.ExportedTo -Raw -Encoding UTF8 | ConvertFrom-Json
+        @($parsed.drivers).Count | Should -Be $export.Count
+    }
+
+    It 'integrity check dry-run shows the plan without running anything' {
+        $dry = Invoke-DomovoySystemIntegrityCheck
+        $dry.Mode | Should -Be 'DryRun'
+        $dry.Command | Should -Match 'sfc'
+
+        $dryDism = Invoke-DomovoySystemIntegrityCheck -Tool Dism
+        $dryDism.Command | Should -Match 'Dism'
+    }
+
+    It 'bitlocker status is read-only and honest' {
+        if (-not (Get-Command Get-BitLockerVolume -ErrorAction SilentlyContinue)) {
+            Set-ItResult -Skipped -Because 'BitLocker module is not available on this runner'
+            return
+        }
+        $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+        $principal = New-Object Security.Principal.WindowsPrincipal($identity)
+        if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+            Set-ItResult -Skipped -Because 'the runner session is not elevated'
+            return
+        }
+        $rows = @(Get-DomovoyBitLockerStatus)
+        foreach ($row in $rows) {
+            $row.MountPoint | Should -Not -BeNullOrEmpty
+            $row.VolumeStatus | Should -Not -BeNullOrEmpty
         }
     }
 }

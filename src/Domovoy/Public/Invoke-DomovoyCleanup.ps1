@@ -77,23 +77,38 @@ function Invoke-DomovoyCleanup {
             }
         }
 
+        # Measured "after": re-scan what is left instead of deriving it from
+        # arithmetic (catalog feature 44 - the report must be measurable).
+        $remaining = @(Get-ChildItem -LiteralPath $paths -Recurse -File -Force -ErrorAction SilentlyContinue |
+            Where-Object { $_.LastWriteTime -lt $cutoff })
+        $bytesAfter = [long]0
+        foreach ($file in $remaining) {
+            $bytesAfter += [long]$file.Length
+        }
+
         $written = Write-DomovoyLedgerEntry -Entry @{
             event = 'cleanup.apply'
             featureId = 'cleanup.' + $Target.ToLowerInvariant()
             target = $Target
             olderThanDays = $OlderThanDays
+            filesFound = $candidates.Count
+            bytesFound = $bytes
             filesRemoved = $removed
             bytesFreed = $removedBytes
             filesFailed = $failed
+            bytesAfter = $bytesAfter
             irreversible = $true
         }
 
         [pscustomobject]@{
             Target = $Target
             Mode = 'Apply'
+            FilesFound = $candidates.Count
+            BytesFound = $bytes
             FilesRemoved = $removed
             BytesFreed = $removedBytes
             FilesFailed = $failed
+            BytesAfter = $bytesAfter
             LedgerTimestamp = $written['timestamp']
         }
     }

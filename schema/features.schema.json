@@ -272,6 +272,15 @@
         {
           "type": "object",
           "additionalProperties": false,
+          "required": ["type", "name"],
+          "properties": {
+            "type": { "const": "appx.present" },
+            "name": { "type": "string", "minLength": 1 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
           "required": ["type", "path", "attributes"],
           "properties": {
             "type": { "const": "file.attributes" },

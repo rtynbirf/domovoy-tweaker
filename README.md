@@ -61,7 +61,7 @@ domovoy-tweaker/
 ├── config/
 │   ├── features/                 # манифесты функций (26: службы, приватность, debloat, интерфейс, планировщик)
 │   └── profiles/                 # профили cautious / standard (JSON, не скрипты)
-├── src/Domovoy/                  # модуль PowerShell (13 публичных команд)
+├── src/Domovoy/                  # модуль PowerShell (23 публичные команды)
 └── tests/                        # Pester
 ```
 
@@ -85,6 +85,19 @@ Get-DomovoyProfile                                        # профили: caut
 Invoke-DomovoyProfile -Id cautious                        # суммарный dry-run-план профиля
 Invoke-DomovoyProfile -Id cautious -Apply                 # применить профиль (одна точка восстановления)
 Backup-DomovoyServiceState                                # экспорт таблицы служб в JSON
+
+# Проверка эффекта как полный контур (v0.5.0)
+$applied = Invoke-DomovoyFeature -Id policy.telemetry.level0 -Apply
+$applied.Changes                                          # что реально изменилось: до/после по каждой пробе
+Invoke-DomovoyCleanup                                     # отчёт «сколько освободим» (dry-run)
+Get-DomovoyTelemetryReport                                # №15: фактические значения телеметрических политик
+Get-DomovoyStartupInventory                               # №41: Run/RunOnce — только чтение
+Get-DomovoyDriverInventory -Export                        # №45/42: инвентаризация + JSON-экспорт драйверов
+Get-DomovoyBitLockerStatus                                # №49: состояние BitLocker по томам
+Get-DomovoyChangeReport -Since (Get-Date).AddDays(-7)     # №63: что изменилось с момента X — по журналу
+Invoke-DomovoyEventLogCleanup                             # №38: журналы событий — сначала отчёт, очистка только с -Apply
+Invoke-DomovoyMemoryTrim                                  # №40: тримминг — честная пометка «эффект временный»
+Invoke-DomovoySystemIntegrityCheck                        # №51: sfc/DISM с записью результата в журнал
 ```
 
 Требуется Windows 10/11, PowerShell 5.1 или 7+; для `-Apply` — сессия с правами администратора.
@@ -92,12 +105,15 @@ Backup-DomovoyServiceState                                # экспорт та�
 ## Дорожная карта
 
 Вехи с критериями приёмки — в [docs/roadmap.md](docs/roadmap.md).
-Сейчас: **v0.4.0** — 26 функций (службы, приватность, debloat, интерфейс,
+Сейчас: **v0.5.0** — 26 функций (службы, приватность, debloat, интерфейс,
 задачи планировщика), профили cautious/standard, дозор дрейфа с базовой
-линией из последнего verified-снимка (даты, `-Since`), op-типы `appx.remove`,
-`file.attribute` и `scheduler.task` с 4 проекциями, очистка temp с отчётом
-объёма и записью факта в журнал, экспорт таблицы служб.
-Дальше: v0.5.0 — проверка эффекта как полный контур; v1.0.0 — 100+ функций и стабильный API.
+линией из последнего verified-снимка, op-типы `appx.remove`, `file.attribute`
+и `scheduler.task` с 4 проекциями, 100% покрытие манифестов пробами,
+отчёт «что реально изменилось» по apply, измеримые «до/после» для очисток,
+отчёты по телеметрии/автозагрузке/драйверам/BitLocker и «что изменилось
+с момента X» — только чтение; сброс сети, очистка журналов событий, тримминг
+памяти и sfc/DISM — dry-run по умолчанию, факт в журнал.
+Дальше: v0.6.0 — авто-лечение (opt-in) и дистрибуция (PSGallery); v1.0.0 — 100+ функций и стабильный API.
 
 ## Отказ от ответственности
 

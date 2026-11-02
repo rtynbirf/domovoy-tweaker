@@ -101,6 +101,12 @@ function Test-DomovoyEffect {
                 $task = Get-ScheduledTask -TaskPath $probe.taskPath -TaskName $probe.taskName -ErrorAction SilentlyContinue
                 $actual = if ($task) { [string]$task.State } else { '<missing>' }
             }
+            'appx.present' {
+                $target = $probe.name
+                $expected = '<present>'
+                $pkg = Get-AppxPackage -Name $probe.name -ErrorAction SilentlyContinue
+                $actual = if ($pkg) { '<present>' } else { '<absent>' }
+            }
             default {
                 $target = '<unknown-probe>'
                 $expected = '?'

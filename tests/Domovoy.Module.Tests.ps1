@@ -14,8 +14,8 @@ AfterAll {
 
 Describe 'Module Domovoy' {
 
-    It 'exports exactly 13 public commands' {
-        @(Get-Command -Module Domovoy).Count | Should -Be 13
+    It 'exports exactly 23 public commands' {
+        @(Get-Command -Module Domovoy).Count | Should -Be 23
     }
 
     It 'parses every source file without syntax errors' {
