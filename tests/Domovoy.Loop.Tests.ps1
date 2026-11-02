@@ -117,18 +117,35 @@ Describe 'v0.2 ledger loop (apply - verify - undo)' {
     }
 
     It 'ledger records featureSource and survives a torn line' {
-        $ledgerPath = (Initialize-Domovoy).Ledger
-        $applies = @(Get-DomovoyLedger -Event 'feature.apply' -Last 1000000)
-        $applies.Count | Should -BeGreaterThan 0
-        $applies[0].featureSource | Should -Not -BeNullOrEmpty
+        # Self-contained: a fresh store guarantees the genesis entry exists.
+        $oldStore = $env:DOMOVOY_STORE
+        $env:DOMOVOY_STORE = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ("domovoy-ledger-" + [guid]::NewGuid().ToString('N'))
+        try {
+            $ledgerPath = (Initialize-Domovoy).Ledger
+            Set-ItemProperty -LiteralPath $script:testRoot -Name 'TestValue' -Value 7 -Type DWord
+            $applied = Invoke-DomovoyFeature -ManifestFile (Join-Path $script:manifestDir 'test-delete.json') -Apply -SkipRestorePoint
+            $applied.Mode | Should -Be 'Apply'
+            $undo = Undo-DomovoyFeature -Id 'test.delete.value' -Apply
+            $undo.Mode | Should -Be 'Undo'
 
-        Add-Content -LiteralPath $ledgerPath -Value '{broken json line...'
+            $applies = @(Get-DomovoyLedger -Event 'feature.apply' -Last 1000000)
+            $applies.Count | Should -BeGreaterThan 0
+            $applies[0].featureSource | Should -Not -BeNullOrEmpty
 
-        $entries = @(Get-DomovoyLedger -Last 1000000)
-        $entries.Count | Should -BeGreaterThan $applies.Count
-        $entries.event | Should -Contain 'feature.apply'
-        $entries.event | Should -Contain 'feature.undo'
-        $entries.event | Should -Contain 'ledger.init'
+            Add-Content -LiteralPath $ledgerPath -Value '{broken json line...'
+
+            $entries = @(Get-DomovoyLedger -Last 1000000)
+            $entries.Count | Should -BeGreaterThan $applies.Count
+            $entries.event | Should -Contain 'ledger.init'
+            $entries.event | Should -Contain 'feature.apply'
+            $entries.event | Should -Contain 'feature.undo'
+        }
+        finally {
+            if (Test-Path -LiteralPath $env:DOMOVOY_STORE) {
+                Remove-Item -LiteralPath $env:DOMOVOY_STORE -Recurse -Force -ErrorAction SilentlyContinue
+            }
+            $env:DOMOVOY_STORE = $oldStore
+        }
     }
 
     It 'drift scan resolves manifests from featureSource after a rename' {
