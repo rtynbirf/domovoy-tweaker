@@ -38,6 +38,10 @@ jobs:
           VERSION="${GITHUB_REF_NAME#v}"
           mkdir -p staging
           cp -r src/Domovoy staging/Domovoy
+          # Ship the feature catalog, profiles, groups and schemas inside the
+          # module itself: the resolver falls back to ModuleBase/config when
+          # there is no repository checkout next to the module.
+          cp -r config schema staging/Domovoy/
           cp README.md LICENSE staging/
           cd staging
           zip -r "../Domovoy-${VERSION}.zip" .
@@ -110,6 +114,7 @@ jobs:
           $VERSION = $env:GITHUB_REF_NAME.Substring(1)
           New-Item -ItemType Directory -Path 'staging' -Force | Out-Null
           Copy-Item -Recurse -Path 'src/Domovoy' -Destination 'staging/Domovoy'
+          Copy-Item -Recurse -Path 'config','schema' -Destination 'staging/Domovoy/'
           Copy-Item 'README.md','LICENSE' 'staging/'
           Compress-Archive -Path 'staging/*' -DestinationPath "Domovoy-$VERSION-signed.zip" -Force
 
@@ -141,6 +146,9 @@ jobs:
             exit 0
           }
           Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Scope CurrentUser | Out-Null
+          # The gallery package must carry the feature catalog the same way the
+          # zip does - otherwise an installed module cannot list any features.
+          Copy-Item -Recurse -Path 'config','schema' -Destination 'src/Domovoy/'
           Import-Module -Name (Join-Path (Get-Location) 'src/Domovoy/Domovoy.psd1') -Force
           $meta = Test-ModuleManifest -Path (Join-Path (Get-Location) 'src/Domovoy/Domovoy.psd1')
           Write-Host "Publishing $($meta.Name) $($meta.Version) to the PowerShell Gallery."

@@ -12,13 +12,18 @@ Install-Module -Name Domovoy -Scope CurrentUser
 Import-Module Domovoy
 ```
 
+Галерейный пакет несёт то же, что и zip: каталог манифестов `config/` и
+схемы лежат внутри модуля — `Get-DomovoyFeature` видит функции сразу после
+установки.
+
 Критерий приёмки вехи v0.6.0: установка одной командой из PSGallery;
 `install.ps1` не нужен — его не существует.
 
 ### Из zip-архива релиза
 
-Каждый релиз на GitHub вкладывает `Domovoy-<версия>.zip` (модуль + README +
-LICENSE). Распаковать и импортировать:
+Каждый релиз на GitHub вкладывает `Domovoy-<версия>.zip` (модуль + каталог
+манифестов `config/` + схемы `schema/` + README + LICENSE). Распаковать и
+импортировать — каталог функций работает сразу, без git-клона:
 
 ```powershell
 Import-Module .\Domovoy\Domovoy.psd1 -Force

@@ -51,17 +51,17 @@ domovoy-tweaker/
 │   ├── spec.md                   # техническая спецификация
 │   ├── architecture.md           # четыре контура, схемы, алгоритмы
 │   ├── roadmap.md                # вехи с критериями приёмки
-│   ├── features.md               # ПОЛНЫЙ нумерованный каталог функций (103)
+│   ├── features.md               # ПОЛНЫЙ нумерованный каталог функций (104)
 │   ├── comparison.md             # сравнение с Sophia/WinUtil/Win11Debloat/privacy.sexy
+│   ├── audit/                    # ревизии: отчёты и ТЗ-дорожные карты
 │   └── analysis/
 │       └── modern-tweaker-case-study.md   # реверс-инжиниринг 2.0 → 3.0 (статика)
-├── schema/
-│   ├── features.schema.json      # JSON-схема манифеста функции
-│   └── profiles.schema.json      # JSON-схема профиля
+├── schema/                       # JSON-схемы: features / profiles / groups
 ├── config/
 │   ├── features/                 # манифесты функций (56: службы, приватность, debloat, интерфейс, сеть, планировщик)
-│   └── profiles/                 # профили cautious / standard (JSON, не скрипты)
-├── src/Domovoy/                  # модуль PowerShell (46 публичных команд)
+│   ├── profiles/                 # профили cautious / standard (JSON, не скрипты)
+│   └── groups/                   # группы функций с зависимостями (JSON)
+├── src/Domovoy/                  # модуль PowerShell (51 публичная команда)
 ├── packaging/winget/             # шаблоны winget-манифестов + генератор
 └── tests/                        # Pester
 ```
@@ -78,7 +78,7 @@ Import-Module Domovoy
 Из zip-архива релиза (без `install.ps1` - он не нужен):
 
 ```powershell
-# распаковать Domovoy-0.6.0.zip и выполнить:
+# распаковать Domovoy-<версия>.zip (каталог манифестов внутри) и выполнить:
 Import-Module .\Domovoy\Domovoy.psd1 -Force
 ```
 
@@ -140,14 +140,14 @@ Backup-DomovoyBitLockerKey -MountPoint C: -OutFile D:\keys\c.txt -Apply         
 ## Дорожная карта
 
 Вехи с критериями приёмки — в [docs/roadmap.md](docs/roadmap.md).
-Сейчас: **v1.2.0** — 103 записи каталога, 56 эталонных манифестов на 10 op-типах,
-46 публичных команд. Журнал tamper-evident: хеш-цепочка SHA-256 и
-`Test-DomovoyLedgerIntegrity` (№103); op `file.timestamp` с 4 проекциями (№91);
-отчёт «драйвер готов к откату» (№90); Component Store cleanup через штатную
-задачу Windows, без собственных удалений (№88); новая документированная волна:
-TaskbarAl, VisualFX-профили, авто-DoH off, телеметрия Office off (№74/80/82/86).
-Дальше: v1.3.0 — пакеты функций с зависимостями (№102) и явная миграция
-журнала (№101).
+Сейчас: **v1.3.0** — 104 записи каталога, 56 эталонных манифестов на 10 op-типах,
+51 публичная команда. Группы функций с зависимостями поверх профилей (№102);
+явная миграция журнала между версиями схемы (№101); аудит shell-расширений
+и «Открыть с помощью» (№104, фундамент №81). Журнал tamper-evident:
+хеш-цепочка SHA-256 и `Test-DomovoyLedgerIntegrity` (№103).
+Дальше: v1.4.0 — операции контекстного меню (№81), №77 и №95 (переносы из v1.2).
+Полная ревизия проекта и ТЗ всего недоделанного —
+[docs/audit/](docs/audit/2026-11-03-revizor-report.md).
 
 ## Отказ от ответственности
 
