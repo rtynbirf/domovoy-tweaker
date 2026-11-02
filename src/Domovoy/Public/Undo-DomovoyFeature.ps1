@@ -280,8 +280,10 @@ function Undo-DomovoyFeature {
                                 'QWord'       { $restoreData = [long]$state.previousData }
                             }
                             try {
-                                $owItem = Get-Item -LiteralPath $owKey -ErrorAction Stop
-                                $owItem.SetValue([string]$state.entry, $restoreData, $kind)
+                                # New-ItemProperty opens the key with write
+                                # access; a raw Get-Item handle is read-only
+                                # and SetValue on it fails (E2E, run 38).
+                                $null = New-ItemProperty -LiteralPath $owKey -Name ([string]$state.entry) -Value $restoreData -PropertyType $kind -Force
                             }
                             catch {
                                 # A None/Unknown kind cannot be stored back

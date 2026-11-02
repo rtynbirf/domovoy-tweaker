@@ -34,7 +34,6 @@ function Restore-DomovoyRegKeyTree {
     $name = [string]$Tree.name
     $keyPath = Join-Path -Path $ParentPath -ChildPath $name
     $null = New-Item -Path $keyPath -ItemType Directory -Force
-    $item = Get-Item -LiteralPath $keyPath -ErrorAction Stop
 
     foreach ($value in @($Tree.values)) {
         $kindName = [string]$value.kind
@@ -55,7 +54,14 @@ function Restore-DomovoyRegKeyTree {
             'QWord' { $data = [long]$data }
             default { $data = [string]$data }
         }
-        $item.SetValue([string]$value.name, $data, $kind)
+        # New-ItemProperty opens the key with write access; a raw
+        # Get-Item handle is read-only and SetValue on it fails with
+        # "Cannot write to the registry key" (caught by the E2E suite).
+        # The default value is captured under the name '' and is written
+        # back under the provider's reserved spelling '(default)'.
+        $valueName = [string]$value.name
+        if ($valueName -eq '') { $valueName = '(default)' }
+        $null = New-ItemProperty -LiteralPath $keyPath -Name $valueName -Value $data -PropertyType $kind -Force
     }
 
     foreach ($child in @($Tree.subkeys)) {
