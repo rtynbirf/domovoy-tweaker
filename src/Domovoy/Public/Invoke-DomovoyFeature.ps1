@@ -223,7 +223,6 @@ function Invoke-DomovoyFeature {
                     NewType = $null
                 }
             }
-            }
             default {
                 throw "Unsupported op type: $($op.type)"
             }
