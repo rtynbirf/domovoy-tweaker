@@ -14,7 +14,13 @@ function Write-DomovoyLedgerEntry {
 
     $Entry['schema'] = 1
     $Entry['tool'] = 'Domovoy'
-    $Entry['toolVersion'] = '0.1.0'
+    $module = Get-Module -Name Domovoy
+    if ($module) {
+        $Entry['toolVersion'] = $module.Version.ToString()
+    }
+    else {
+        $Entry['toolVersion'] = 'unknown'
+    }
     $Entry['timestamp'] = [DateTimeOffset]::UtcNow.ToString('o')
 
     $line = $Entry | ConvertTo-Json -Depth 12 -Compress

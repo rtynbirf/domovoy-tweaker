@@ -52,6 +52,22 @@ function Test-DomovoyEffect {
                     $actual = '<missing>'
                 }
             }
+            'registry.absent' {
+                $target = '{0}\{1}' -f $probe.path, $probe.name
+                $expected = '<unset>'
+                $actual = Get-RegistryValueSafe -Path $probe.path -Name $probe.name
+            }
+            'service.status' {
+                $target = $probe.name
+                $expected = [string]$probe.expected
+                $service = Get-Service -Name $probe.name -ErrorAction SilentlyContinue
+                if ($service) {
+                    $actual = [string]$service.Status
+                }
+                else {
+                    $actual = '<missing>'
+                }
+            }
             default {
                 $target = '<unknown-probe>'
                 $expected = '?'

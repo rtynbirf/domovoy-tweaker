@@ -6,9 +6,9 @@ function Undo-DomovoyFeature {
     .DESCRIPTION
     Finds the most recent feature.apply event for the feature in the ledger and
     restores every captured value (registry values with their original types,
-    service startup types). Values that did not exist before the tweak are
-    removed. Without -Apply the command is a dry-run: it shows what would be
-    restored.
+    service startup types, stopped services started again when they were
+    running). Values that did not exist before the tweak are removed.
+    Without -Apply the command is a dry-run: it shows what would be restored.
 
     .EXAMPLE
     Undo-DomovoyFeature -Id services.diagtrack.disabled
@@ -71,10 +71,22 @@ function Undo-DomovoyFeature {
                         Set-Service -Name $state.name -StartupType $state.previousValue
                     }
                 }
+                'service.stop' {
+                    if ($state.previousStatus -eq 'Running') {
+                        Start-Service -Name $state.name -ErrorAction SilentlyContinue
+                    }
+                }
             }
         }
 
-        $verification = Test-DomovoyEffect -Id $Id
+        $verification = $null
+        try {
+            $manifest = Get-DomovoyManifestForFeature -Id $Id -LedgerEntry $entry
+            $verification = Test-DomovoyEffect -Manifest $manifest
+        }
+        catch {
+            Write-Verbose ("Post-undo verification was not possible: {0}" -f $_.Exception.Message)
+        }
         $written = Write-DomovoyLedgerEntry -Entry @{
             event = 'feature.undo'
             featureId = $Id

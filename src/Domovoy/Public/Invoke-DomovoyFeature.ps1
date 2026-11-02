@@ -30,8 +30,10 @@ function Invoke-DomovoyFeature {
         [switch]$SkipRestorePoint
     )
 
+    $manifestPath = $null
     if ($PSCmdlet.ParameterSetName -eq 'ByFile') {
         $manifest = Read-FeatureManifest -Path $ManifestFile
+        $manifestPath = $ManifestFile
     }
     else {
         $feature = Get-DomovoyFeature -Id $Id
@@ -39,6 +41,7 @@ function Invoke-DomovoyFeature {
             throw "Feature not found: $Id"
         }
         $manifest = Read-FeatureManifest -Path $feature[0].File
+        $manifestPath = $feature[0].File
     }
 
     # Build the plan: for every operation, capture the current state.
@@ -72,6 +75,36 @@ function Invoke-DomovoyFeature {
                     Current = if ($service) { [string]$service.StartType } else { '<missing>' }
                     CurrentType = $null
                     New = $op.startupType
+                    NewType = $null
+                }
+            }
+            'registry.delete' {
+                $currentType = 'None'
+                if (Test-Path -LiteralPath $op.path) {
+                    try {
+                        $currentType = [string](Get-Item -LiteralPath $op.path -ErrorAction Stop).GetValueKind($op.name)
+                    }
+                    catch {
+                        $currentType = 'None'
+                    }
+                }
+                $plan += [pscustomobject]@{
+                    Op = 'registry.delete'
+                    Target = '{0}\{1}' -f $op.path, $op.name
+                    Current = (Get-RegistryValueSafe -Path $op.path -Name $op.name)
+                    CurrentType = $currentType
+                    New = '<delete>'
+                    NewType = $null
+                }
+            }
+            'service.stop' {
+                $service = Get-Service -Name $op.name -ErrorAction SilentlyContinue
+                $plan += [pscustomobject]@{
+                    Op = 'service.stop'
+                    Target = $op.name
+                    Current = if ($service) { [string]$service.Status } else { '<missing>' }
+                    CurrentType = $null
+                    New = 'Stopped'
                     NewType = $null
                 }
             }
@@ -137,6 +170,32 @@ function Invoke-DomovoyFeature {
                         previousValue = if ($service) { [string]$service.StartType } else { '<missing>' }
                     }
                 }
+                'registry.delete' {
+                    $kind = 'None'
+                    if (Test-Path -LiteralPath $op.path) {
+                        try {
+                            $kind = [string](Get-Item -LiteralPath $op.path -ErrorAction Stop).GetValueKind($op.name)
+                        }
+                        catch {
+                            $kind = 'None'
+                        }
+                    }
+                    $snapshot += @{
+                        op = 'registry.delete'
+                        path = $op.path
+                        name = $op.name
+                        previousValue = (Get-RegistryValueSafe -Path $op.path -Name $op.name)
+                        previousType = $kind
+                    }
+                }
+                'service.stop' {
+                    $service = Get-Service -Name $op.name -ErrorAction SilentlyContinue
+                    $snapshot += @{
+                        op = 'service.stop'
+                        name = $op.name
+                        previousStatus = if ($service) { [string]$service.Status } else { '<missing>' }
+                    }
+                }
             }
         }
 
@@ -152,6 +211,15 @@ function Invoke-DomovoyFeature {
                 'service.startup' {
                     Set-Service -Name $op.name -StartupType $op.startupType
                 }
+                'registry.delete' {
+                    Remove-ItemProperty -LiteralPath $op.path -Name $op.name -ErrorAction SilentlyContinue
+                }
+                'service.stop' {
+                    $running = Get-Service -Name $op.name -ErrorAction SilentlyContinue
+                    if ($running -and $running.Status -eq 'Running') {
+                        Stop-Service -Name $op.name -Force -ErrorAction Stop
+                    }
+                }
             }
         }
 
@@ -161,6 +229,7 @@ function Invoke-DomovoyFeature {
             event = 'feature.apply'
             featureId = $manifest.id
             featureVersion = $manifest.version
+            featureSource = $manifestPath
             snapshot = $snapshot
             verification = $verification
         }

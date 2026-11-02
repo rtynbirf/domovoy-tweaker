@@ -35,10 +35,13 @@ function Initialize-Domovoy {
         }
     }
 
+    $module = Get-Module -Name Domovoy
+    $moduleVersion = if ($module) { $module.Version.ToString() } else { 'unknown' }
+
     [pscustomobject]@{
         Store = $store
         Ledger = $ledgerPath
         GenesisCreated = $genesisCreated
-        ModuleVersion = '0.1.0'
+        ModuleVersion = $moduleVersion
     }
 }

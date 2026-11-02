@@ -40,12 +40,27 @@ function Invoke-DomovoyDriftScan {
 
     $report = @()
     foreach ($applied in @($latest)) {
-        $verification = Test-DomovoyEffect -Id $applied.featureId
+        try {
+            $manifest = Get-DomovoyManifestForFeature -Id $applied.featureId -LedgerEntry $applied
+            $verification = Test-DomovoyEffect -Manifest $manifest
+            $drifted = -not $verification.AllPass
+            $details = $verification.Results
+        }
+        catch {
+            $drifted = $true
+            $details = @([pscustomobject]@{
+                Probe = 'manifest'
+                Target = $applied.featureId
+                Expected = 'readable manifest'
+                Actual = '<unresolved>'
+                Pass = $false
+            })
+        }
         $report += [pscustomobject]@{
             FeatureId = $applied.featureId
             AppliedAt = $applied.timestamp
-            Drifted = (-not $verification.AllPass)
-            Details = $verification.Results
+            Drifted = $drifted
+            Details = $details
         }
     }
 
