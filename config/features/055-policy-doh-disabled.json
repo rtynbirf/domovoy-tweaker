@@ -1,0 +1,32 @@
+{
+  "id": "policy.doh.auto.disabled",
+  "title": "DNS-over-HTTPS: disable automatic DoH resolution",
+  "version": "1.2.0",
+  "category": "network",
+  "risk": "low",
+  "description": "Sets the documented EnableAutoDoh value of the DNS Cache service parameters to 2, which stops the service from automatically resolving names over DNS-over-HTTPS against known template servers. Predictable plain DNS is what the network.dns profiles rely on: without this, Windows may bypass the explicitly configured resolvers. The previous value is captured in a snapshot before the change and restored by per-feature undo (catalog 86); the newer DoHPolicy group policy is a separate value and is not touched.",
+  "ops": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Dnscache\\Parameters",
+      "name": "EnableAutoDoh",
+      "value": 2,
+      "valueType": "DWord"
+    }
+  ],
+  "undo": {
+    "mode": "snapshot"
+  },
+  "verify": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Dnscache\\Parameters",
+      "name": "EnableAutoDoh",
+      "value": 2
+    }
+  ],
+  "references": [
+    "https://learn.microsoft.com/windows-server/networking/dns/doh-client-support",
+    "https://learn.microsoft.com/windows/win32/sysinfo/registry"
+  ]
+}

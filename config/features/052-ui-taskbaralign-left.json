@@ -1,0 +1,31 @@
+{
+  "id": "ui.taskbaralign.left",
+  "title": "Taskbar alignment: left (Windows 10 style)",
+  "version": "1.2.0",
+  "category": "ui",
+  "risk": "low",
+  "description": "Sets the documented TaskbarAl value to 0, which pins the Windows 11 taskbar to the left edge - the Windows 10 style alignment. On Windows 10 the taskbar is always left-aligned and the value does not exist by default; creating it there is harmless and the undo restores the absence exactly. The previous value is captured in a snapshot before the change and restored by per-feature undo (catalog 80).",
+  "ops": [
+    {
+      "type": "registry.set",
+      "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+      "name": "TaskbarAl",
+      "value": 0,
+      "valueType": "DWord"
+    }
+  ],
+  "undo": {
+    "mode": "snapshot"
+  },
+  "verify": [
+    {
+      "type": "registry.set",
+      "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+      "name": "TaskbarAl",
+      "value": 0
+    }
+  ],
+  "references": [
+    "https://learn.microsoft.com/windows/win32/sysinfo/registry"
+  ]
+}

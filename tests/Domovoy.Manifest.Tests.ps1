@@ -39,7 +39,7 @@ Describe 'Feature manifests' {
         foreach ($file in $featureFiles) {
             $m = Get-Content -LiteralPath $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
             foreach ($op in @($m.ops)) {
-                $op.type | Should -BeIn @('registry.set', 'registry.delete', 'service.startup', 'service.stop', 'appx.remove', 'file.attribute', 'scheduler.task', 'network.dns', 'network.proxy') -Because "$file.Name op $($op.type)"
+                $op.type | Should -BeIn @('registry.set', 'registry.delete', 'service.startup', 'service.stop', 'appx.remove', 'file.attribute', 'scheduler.task', 'network.dns', 'network.proxy', 'file.timestamp') -Because "$file.Name op $($op.type)"
             }
         }
     }
@@ -64,7 +64,7 @@ Describe 'Feature manifests' {
         # listed here in the same change.
         $implemented = @(
             'registry.set', 'registry.absent', 'service.startup', 'service.status',
-            'appx.absent', 'appx.present', 'file.attributes', 'scheduler.taskState', 'network.dns', 'network.proxy'
+            'appx.absent', 'appx.present', 'file.attributes', 'scheduler.taskState', 'network.dns', 'network.proxy', 'file.timestamp'
         )
         foreach ($file in $featureFiles) {
             $m = Get-Content -LiteralPath $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json

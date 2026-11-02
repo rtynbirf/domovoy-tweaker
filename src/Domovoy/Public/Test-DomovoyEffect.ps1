@@ -147,6 +147,40 @@ function Test-DomovoyEffect {
                     }
                 }
             }
+            'file.timestamp' {
+                $target = $probe.path
+                if (-not (Test-Path -LiteralPath $probe.path)) {
+                    # The honest answer for a missing path.
+                    $expected = 'pinned timestamps of an existing path'
+                    $actual = '<missing>'
+                }
+                else {
+                    $current = Get-DomovoyTimestampTriple -Path $probe.path
+                    $expectedParts = @()
+                    $actualParts = @()
+                    $passOverride = $true
+                    foreach ($field in @('creation', 'lastWrite', 'lastAccess')) {
+                        $probeProp = $probe.PSObject.Properties[$field]
+                        if ($probeProp) {
+                            $expectedParts += '{0}={1}' -f $field, $probeProp.Value
+                            $actualParts += '{0}={1}' -f $field, $current[$field]
+                            $pinned = [DateTimeOffset]::Parse([string]$probeProp.Value,
+                                [System.Globalization.CultureInfo]::InvariantCulture,
+                                [System.Globalization.DateTimeStyles]::AssumeUniversal)
+                            $seen = [DateTimeOffset]::Parse([string]$current[$field],
+                                [System.Globalization.CultureInfo]::InvariantCulture,
+                                [System.Globalization.DateTimeStyles]::AssumeUniversal)
+                            if ($pinned.UtcDateTime -ne $seen.UtcDateTime) { $passOverride = $false }
+                        }
+                        else {
+                            $expectedParts += '{0}=<any>' -f $field
+                            $actualParts += '{0}=<any>' -f $field
+                        }
+                    }
+                    $expected = ($expectedParts -join ';')
+                    $actual = ($actualParts -join ';')
+                }
+            }
             default {
                 $target = '<unknown-probe>'
                 $expected = '?'

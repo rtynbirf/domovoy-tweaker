@@ -2,6 +2,15 @@ function Write-DomovoyLedgerEntry {
     <#
     .SYNOPSIS
     Appends one event to the Domovoy ledger (append-only JSONL, invariant I1).
+
+    .DESCRIPTION
+    Since v1.2 every new entry is bound to its predecessor by a hash chain
+    (catalog 103): prevHash carries the hash of the previous entry (or the
+    literal 'genesis' when the journal tail has no hashed entry yet), and
+    hash carries the SHA-256 over the canonical JSON form of the entry itself
+    - every field including prevHash, excluding the hash field. The change is
+    additive: schema stays 1, journals written before v1.2 load and verify as
+    'unchained' - the SemVer MAJOR policy holds.
     #>
     [CmdletBinding()]
     [OutputType([hashtable])]
@@ -22,6 +31,42 @@ function Write-DomovoyLedgerEntry {
         $Entry['toolVersion'] = 'unknown'
     }
     $Entry['timestamp'] = [DateTimeOffset]::UtcNow.ToString('o')
+
+    # Hash chain (catalog 103): read only the tail - the ledger can be long
+    # and every entry is bound to exactly one predecessor. A torn last line
+    # (a crash mid-write) must not block the next honest append; the gap is
+    # reported by Test-DomovoyLedgerIntegrity instead.
+    $previousHash = 'genesis'
+    if (Test-Path -LiteralPath $ledgerPath) {
+        $lastLine = Get-Content -LiteralPath $ledgerPath -Tail 1 -ErrorAction SilentlyContinue
+        if ($lastLine) {
+            try {
+                $lastEntry = $lastLine | ConvertFrom-Json
+                $lastHashProp = $lastEntry.PSObject.Properties['hash']
+                if ($lastHashProp -and $lastHashProp.Value) {
+                    $previousHash = [string]$lastHashProp.Value
+                }
+            }
+            catch {
+                $previousHash = 'genesis'
+            }
+        }
+    }
+    $Entry['prevHash'] = $previousHash
+
+    # The hash covers everything the entry will store except 'hash' itself.
+    $canonicalInput = @{}
+    foreach ($key in @($Entry.Keys)) { $canonicalInput[$key] = $Entry[$key] }
+    $canonical = Get-DomovoyCanonicalJson -Value $canonicalInput
+    $sha = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        $bytes = [System.Text.Encoding]::UTF8.GetBytes($canonical)
+        $digest = $sha.ComputeHash($bytes)
+        $Entry['hash'] = [System.BitConverter]::ToString($digest).Replace('-', '').ToLowerInvariant()
+    }
+    finally {
+        $sha.Dispose()
+    }
 
     $line = $Entry | ConvertTo-Json -Depth 12 -Compress
     Add-Content -LiteralPath $ledgerPath -Value $line -Encoding UTF8

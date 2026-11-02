@@ -243,6 +243,30 @@
               "description": "When true (mode=server), local addresses bypass the proxy (ProxyOverride = <local>)."
             }
           }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "path"],
+          "anyOf": [
+            { "required": ["creation"] },
+            { "required": ["lastWrite"] },
+            { "required": ["lastAccess"] }
+          ],
+          "properties": {
+            "type": { "const": "file.timestamp" },
+            "path": {
+              "type": "string",
+              "pattern": "^[A-Za-z]:\\\\"
+            },
+            "creation": { "$ref": "#/definitions/timestampValue" },
+            "lastWrite": { "$ref": "#/definitions/timestampValue" },
+            "lastAccess": { "$ref": "#/definitions/timestampValue" },
+            "allowMissing": {
+              "type": "boolean",
+              "description": "When true, a missing path is skipped instead of failing the apply."
+            }
+          }
         }
       ]
     },
@@ -387,8 +411,33 @@
               "description": "The captured value or '<unset>'; the probe pins the exact state."
             }
           }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "path"],
+          "anyOf": [
+            { "required": ["creation"] },
+            { "required": ["lastWrite"] },
+            { "required": ["lastAccess"] }
+          ],
+          "properties": {
+            "type": { "const": "file.timestamp" },
+            "path": {
+              "type": "string",
+              "pattern": "^[A-Za-z]:\\\\"
+            },
+            "creation": { "$ref": "#/definitions/timestampValue" },
+            "lastWrite": { "$ref": "#/definitions/timestampValue" },
+            "lastAccess": { "$ref": "#/definitions/timestampValue" }
+          }
         }
       ]
+    },
+    "timestampValue": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}",
+      "description": "ISO 8601 timestamp; the probe compares the instant, not the spelling."
     }
   }
 }

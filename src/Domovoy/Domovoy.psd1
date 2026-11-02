@@ -3,7 +3,7 @@
 #
 @{
     RootModule = 'Domovoy.psm1'
-    ModuleVersion = '1.1.0'
+    ModuleVersion = '1.2.0'
     GUID = '8546e1cf-4418-4133-92f4-4adcb7897011'
     Author = 'rtynbirf'
     CompanyName = 'Domovoy contributors'
@@ -56,6 +56,9 @@
         'Export-DomovoyNetworkState',
         'Restore-DomovoyNetworkState',
         'Export-DomovoyPolicy',
+        'Test-DomovoyLedgerIntegrity',
+        'Get-DomovoyDriverRollbackReport',
+        'Invoke-DomovoyComponentStoreCleanup',
         'Show-Domovoy'
     )
     CmdletsToExport = @()
@@ -67,7 +70,7 @@
             Tags = @('Windows', 'Tweaker', 'Privacy', 'Telemetry', 'Debloat', 'Undo', 'Ledger', 'Drift', 'Network', 'Security', 'Drivers')
             LicenseUri = 'https://github.com/rtynbirf/domovoy-tweaker/blob/main/LICENSE'
             ProjectUri = 'https://github.com/rtynbirf/domovoy-tweaker'
-            ReleaseNotes = 'v0.6.0: drift auto-heal as an opt-in contour (Invoke-DomovoyAutoHeal with a journaled cycle and a scheduled watchdog task the user registers explicitly), DNS profiles as manifests (network.dns op with probe, snapshot and undo), driver dedup only after a full .cab backup, file attribute clearing and owner change with ledger snapshots, journaled token privilege management and an explicit BitLocker recovery key backup.'
+            ReleaseNotes = 'v1.2.0: the ledger becomes tamper-evident (a SHA-256 hash chain with an honest verifier, catalog 103), a new file.timestamp op with all four projections and probes, five documented catalog policies (taskbar alignment, VisualFX profiles, automatic DoH off, Office client telemetry off), the driver rollback-readiness report and the component store cleanup that only triggers the built-in Windows servicing task.'
         }
     }
 }

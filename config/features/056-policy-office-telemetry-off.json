@@ -1,0 +1,45 @@
+{
+  "id": "policy.office.telemetry.off",
+  "title": "Office client telemetry: diagnostic data off",
+  "version": "1.2.0",
+  "category": "privacy",
+  "risk": "low",
+  "description": "Writes the documented Office policy values under the clienttelemetry policy key: SendTelemetry = 3 (neither required nor optional diagnostic data, the mapping documented by BSI and used by DISA STIG O365) and DisableTelemetry = 1. Only documented policy paths are used; Microsoft 365 Apps reads them under HKLM Policies. The previous values are captured in a snapshot before the change and restored by per-feature undo (catalog 74).",
+  "ops": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\office\\16.0\\common\\clienttelemetry",
+      "name": "SendTelemetry",
+      "value": 3,
+      "valueType": "DWord"
+    },
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\office\\16.0\\common\\clienttelemetry",
+      "name": "DisableTelemetry",
+      "value": 1,
+      "valueType": "DWord"
+    }
+  ],
+  "undo": {
+    "mode": "snapshot"
+  },
+  "verify": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\office\\16.0\\common\\clienttelemetry",
+      "name": "SendTelemetry",
+      "value": 3
+    },
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\office\\16.0\\common\\clienttelemetry",
+      "name": "DisableTelemetry",
+      "value": 1
+    }
+  ],
+  "references": [
+    "https://learn.microsoft.com/microsoft-365-apps/privacy/manage-privacy-controls",
+    "https://www.bsi.bund.de/SharedDocs/Downloads/DE/BSI/Publikationen/Studien/Office_Telemetrie/Office_Telemetrie.pdf"
+  ]
+}

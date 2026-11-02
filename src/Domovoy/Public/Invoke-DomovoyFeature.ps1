@@ -203,6 +203,27 @@ function Invoke-DomovoyFeature {
                     NewType = $null
                 }
             }
+            'file.timestamp' {
+                # Catalog 91: set documented file timestamps; snapshot
+                # and undo restore the exact previous stamps. Unpinned
+                # stamps stay untouched - the plan says <keep> for them.
+                $current = Get-DomovoyTimestampTriple -Path $op.path
+                $currentText = 'creation={0};lastWrite={1};lastAccess={2}' -f $current['creation'], $current['lastWrite'], $current['lastAccess']
+                $newParts = foreach ($field in @('creation', 'lastWrite', 'lastAccess')) {
+                    $opProp = $op.PSObject.Properties[$field]
+                    if ($opProp) { '{0}={1}' -f $field, $opProp.Value }
+                    else { '{0}=<keep>' -f $field }
+                }
+                $plan += [pscustomobject]@{
+                    Op = 'file.timestamp'
+                    Target = $op.path
+                    Current = $currentText
+                    CurrentType = $null
+                    New = ($newParts -join ';')
+                    NewType = $null
+                }
+            }
+            }
             default {
                 throw "Unsupported op type: $($op.type)"
             }
@@ -351,6 +372,16 @@ function Invoke-DomovoyFeature {
                         previousProxyOverride = (Get-RegistryValueSafe -Path $proxyKey -Name 'ProxyOverride')
                     }
                 }
+                'file.timestamp' {
+                    $previous = Get-DomovoyTimestampTriple -Path $op.path
+                    $snapshot += @{
+                        op = 'file.timestamp'
+                        path = $op.path
+                        previousCreation = $previous['creation']
+                        previousLastWrite = $previous['lastWrite']
+                        previousLastAccess = $previous['lastAccess']
+                    }
+                }
             }
         }
 
@@ -432,6 +463,21 @@ function Invoke-DomovoyFeature {
                         }
                         'pac' {
                             $null = New-ItemProperty -LiteralPath $proxyKey -Name 'AutoConfigURL' -Value ([string]$op.autoConfigUrl) -PropertyType String -Force
+                        }
+                    }
+                }
+                'file.timestamp' {
+                    if (-not (Test-Path -LiteralPath $op.path)) {
+                        if (-not ($op.PSObject.Properties['allowMissing'] -and $op.allowMissing)) {
+                            throw ("Path not found for file.timestamp: {0}" -f $op.path)
+                        }
+                    }
+                    else {
+                        foreach ($field in @('creation', 'lastWrite', 'lastAccess')) {
+                            $opProp = $op.PSObject.Properties[$field]
+                            if ($opProp) {
+                                Set-DomovoyTimestamp -Path $op.path -Field $field -Value ([string]$opProp.Value)
+                            }
                         }
                     }
                 }

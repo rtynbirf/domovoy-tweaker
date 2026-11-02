@@ -207,6 +207,21 @@ function Undo-DomovoyFeature {
                         }
                     }
                 }
+                'file.timestamp' {
+                    # '<missing>' for every stamp means the file did not
+                    # exist before the apply - undo keeps the absence.
+                    if ($state.previousCreation -ne '<missing>' -and (Test-Path -LiteralPath $state.path)) {
+                        foreach ($pair in @(
+                            @{ Field = 'creation';   Previous = $state.previousCreation }
+                            @{ Field = 'lastWrite';  Previous = $state.previousLastWrite }
+                            @{ Field = 'lastAccess'; Previous = $state.previousLastAccess }
+                        )) {
+                            if ($pair.Previous -and $pair.Previous -ne '<missing>') {
+                                Set-DomovoyTimestamp -Path $state.path -Field $pair.Field -Value $pair.Previous
+                            }
+                        }
+                    }
+                }
             }
         }
 

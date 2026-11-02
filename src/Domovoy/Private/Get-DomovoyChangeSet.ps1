@@ -88,6 +88,10 @@ function Get-DomovoyChangeSet {
                 $key = 'network.proxy|{0}' -f $item.target
                 $value = 'enable={0};server={1};pac={2}' -f $item.previousProxyEnable, $item.previousProxyServer, $item.previousAutoConfigUrl
             }
+            'file.timestamp' {
+                $key = 'file.timestamp|{0}' -f $item.path
+                $value = 'creation={0};lastWrite={1};lastAccess={2}' -f $item.previousCreation, $item.previousLastWrite, $item.previousLastAccess
+            }
         }
         if ($key) {
             $before[$key] = [string]$value

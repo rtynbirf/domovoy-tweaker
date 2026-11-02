@@ -1,0 +1,31 @@
+{
+  "id": "ui.visualfx.performance",
+  "title": "Visual effects: adjust for best performance",
+  "version": "1.2.0",
+  "category": "ui",
+  "risk": "low",
+  "description": "Sets the documented VisualFXSetting value to 2 (adjust for best performance): Windows stops drawing translucent, animated and shadowed window effects. The previous value is captured in a snapshot before the change and restored by per-feature undo; the pair feature ui.visualfx.appearance pins the opposite documented value 1 (catalog 82).",
+  "ops": [
+    {
+      "type": "registry.set",
+      "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VisualFXSetting",
+      "name": "VisualFXSetting",
+      "value": 2,
+      "valueType": "DWord"
+    }
+  ],
+  "undo": {
+    "mode": "snapshot"
+  },
+  "verify": [
+    {
+      "type": "registry.set",
+      "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VisualFXSetting",
+      "name": "VisualFXSetting",
+      "value": 2
+    }
+  ],
+  "references": [
+    "https://learn.microsoft.com/windows/win32/sysinfo/registry"
+  ]
+}

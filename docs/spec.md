@@ -129,11 +129,22 @@ JSON по схеме `schema/profiles.schema.json`: `id`, `title`, `maxRisk`
 Файл `ledger.jsonl`, по событию на строку:
 
 ```json
-{"schema":1,"event":"feature.apply","tool":"Domovoy","toolVersion":"0.2.0",
+{"schema":1,"event":"feature.apply","tool":"Domovoy","toolVersion":"1.2.0",
  "timestamp":"2026-11-02T12:00:00.0000000+00:00","featureId":"...","featureVersion":"1.0.0",
  "featureSource":"C:\\path\\to\\manifest.json",
- "snapshot":[...],"verification":{"feature":"...","allPass":true,"results":[...]}}
+ "snapshot":[...],"verification":{"feature":"...","allPass":true,"results":[...]},
+ "prevHash":"genesis","hash":"64 hex chars"}
 ```
+
+С v1.2 каждая новая запись несёт хеш-цепочку (№103, аддитивно — schema
+остаётся 1): `hash` — SHA-256 канонической JSON-формы записи (все поля,
+кроме `hash` самого; канонический сериализатор с ordinal-сортировкой ключей
+и инвариантной культурой — одинаковый на Windows PowerShell 5.1 и 7.x),
+`prevHash` — `hash` предыдущей записи или литерал `genesis`. Целостность
+проверяет `Test-DomovoyLedgerIntegrity`: записи до v1.2 считаются
+`unchained`, журнал целиком до v1.2 — `ChainState = absent` (это честный
+ответ, а не ошибка); правка или перестановка записей даёт `broken` с
+номером строки.
 
 События: `ledger.init`, `feature.apply`, `feature.undo`, `cleanup.apply`
 (очистка temp: фиксирует факт и объём; необратима по дизайну, поэтому — не

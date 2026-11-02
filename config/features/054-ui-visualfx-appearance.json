@@ -1,0 +1,31 @@
+{
+  "id": "ui.visualfx.appearance",
+  "title": "Visual effects: adjust for best appearance",
+  "version": "1.2.0",
+  "category": "ui",
+  "risk": "low",
+  "description": "Sets the documented VisualFXSetting value to 1 (adjust for best appearance): Windows draws the full set of visual effects - fonts smoothing, shadows, animations. The previous value is captured in a snapshot before the change and restored by per-feature undo; the pair feature ui.visualfx.performance pins the opposite documented value 2 (catalog 82).",
+  "ops": [
+    {
+      "type": "registry.set",
+      "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VisualFXSetting",
+      "name": "VisualFXSetting",
+      "value": 1,
+      "valueType": "DWord"
+    }
+  ],
+  "undo": {
+    "mode": "snapshot"
+  },
+  "verify": [
+    {
+      "type": "registry.set",
+      "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VisualFXSetting",
+      "name": "VisualFXSetting",
+      "value": 1
+    }
+  ],
+  "references": [
+    "https://learn.microsoft.com/windows/win32/sysinfo/registry"
+  ]
+}
