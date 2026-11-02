@@ -66,6 +66,19 @@ function Undo-DomovoyFeature {
                         $null = New-ItemProperty -LiteralPath $state.path -Name $state.name -Value $state.previousValue -Force
                     }
                 }
+                'registry.delete' {
+                    # A deleted value is recreated with its exact type and data;
+                    # if the value did not exist before apply, the absence is restored.
+                    if ($state.previousType -and $state.previousType -ne 'None') {
+                        if (-not (Test-Path -LiteralPath $state.path)) {
+                            $null = New-Item -Path $state.path -ItemType Directory -Force
+                        }
+                        $null = New-ItemProperty -LiteralPath $state.path -Name $state.name -Value $state.previousValue -PropertyType $state.previousType -Force
+                    }
+                    elseif ($state.previousValue -eq '<unset>') {
+                        Remove-ItemProperty -LiteralPath $state.path -Name $state.name -ErrorAction SilentlyContinue
+                    }
+                }
                 'service.startup' {
                     if ($state.previousValue -ne '<missing>') {
                         Set-Service -Name $state.name -StartupType $state.previousValue
@@ -74,6 +87,12 @@ function Undo-DomovoyFeature {
                 'service.stop' {
                     if ($state.previousStatus -eq 'Running') {
                         Start-Service -Name $state.name -ErrorAction SilentlyContinue
+                    }
+                    elseif ($state.previousStatus -eq 'Stopped') {
+                        $current = Get-Service -Name $state.name -ErrorAction SilentlyContinue
+                        if ($current -and $current.Status -eq 'Running') {
+                            Stop-Service -Name $state.name -Force -ErrorAction SilentlyContinue
+                        }
                     }
                 }
             }
