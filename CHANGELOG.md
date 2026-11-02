@@ -5,10 +5,40 @@
 
 ## [Unreleased]
 
-### Planned (v0.3.0)
-- 30+ функций (каталог №17–31): debloat, интерфейс.
-- Новые op-типы: `appx.remove`, `file.attribute`.
-- Профили: осторожный / стандартный.
+### Planned (v0.4.0)
+- Дозор: базовая линия из последнего verified-снимка (не из манифеста).
+- Каталог №5, 18, 20, 28, 30, 37.
+- Новые op-типы: `scheduler.task`.
+
+## [0.3.0] — 2026-11-02
+
+### Added
+- Новые op-типы с полными четырьмя проекциями (op/probe/snapshot/undo):
+  `appx.remove` (undo — пере-регистрация пакета из места установки, без сети,
+  честный отчёт, если файлов уже нет) и `file.attribute` (undo — точный
+  прежний набор атрибутов).
+- Новые пробы: `appx.absent`, `file.attributes`.
+- Профили — декларативные JSON-пакеты с потолком риска (maxRisk):
+  «осторожный» (low) и «стандартный» (medium). `Get-DomovoyProfile`,
+  `Invoke-DomovoyProfile`: суммарный dry-run-план по умолчанию; при `-Apply` —
+  одна точка восстановления на профиль и честный отчёт о пропущенных
+  функциях (критерий вехи: «профиль — JSON, а не скрипт»).
+- 11 новых функций (итого 21): Store-пакеты (OneDrive sync, Chat, Xbox Game
+  Bar overlay + политика Game DVR, Cortana, Get Help, Tips), классическое
+  контекстное меню Windows 11, показ расширений и скрытых файлов,
+  отключение панели Виджетов по политике, телеметрия рукописного/речевого
+  ввода, облачный поиск.
+- `Backup-DomovoyServiceState` — экспорт всей таблицы служб в JSON (каталог №8;
+  ответ на идею экспорта из 2.0 `Exportext`/3.0 `Exportdrv`).
+- Undo `registry.set` теперь удаляет и пустые ключи, созданные самим твиком
+  (в снапшоте `pathExisted`, подъём по пустой цепочке — spec §9.1 v0.3).
+- Схема профилей `schema/profiles.schema.json`; CI валидирует профили наряду
+  с манифестами.
+
+### Changed
+- Модуль: 12 публичных команд (было 9).
+- Снапшот `registry.set` дополнен полем `pathExisted` (обратно совместим:
+  старые записи журнала разбираются без него).
 
 ## [0.2.0] — 2026-11-02
 
@@ -45,6 +75,7 @@
   функций (64 позиции), сравнение с мировой практикой, кейс-стади реверс-инжиниринга
   Modern Tweaker 2.0 → 3.0.
 
-[Unreleased]: https://github.com/rtynbirf/domovoy-tweaker/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/rtynbirf/domovoy-tweaker/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/rtynbirf/domovoy-tweaker/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/rtynbirf/domovoy-tweaker/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/rtynbirf/domovoy-tweaker/releases/tag/v0.1.0

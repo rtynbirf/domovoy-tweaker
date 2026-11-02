@@ -46,7 +46,7 @@
 ```
 domovoy-tweaker/
 ├── README.md, LICENSE, CHANGELOG, CONTRIBUTING, CODE_OF_CONDUCT, SECURITY
-├── .github/workflows/ci.yml      # PSScriptAnalyzer + Pester + валидация манифестов
+├── .github/workflows/            # ci.yml + release.yml (тег → релиз)
 ├── docs/
 │   ├── spec.md                   # техническая спецификация
 │   ├── architecture.md           # четыре контура, схемы, алгоритмы
@@ -55,9 +55,13 @@ domovoy-tweaker/
 │   ├── comparison.md             # сравнение с Sophia/WinUtil/Win11Debloat/privacy.sexy
 │   └── analysis/
 │       └── modern-tweaker-case-study.md   # реверс-инжиниринг 2.0 → 3.0 (статика)
-├── schema/features.schema.json   # JSON-схема манифеста функции
-├── config/features/              # манифесты функций (10 функций: службы + приватность)
-├── src/Domovoy/                  # модуль PowerShell (9 публичных команд)
+├── schema/
+│   ├── features.schema.json      # JSON-схема манифеста функции
+│   └── profiles.schema.json      # JSON-схема профиля
+├── config/
+│   ├── features/                 # манифесты функций (21: службы, приватность, debloat, интерфейс)
+│   └── profiles/                 # профили cautious / standard (JSON, не скрипты)
+├── src/Domovoy/                  # модуль PowerShell (12 публичных команд)
 └── tests/                        # Pester
 ```
 
@@ -76,6 +80,11 @@ Get-DomovoyLedger                                         # что произо�
 Test-DomovoyEffect -Id services.diagtrack.disabled        # пробы эффекта
 Undo-DomovoyFeature -Id services.diagtrack.disabled -Apply     # откат из снимка
 Invoke-DomovoyDriftScan                                   # есть ли дрейф
+
+Get-DomovoyProfile                                        # профили: cautious / standard
+Invoke-DomovoyProfile -Id cautious                        # суммарный dry-run-план профиля
+Invoke-DomovoyProfile -Id cautious -Apply                 # применить профиль (одна точка восстановления)
+Backup-DomovoyServiceState                                # экспорт таблицы служб в JSON
 ```
 
 Требуется Windows 10/11, PowerShell 5.1 или 7+; для `-Apply` — сессия с правами администратора.
@@ -83,8 +92,10 @@ Invoke-DomovoyDriftScan                                   # есть ли дре
 ## Дорожная карта
 
 Вехи с критериями приёмки — в [docs/roadmap.md](docs/roadmap.md).
-Сейчас: **v0.2.0** — журнал и откат как рабочий контур, 4 op/probe-типа, 10 функций, E2E-тесты apply→undo.
-Дальше: v0.3.0 — 30+ функций и профили; v0.4.0 — Дозор с базовой линией из снимков; v1.0.0 — 100+ функций и стабильный API.
+Сейчас: **v0.3.0** — 21 функция (службы, приватность, debloat, интерфейс),
+профили cautious/standard (JSON + потолок риска), op-типы `appx.remove` и
+`file.attribute` с 4 проекциями, экспорт таблицы служб.
+Дальше: v0.4.0 — Дозор с базовой линией из снимков; v1.0.0 — 100+ функций и стабильный API.
 
 ## Отказ от ответственности
 
