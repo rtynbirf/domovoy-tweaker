@@ -23,7 +23,7 @@ function Get-DomovoyLedger {
     param(
         [string]$FeatureId,
 
-        [ValidateSet('ledger.init', 'feature.apply', 'feature.undo', 'cleanup.apply', 'networkreset.apply', 'eventlog.cleanup.apply', 'memorytrim.apply', 'integritycheck.apply', 'all')]
+        [ValidateSet('ledger.init', 'feature.apply', 'feature.undo', 'cleanup.apply', 'networkreset.apply', 'eventlog.cleanup.apply', 'memorytrim.apply', 'integritycheck.apply', 'autoheal.cycle', 'watchdog.register', 'watchdog.unregister', 'driverdedup.apply', 'fileattr.clear', 'fileattr.clear.undo', 'fileowner.set', 'fileowner.undo', 'privilege.enable', 'privilege.disable', 'bitlocker.keybackup', 'all')]
         [string]$Event = 'all',
 
         [ValidateRange(1, 1000000)]

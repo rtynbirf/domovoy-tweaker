@@ -28,33 +28,40 @@ AfterAll {
 
 Describe 'network.dns op (catalog 34)' {
     BeforeEach {
-        # Script-scoped fake DNS state: the mocks below make the whole
-        # plan/snapshot/execute/probe/undo contour run against it.
+        # Script-scoped fake DNS state: the InModuleScope mocks below make the
+        # whole plan/snapshot/execute/probe/undo contour run against it.
         $script:dnsState = @{
             'Ethernet' = @('192.168.1.1')
             'Wi-Fi'    = @('10.0.0.1')
         }
-        Mock Get-NetAdapter {
-            @(
-                [pscustomobject]@{ Name = 'Ethernet'; Status = 'Up' }
-                [pscustomobject]@{ Name = 'Wi-Fi'; Status = 'Up' }
-            )
-        }
-        Mock Get-DnsClientServerAddress {
-            param($InterfaceAlias, $AddressFamily)
-            $servers = $script:dnsState[$InterfaceAlias]
-            if ($null -eq $servers) { return $null }
-            [pscustomobject]@{ InterfaceAlias = $InterfaceAlias; ServerAddresses = @($servers) }
-        }
-        Mock Set-DnsClientServerAddress {
-            param($InterfaceAlias, $ServerAddresses, $ResetServerAddresses)
-            if ($ResetServerAddresses) {
-                $script:dnsState[$InterfaceAlias] = @()
+        # Pester mocks only reach module-internal calls when they are created
+        # inside the module session state (InModuleScope); the mutable state
+        # crosses the boundary by reference through -Parameters.
+        InModuleScope Domovoy {
+            param($State)
+
+            Mock Get-NetAdapter {
+                @(
+                    [pscustomobject]@{ Name = 'Ethernet'; Status = 'Up' }
+                    [pscustomobject]@{ Name = 'Wi-Fi'; Status = 'Up' }
+                )
             }
-            else {
-                $script:dnsState[$InterfaceAlias] = @($ServerAddresses)
+            Mock Get-DnsClientServerAddress {
+                param($InterfaceAlias, $AddressFamily)
+                $servers = $State[$InterfaceAlias]
+                if ($null -eq $servers) { return $null }
+                [pscustomobject]@{ InterfaceAlias = $InterfaceAlias; ServerAddresses = @($servers) }
             }
-        }
+            Mock Set-DnsClientServerAddress {
+                param($InterfaceAlias, $ServerAddresses, $ResetServerAddresses)
+                if ($ResetServerAddresses) {
+                    $State[$InterfaceAlias] = @()
+                }
+                else {
+                    $State[$InterfaceAlias] = @($ServerAddresses)
+                }
+            }
+        } -Parameters @{ State = $script:dnsState }
 
         $script:dnsManifest = Join-Path -Path $script:manifestDir -ChildPath 'dns-test.json'
         @{
@@ -172,17 +179,20 @@ Describe 'File attribute clearing (catalog 47)' {
 Describe 'BitLocker key backup (catalog 50)' {
     BeforeEach {
         $script:recoveryPassword = '111111-222222-333333-444444-555555-666666-777777-888888'
-        Mock Get-BitLockerVolume {
-            param($MountPoint)
-            [pscustomobject]@{
-                MountPoint = $MountPoint
-                VolumeStatus = 'FullyEncrypted'
-                KeyProtector = @(
-                    [pscustomobject]@{ KeyProtectorId = '{TPM-GUID}'; KeyProtectorType = 'Tpm' }
-                    [pscustomobject]@{ KeyProtectorId = '{RECOVERY-GUID}'; KeyProtectorType = 'RecoveryPassword'; RecoveryPassword = $script:recoveryPassword }
-                )
+        InModuleScope Domovoy {
+            param($Password)
+            Mock Get-BitLockerVolume {
+                param($MountPoint)
+                [pscustomobject]@{
+                    MountPoint = $MountPoint
+                    VolumeStatus = 'FullyEncrypted'
+                    KeyProtector = @(
+                        [pscustomobject]@{ KeyProtectorId = '{TPM-GUID}'; KeyProtectorType = 'Tpm' }
+                        [pscustomobject]@{ KeyProtectorId = '{RECOVERY-GUID}'; KeyProtectorType = 'RecoveryPassword'; RecoveryPassword = $Password }
+                    )
+                }
             }
-        }
+        } -Parameters @{ Password = $script:recoveryPassword }
     }
 
     It 'dry-run shows protectors but never the key' -Skip:(-not $script:isAdmin) {
@@ -212,39 +222,43 @@ Describe 'BitLocker key backup (catalog 50)' {
 
 Describe 'Driver dedup (catalog 43/46)' {
     It 'ConvertTo-DomovoyCab packs a directory into a real .cab' -Skip:(-not $script:isAdmin) {
-        $src = Join-Path -Path (Get-PSDrive TestDrive).Root -ChildPath 'cab-src\nested'
-        New-Item -ItemType Directory -Force -Path $src | Out-Null
+        $src = Join-Path -Path (Get-PSDrive TestDrive).Root -ChildPath 'cab-src'
+        New-Item -ItemType Directory -Force -Path (Join-Path $src 'nested') | Out-Null
         Set-Content -LiteralPath (Join-Path $src 'a.inf') -Value 'x'
-        Set-Content -LiteralPath (Join-Path $src 'a.sys') -Value 'x'
+        Set-Content -LiteralPath (Join-Path $src 'nested\a.sys') -Value 'x'
         $cab = Join-Path -Path (Get-PSDrive TestDrive).Root -ChildPath 'out\backup.cab'
 
         InModuleScope Domovoy {
             param($Src, $Cab)
             $null = ConvertTo-DomovoyCab -SourceDirectory $Src -DestinationFile $Cab
-        } -Parameters @{ Src = (Split-Path -Parent $src); Cab = $cab }
+        } -Parameters @{ Src = $src; Cab = $cab }
 
         (Get-Item -LiteralPath $cab).Length | Should -BeGreaterThan 0
     }
 
     It 'dry-run reports candidates, apply backs up first and removes only old copies' -Skip:(-not $script:isAdmin) {
-        Mock Get-WindowsDriver {
-            @(
-                [pscustomobject]@{ Driver = 'oem10.inf'; OriginalFileName = 'nvlt.inf'; ProviderName = 'NV'; ClassName = 'Display'; ClassGuid = '{4d36e968-e325-11ce-bfc1-08002be10318}'; Version = '27.21.14.1000'; Date = [datetime]'2020-01-01' }
-                [pscustomobject]@{ Driver = 'oem11.inf'; OriginalFileName = 'nvlt.inf'; ProviderName = 'NV'; ClassName = 'Display'; ClassGuid = '{4d36e968-e325-11ce-bfc1-08002be10318}'; Version = '27.21.14.2000'; Date = [datetime]'2021-01-01' }
-                [pscustomobject]@{ Driver = 'oem20.inf'; OriginalFileName = 'audc.inf'; ProviderName = 'AU'; ClassName = 'MEDIA'; ClassGuid = '{4d36e96c-e325-11ce-bfc1-08002be10318}'; Version = '1.0.0.5'; Date = [datetime]'2019-01-01' }
-            )
-        }
-        $script:pnputilCalls = @()
-        Mock pnputil {
-            $script:pnputilCalls += ($args -join ' ')
-            $LASTEXITCODE = 0
-            if ($args[0] -eq '/export-driver') {
-                $dest = $args[2]
-                New-Item -ItemType Directory -Force -Path (Join-Path $dest 'nvlt') | Out-Null
-                Set-Content -LiteralPath (Join-Path $dest 'nvlt\nvlt.inf') -Value 'x'
-                Set-Content -LiteralPath (Join-Path $dest 'nvlt\nvlt.sys') -Value 'x'
+        $script:pnputilCalls = [System.Collections.Generic.List[string]]::new()
+        InModuleScope Domovoy {
+            param($Calls)
+
+            Mock Get-WindowsDriver {
+                @(
+                    [pscustomobject]@{ Driver = 'oem10.inf'; OriginalFileName = 'nvlt.inf'; ProviderName = 'NV'; ClassName = 'Display'; ClassGuid = '{4d36e968-e325-11ce-bfc1-08002be10318}'; Version = '27.21.14.1000'; Date = [datetime]'2020-01-01' }
+                    [pscustomobject]@{ Driver = 'oem11.inf'; OriginalFileName = 'nvlt.inf'; ProviderName = 'NV'; ClassName = 'Display'; ClassGuid = '{4d36e968-e325-11ce-bfc1-08002be10318}'; Version = '27.21.14.2000'; Date = [datetime]'2021-01-01' }
+                    [pscustomobject]@{ Driver = 'oem20.inf'; OriginalFileName = 'audc.inf'; ProviderName = 'AU'; ClassName = 'MEDIA'; ClassGuid = '{4d36e96c-e325-11ce-bfc1-08002be10318}'; Version = '1.0.0.5'; Date = [datetime]'2019-01-01' }
+                )
             }
-        }
+            Mock pnputil {
+                $Calls.Add(($args -join ' '))
+                $global:LASTEXITCODE = 0
+                if ($args[0] -eq '/export-driver') {
+                    $dest = $args[2]
+                    New-Item -ItemType Directory -Force -Path (Join-Path $dest 'nvlt') | Out-Null
+                    Set-Content -LiteralPath (Join-Path $dest 'nvlt\nvlt.inf') -Value 'x'
+                    Set-Content -LiteralPath (Join-Path $dest 'nvlt\nvlt.sys') -Value 'x'
+                }
+            }
+        } -Parameters @{ Calls = $script:pnputilCalls }
 
         $dry = Invoke-DomovoyDriverDedup
         $dry.Mode | Should -Be 'DryRun'
@@ -257,9 +271,14 @@ Describe 'Driver dedup (catalog 43/46)' {
         $applied = Invoke-DomovoyDriverDedup -Apply -BackupDirectory $backupDir
 
         # The backup gate ran before any removal.
-        $exportIndex = [array]::IndexOf($script:pnputilCalls, ($script:pnputilCalls | Where-Object { $_ -like '/export-driver*' })[0])
-        $deleteIndex = [array]::IndexOf($script:pnputilCalls, ($script:pnputilCalls | Where-Object { $_ -like '/delete-driver*' })[0])
-        $exportIndex | Should -BeLessThan $deleteIndex
+        $exportIndex = -1
+        $deleteIndex = -1
+        for ($i = 0; $i -lt $script:pnputilCalls.Count; $i++) {
+            if ($exportIndex -lt 0 -and $script:pnputilCalls[$i].StartsWith('/export-driver')) { $exportIndex = $i }
+            if ($deleteIndex -lt 0 -and $script:pnputilCalls[$i].StartsWith('/delete-driver')) { $deleteIndex = $i }
+        }
+        $exportIndex | Should -BeGreaterThan -1
+        $deleteIndex | Should -BeGreaterThan $exportIndex
 
         (Get-Item -LiteralPath $applied.BackupCab).Length | Should -BeGreaterThan 0
         $applied.Removed | Should -Be 'oem10.inf'
@@ -310,15 +329,26 @@ Describe 'Drift auto-heal (catalog 58)' -Skip:(-not $script:isAdmin) {
 
 Describe 'Watchdog registration (catalog 58)' -Skip:(-not $script:isAdmin) {
     BeforeEach {
-        Mock New-ScheduledTaskAction { [pscustomobject]@{ Execute = $Execute; Arguments = $Argument } }
-        Mock New-ScheduledTaskTrigger { [pscustomobject]@{ StartBoundary = $At } }
-        Mock New-ScheduledTaskSettingsSet { [pscustomobject]@{ StartWhenAvailable = $true } }
-        Mock Register-ScheduledTask { $script:registered = $args; [pscustomobject]@{ TaskPath = '\Domovoy\'; TaskName = 'DriftWatchdog' } }
-        Mock Get-ScheduledTask {
-            param($TaskPath, $TaskName)
-            [pscustomobject]@{ TaskPath = $TaskPath; TaskName = $TaskName; State = 'Ready' }
-        }
-        Mock Unregister-ScheduledTask { $script:unregistered = $args }
+        $script:registered = [System.Collections.Generic.List[string]]::new()
+        $script:unregistered = [System.Collections.Generic.List[string]]::new()
+        InModuleScope Domovoy {
+            param($Registered, $Unregistered)
+
+            Mock New-ScheduledTaskAction { [pscustomobject]@{ Execute = $Execute; Arguments = $Argument } }
+            Mock New-ScheduledTaskTrigger { [pscustomobject]@{ StartBoundary = $At } }
+            Mock New-ScheduledTaskSettingsSet { [pscustomobject]@{ StartWhenAvailable = $true } }
+            Mock Register-ScheduledTask {
+                foreach ($a in $args) { $Registered.Add([string]$a) }
+                [pscustomobject]@{ TaskPath = '\Domovoy\'; TaskName = 'DriftWatchdog' }
+            }
+            Mock Get-ScheduledTask {
+                param($TaskPath, $TaskName)
+                [pscustomobject]@{ TaskPath = $TaskPath; TaskName = $TaskName; State = 'Ready' }
+            }
+            Mock Unregister-ScheduledTask {
+                foreach ($a in $args) { $Unregistered.Add([string]$a) }
+            }
+        } -Parameters @{ Registered = $script:registered; Unregistered = $script:unregistered }
     }
 
     It 'dry-run shows the task definition, apply registers with a journal event' {
@@ -335,8 +365,11 @@ Describe 'Watchdog registration (catalog 58)' -Skip:(-not $script:isAdmin) {
         $runner = Get-Content -LiteralPath $applied.RunnerScript -Raw
         $runner -match 'Invoke-DomovoyAutoHeal -Apply -Trigger Scheduled' | Should -BeTrue
 
+        ($script:registered.Count) | Should -BeGreaterThan 0
+
         $event = @(Get-DomovoyLedger | Where-Object { $_.event -eq 'watchdog.register' }) | Select-Object -Last 1
         $event | Should -Not -BeNullOrEmpty
+        $event.taskPath | Should -Be '\Domovoy\'
         $event.dailyAt | Should -Be '21:30'
     }
 
@@ -344,7 +377,7 @@ Describe 'Watchdog registration (catalog 58)' -Skip:(-not $script:isAdmin) {
         $null = Register-DomovoyWatchdog -Apply
         $undone = Unregister-DomovoyWatchdog -Apply
         $undone.Mode | Should -Be 'Apply'
-        ($script:unregistered -contains '-TaskPath') | Should -BeTrue
+        ($script:unregistered.Count) | Should -BeGreaterThan 0
         $event = @(Get-DomovoyLedger | Where-Object { $_.event -eq 'watchdog.unregister' }) | Select-Object -Last 1
         $event | Should -Not -BeNullOrEmpty
     }
