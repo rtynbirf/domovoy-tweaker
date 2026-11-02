@@ -19,7 +19,9 @@ BeforeAll {
     catch {
         $script:isAdmin = $false
     }
-    $script:isWindows = ($PSVersionTable.PSVersion.Major -lt 6) -or $IsWindows
+    # NOTE: the variable must not be named *isWindows* - that name collides
+    # with the read-only automatic $IsWindows (names are case-insensitive).
+    $script:isWindowsPlatform = ($PSVersionTable.PSVersion.Major -lt 6) -or $IsWindows
 }
 
 AfterAll {
@@ -82,10 +84,19 @@ Describe 'network.proxy op (v0.7.0)' {
             'AutoConfigURL' = '<unset>'
             'ProxyOverride' = '<unset>'
         }
+        # Capture the real cmdlets BEFORE mocking: a mock defined in module
+        # session state intercepts the module-qualified name as well, so a
+        # qualified call inside the mock body would recurse until the call
+        # depth overflows. Invoking the captured CommandInfo bypasses name
+        # resolution entirely (and keeps the fallback cross-platform).
+        $realTestPath = Get-Command -Name Test-Path -CommandType Cmdlet -ErrorAction SilentlyContinue
+        $realNewItem = Get-Command -Name New-Item -CommandType Cmdlet -ErrorAction SilentlyContinue
         InModuleScope Domovoy {
-            param($State)
+            param($State, $RealTestPath, $RealNewItem)
 
             $script:V07ProxyState = $State
+            $script:V07RealTestPath = $RealTestPath
+            $script:V07RealNewItem = $RealNewItem
 
             Mock Get-RegistryValueSafe {
                 param($Path, $Name)
@@ -95,12 +106,14 @@ Describe 'network.proxy op (v0.7.0)' {
                 param($LiteralPath, $Path)
                 $target = if ($LiteralPath) { $LiteralPath } else { $Path }
                 if ($target -like 'HKCU:*') { return $true }
-                return Microsoft.PowerShell.Management\Test-Path @PSBoundParameters
+                if ($script:V07RealTestPath) { return & $script:V07RealTestPath @PSBoundParameters }
+                return $true
             }
             Mock New-Item {
                 param($Path)
                 if ($Path -like 'HKCU:*') { return $null }
-                return Microsoft.PowerShell.Management\New-Item @PSBoundParameters
+                if ($script:V07RealNewItem) { return & $script:V07RealNewItem @PSBoundParameters }
+                return $null
             }
             Mock New-ItemProperty {
                 param($LiteralPath, $Name, $Value, $PropertyType, $Force)
@@ -113,7 +126,7 @@ Describe 'network.proxy op (v0.7.0)' {
                 return $null
             }
             Mock Test-DomovoyAdmin { return $true }
-        } -Parameters @{ State = $script:proxyState }
+        } -Parameters @{ State = $script:proxyState; RealTestPath = $realTestPath; RealNewItem = $realNewItem }
 
         $script:proxyManifest = Join-Path -Path $script:manifestDir -ChildPath 'proxy-test.json'
         @{
@@ -359,17 +372,24 @@ Describe 'Network state export/restore (catalog 35)' {
     }
 
     It 'restore apply runs the full pipeline: execute, probes, journal' -Skip:(-not $script:isAdmin) {
+        $realTestPath = Get-Command -Name Test-Path -CommandType Cmdlet -ErrorAction SilentlyContinue
+        $realNewItem = Get-Command -Name New-Item -CommandType Cmdlet -ErrorAction SilentlyContinue
         InModuleScope Domovoy {
+            param($RealTestPath, $RealNewItem)
+            $script:V07RealTestPath2 = $RealTestPath
+            $script:V07RealNewItem2 = $RealNewItem
             Mock Test-Path {
                 param($LiteralPath, $Path)
                 $target = if ($LiteralPath) { $LiteralPath } else { $Path }
                 if ($target -like 'HKCU:*') { return $true }
-                return Microsoft.PowerShell.Management\Test-Path @PSBoundParameters
+                if ($script:V07RealTestPath2) { return & $script:V07RealTestPath2 @PSBoundParameters }
+                return $true
             }
             Mock New-Item {
                 param($Path)
                 if ($Path -like 'HKCU:*') { return $null }
-                return Microsoft.PowerShell.Management\New-Item @PSBoundParameters
+                if ($script:V07RealNewItem2) { return & $script:V07RealNewItem2 @PSBoundParameters }
+                return $null
             }
             Mock New-ItemProperty {
                 param($LiteralPath, $Name, $Value, $PropertyType, $Force)
@@ -580,7 +600,7 @@ Describe 'Policy export (catalog 62)' {
 }
 
 Describe 'GUI (Show-Domovoy)' {
-    It 'builds the whole window in preview mode: catalog in, journal status on' -Skip:(-not $script:isWindows) {
+    It 'builds the whole window in preview mode: catalog in, journal status on' -Skip:(-not $script:isWindowsPlatform) {
         $form = Show-Domovoy -Preview
         try {
             $form | Should -BeOfType [System.Windows.Forms.Form]
