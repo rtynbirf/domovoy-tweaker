@@ -395,6 +395,11 @@ Describe 'Network state export/restore (catalog 35)' {
             proxy = @{ proxyEnable = '0'; proxyServer = '<unset>'; autoConfigUrl = '<unset>'; proxyOverride = '<unset>' }
         } | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $statePath -Encoding UTF8
 
+        # The mock reads live state from the same hashtable the export
+        # mocked earlier; align it with what this state file carries so
+        # the verification probes check the state this restore produces.
+        $script:netState.ProxyServer = '<unset>'
+        $script:netState.ProxyOverride = '<unset>'
         $applied = Restore-DomovoyNetworkState -Path $statePath -Apply -SkipRestorePoint
         $applied.Mode | Should -Be 'Apply'
         $applied.Verification.AllPass | Should -BeTrue
@@ -520,7 +525,9 @@ Describe 'Policy export (catalog 62)' {
         $result = Export-DomovoyPolicy -OutputDir $out -Force
 
         $result.SelfCheck | Should -BeLike 'pass*'
-        $result.MachineEntries | Should -Be 3
+        # Value (deduped: conflict feature won) + **Del.Legacy; the
+        # unverified feature contributes nothing.
+        $result.MachineEntries | Should -Be 2
         $result.UserEntries | Should -Be 1
         $result.AdmxPolicies | Should -Be 4
         Test-Path -LiteralPath $result.Admx | Should -BeTrue
