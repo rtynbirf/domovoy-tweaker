@@ -120,9 +120,11 @@ function Invoke-DomovoyFeature {
                 }
             }
             'file.attribute' {
+                # -Force: a file carrying the Hidden attribute is invisible
+                # to Get-Item without it; Test-Path needs no switch here.
                 $current = '<missing>'
                 if (Test-Path -LiteralPath $op.path) {
-                    $current = [string](Get-Item -LiteralPath $op.path).Attributes
+                    $current = [string](Get-Item -LiteralPath $op.path -Force).Attributes
                 }
                 $plan += [pscustomobject]@{
                     Op = 'file.attribute'
@@ -240,9 +242,10 @@ function Invoke-DomovoyFeature {
                     }
                 }
                 'file.attribute' {
+                    # -Force: the target file may already carry the Hidden attribute.
                     $previousAttributes = '<missing>'
                     if (Test-Path -LiteralPath $op.path) {
-                        $previousAttributes = [string](Get-Item -LiteralPath $op.path).Attributes
+                        $previousAttributes = [string](Get-Item -LiteralPath $op.path -Force).Attributes
                     }
                     $snapshot += @{
                         op = 'file.attribute'
@@ -294,7 +297,7 @@ function Invoke-DomovoyFeature {
                         }
                     }
                     else {
-                        $item = Get-Item -LiteralPath $op.path
+                        $item = Get-Item -LiteralPath $op.path -Force
                         $newAttributes = $item.Attributes
                         foreach ($attrName in @($op.attributes)) {
                             $newAttributes = $newAttributes -bor [System.IO.FileAttributes]::$attrName

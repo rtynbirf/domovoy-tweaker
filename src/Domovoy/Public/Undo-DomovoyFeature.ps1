@@ -100,10 +100,12 @@ function Undo-DomovoyFeature {
                     # verification reports this honestly instead of pretending.
                 }
                 'file.attribute' {
+                    # -Force: the file stays Hidden until the restore below
+                    # runs, and Get-Item cannot see a hidden file without it.
                     if ($state.PSObject.Properties['previousAttributes'] -and
                         $state.previousAttributes -ne '<missing>' -and
                         (Test-Path -LiteralPath $state.path)) {
-                        $item = Get-Item -LiteralPath $state.path
+                        $item = Get-Item -LiteralPath $state.path -Force
                         $target = [System.IO.FileAttributes]$state.previousAttributes
                         if ($item.Attributes -band [System.IO.FileAttributes]::Directory) {
                             # The Directory bit itself cannot be cleared; keep it.

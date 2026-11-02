@@ -173,16 +173,18 @@ Describe 'v0.2 ledger loop (apply - verify - undo)' {
     }
 
     It 'apply file.attribute adds the attribute; undo restores the exact previous set' {
-        $before = [string](Get-Item -LiteralPath $script:testFile).Attributes
+        # -Force everywhere: after apply the fixture is Hidden, and Get-Item
+        # cannot see hidden files without it (same reason the module needs it).
+        $before = [string](Get-Item -LiteralPath $script:testFile -Force).Attributes
 
         $applied = Invoke-DomovoyFeature -ManifestFile (Join-Path $script:manifestDir 'test-attribute.json') -Apply -SkipRestorePoint
         $applied.Mode | Should -Be 'Apply'
         $applied.Verification.AllPass | Should -BeTrue
-        ((Get-Item -LiteralPath $script:testFile).Attributes -band [System.IO.FileAttributes]::Hidden) | Should -Not -Be 0
+        ((Get-Item -LiteralPath $script:testFile -Force).Attributes -band [System.IO.FileAttributes]::Hidden) | Should -Not -Be 0
 
         $undo = Undo-DomovoyFeature -Id 'test.attribute.file' -Apply
         $undo.Mode | Should -Be 'Undo'
-        [string](Get-Item -LiteralPath $script:testFile).Attributes | Should -Be $before
+        [string](Get-Item -LiteralPath $script:testFile -Force).Attributes | Should -Be $before
     }
 
     It 'apply creates the registry key chain; undo removes the value and the created empty keys' {
