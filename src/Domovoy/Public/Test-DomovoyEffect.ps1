@@ -78,10 +78,10 @@ function Test-DomovoyEffect {
                 $target = $probe.path
                 $requested = @($probe.attributes)
                 $expected = ($requested -join ',')
-                # -Force: a Hidden file is invisible to Get-Item/Test-Path
-                # without it, so verification would fail right after apply
-                # sets the attribute.
-                if (Test-Path -LiteralPath $probe.path -Force) {
+                # -Force: a Hidden file is invisible to Get-Item without it,
+                # so verification would fail right after apply sets the
+                # attribute (Test-Path itself sees hidden files).
+                if (Test-Path -LiteralPath $probe.path) {
                     $currentAttributes = (Get-Item -LiteralPath $probe.path -Force).Attributes
                     $present = @()
                     foreach ($attrName in $requested) {

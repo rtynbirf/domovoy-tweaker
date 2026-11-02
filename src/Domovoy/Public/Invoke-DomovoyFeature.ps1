@@ -120,10 +120,10 @@ function Invoke-DomovoyFeature {
                 }
             }
             'file.attribute' {
-                # -Force: files with the Hidden attribute are invisible to
-                # Get-Item/Test-Path without it (PowerShell provider filter).
+                # -Force: a file carrying the Hidden attribute is invisible
+                # to Get-Item without it; Test-Path needs no switch here.
                 $current = '<missing>'
-                if (Test-Path -LiteralPath $op.path -Force) {
+                if (Test-Path -LiteralPath $op.path) {
                     $current = [string](Get-Item -LiteralPath $op.path -Force).Attributes
                 }
                 $plan += [pscustomobject]@{
@@ -244,7 +244,7 @@ function Invoke-DomovoyFeature {
                 'file.attribute' {
                     # -Force: the target file may already carry the Hidden attribute.
                     $previousAttributes = '<missing>'
-                    if (Test-Path -LiteralPath $op.path -Force) {
+                    if (Test-Path -LiteralPath $op.path) {
                         $previousAttributes = [string](Get-Item -LiteralPath $op.path -Force).Attributes
                     }
                     $snapshot += @{
@@ -291,7 +291,7 @@ function Invoke-DomovoyFeature {
                     }
                 }
                 'file.attribute' {
-                    if (-not (Test-Path -LiteralPath $op.path -Force)) {
+                    if (-not (Test-Path -LiteralPath $op.path)) {
                         if (-not $op.allowMissing) {
                             throw ("Path not found for file.attribute: {0}" -f $op.path)
                         }

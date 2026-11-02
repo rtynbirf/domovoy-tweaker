@@ -101,10 +101,10 @@ function Undo-DomovoyFeature {
                 }
                 'file.attribute' {
                     # -Force: the file stays Hidden until the restore below
-                    # runs, and without -Force PowerShell cannot even see it.
+                    # runs, and Get-Item cannot see a hidden file without it.
                     if ($state.PSObject.Properties['previousAttributes'] -and
                         $state.previousAttributes -ne '<missing>' -and
-                        (Test-Path -LiteralPath $state.path -Force)) {
+                        (Test-Path -LiteralPath $state.path)) {
                         $item = Get-Item -LiteralPath $state.path -Force
                         $target = [System.IO.FileAttributes]$state.previousAttributes
                         if ($item.Attributes -band [System.IO.FileAttributes]::Directory) {
