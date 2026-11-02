@@ -5,6 +5,13 @@
 
 ## [Unreleased]
 
+### Fixed
+- `file.attribute`: применение, верификация и undo снова «видят» скрытые файлы.
+  В PowerShell `Get-Item` без `-Force` не находит файл с атрибутом Hidden:
+  apply с `Hidden` падал с «IOException: Could not find item» (красный CI на
+  windows-latest), а undo молча пропускал восстановление. `Test-Path` скрытые
+  файлы видит и параметра `-Force` не имеет (#1).
+
 ### Planned (v0.4.0)
 - Дозор: базовая линия из последнего verified-снимка (не из манифеста).
 - Каталог №5, 18, 20, 28, 30, 37.
