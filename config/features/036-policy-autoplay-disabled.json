@@ -1,0 +1,31 @@
+{
+  "id": "policy.autoplay.disabled",
+  "title": "Turn off AutoPlay for all media and devices",
+  "version": "1.0.0",
+  "category": "security",
+  "risk": "low",
+  "description": "Sets the documented group policy value NoDriveTypeAutoRun to 255 (0xFF: AutoPlay disabled on every drive type) under HKLM Software Microsoft Windows CurrentVersion Policies Explorer. The previous value and its type are captured in a snapshot before the change and restored by per-feature undo.",
+  "ops": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer",
+      "name": "NoDriveTypeAutoRun",
+      "value": 255,
+      "valueType": "DWord"
+    }
+  ],
+  "undo": {
+    "mode": "snapshot"
+  },
+  "verify": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer",
+      "name": "NoDriveTypeAutoRun",
+      "value": 255
+    }
+  ],
+  "references": [
+    "https://learn.microsoft.com/windows/client-management/mdm/policy-csp-admx-autoplay"
+  ]
+}

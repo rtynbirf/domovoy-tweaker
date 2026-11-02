@@ -1,0 +1,31 @@
+{
+  "id": "policy.deliveryoptimization.localonly",
+  "title": "Delivery Optimization: download mode HTTP only (no peering)",
+  "version": "1.0.0",
+  "category": "privacy",
+  "risk": "low",
+  "description": "Sets the documented group policy value DODownloadMode to 0 (HTTP only, no peering) under HKLM Software Policies Microsoft Windows DeliveryOptimization: updates are still downloaded, but the machine neither uploads to nor downloads from other PCs on the internet. The previous value and its type are captured in a snapshot before the change and restored by per-feature undo.",
+  "ops": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\DeliveryOptimization",
+      "name": "DODownloadMode",
+      "value": 0,
+      "valueType": "DWord"
+    }
+  ],
+  "undo": {
+    "mode": "snapshot"
+  },
+  "verify": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\DeliveryOptimization",
+      "name": "DODownloadMode",
+      "value": 0
+    }
+  ],
+  "references": [
+    "https://learn.microsoft.com/windows/deployment/do/waas-delivery-optimization-reference"
+  ]
+}

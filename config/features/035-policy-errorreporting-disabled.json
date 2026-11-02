@@ -1,0 +1,31 @@
+{
+  "id": "policy.errorreporting.disabled",
+  "title": "Turn off Windows Error Reporting",
+  "version": "1.0.0",
+  "category": "privacy",
+  "risk": "low",
+  "description": "Sets the documented group policy value Disabled to 1 under HKLM Software Policies Microsoft Windows Windows Error Reporting. The previous value and its type are captured in a snapshot before the change and restored by per-feature undo.",
+  "ops": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Error Reporting",
+      "name": "Disabled",
+      "value": 1,
+      "valueType": "DWord"
+    }
+  ],
+  "undo": {
+    "mode": "snapshot"
+  },
+  "verify": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Error Reporting",
+      "name": "Disabled",
+      "value": 1
+    }
+  ],
+  "references": [
+    "https://learn.microsoft.com/windows/win32/wer/wer-settings"
+  ]
+}

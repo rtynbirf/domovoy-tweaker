@@ -3,7 +3,7 @@
 #
 @{
     RootModule = 'Domovoy.psm1'
-    ModuleVersion = '0.7.0'
+    ModuleVersion = '1.0.0'
     GUID = '8546e1cf-4418-4133-92f4-4adcb7897011'
     Author = 'rtynbirf'
     CompanyName = 'Domovoy contributors'

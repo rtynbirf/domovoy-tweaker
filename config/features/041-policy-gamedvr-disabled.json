@@ -1,0 +1,44 @@
+{
+  "id": "policy.gamedvr.disabled",
+  "title": "Turn off Game DVR background recording (Game Bar clips)",
+  "version": "1.0.0",
+  "category": "ui",
+  "risk": "medium",
+  "description": "Sets the documented group policy value AllowGameDVR to 0 under HKLM Software Policies Microsoft Windows GameDVR and the documented user value GameDVR_Enabled to 0 under HKCU System GameConfigStore. Background game recording stops; manual Game Bar recording is disabled while the policy is applied. The previous values and their types are captured in a snapshot before the change and restored by per-feature undo.",
+  "ops": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\GameDVR",
+      "name": "AllowGameDVR",
+      "value": 0,
+      "valueType": "DWord"
+    },
+    {
+      "type": "registry.set",
+      "path": "HKCU:\\System\\GameConfigStore",
+      "name": "GameDVR_Enabled",
+      "value": 0,
+      "valueType": "DWord"
+    }
+  ],
+  "undo": {
+    "mode": "snapshot"
+  },
+  "verify": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\GameDVR",
+      "name": "AllowGameDVR",
+      "value": 0
+    },
+    {
+      "type": "registry.set",
+      "path": "HKCU:\\System\\GameConfigStore",
+      "name": "GameDVR_Enabled",
+      "value": 0
+    }
+  ],
+  "references": [
+    "https://learn.microsoft.com/windows/client-management/mdm/policy-csp-admx-gamedvr"
+  ]
+}

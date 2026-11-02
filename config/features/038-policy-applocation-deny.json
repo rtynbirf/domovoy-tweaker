@@ -1,0 +1,31 @@
+{
+  "id": "policy.applocation.deny",
+  "title": "Let apps access location: force deny (documented policy)",
+  "version": "1.0.0",
+  "category": "privacy",
+  "risk": "medium",
+  "description": "Sets the documented group policy value LetAppsAccessLocation to 2 (force deny) under HKLM Software Policies Microsoft Windows AppPrivacy. Apps can no longer request the device location; the Settings toggle stays read-only while the policy is applied. The previous value and its type are captured in a snapshot before the change and restored by per-feature undo.",
+  "ops": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\AppPrivacy",
+      "name": "LetAppsAccessLocation",
+      "value": 2,
+      "valueType": "DWord"
+    }
+  ],
+  "undo": {
+    "mode": "snapshot"
+  },
+  "verify": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\AppPrivacy",
+      "name": "LetAppsAccessLocation",
+      "value": 2
+    }
+  ],
+  "references": [
+    "https://learn.microsoft.com/windows/client-management/mdm/policy-csp-admx-appprivacy"
+  ]
+}

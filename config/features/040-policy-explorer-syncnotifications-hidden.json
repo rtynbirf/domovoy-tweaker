@@ -1,0 +1,31 @@
+{
+  "id": "policy.explorer.syncnotifications.hidden",
+  "title": "Hide sync provider notifications in File Explorer",
+  "version": "1.0.0",
+  "category": "ui",
+  "risk": "low",
+  "description": "Sets the documented group policy value ShowSyncProviderNotifications to 0 under HKLM Software Policies Microsoft Windows Explorer: File Explorer stops showing OneDrive-style promotional provider notifications. The previous value and its type are captured in a snapshot before the change and restored by per-feature undo.",
+  "ops": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\Explorer",
+      "name": "ShowSyncProviderNotifications",
+      "value": 0,
+      "valueType": "DWord"
+    }
+  ],
+  "undo": {
+    "mode": "snapshot"
+  },
+  "verify": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\Explorer",
+      "name": "ShowSyncProviderNotifications",
+      "value": 0
+    }
+  ],
+  "references": [
+    "https://learn.microsoft.com/windows/client-management/mdm/policy-csp-admx-explorer"
+  ]
+}

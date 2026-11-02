@@ -1,0 +1,31 @@
+{
+  "id": "policy.appbackground.disabled",
+  "title": "Let apps run in the background: force deny (documented policy)",
+  "version": "1.0.0",
+  "category": "privacy",
+  "risk": "medium",
+  "description": "Sets the documented group policy value LetAppsRunInBackground to 2 (force deny) under HKLM Software Policies Microsoft Windows AppPrivacy. Store apps can no longer run in the background; this also affects their live tiles and push updates until undone. The previous value and its type are captured in a snapshot before the change and restored by per-feature undo.",
+  "ops": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\AppPrivacy",
+      "name": "LetAppsRunInBackground",
+      "value": 2,
+      "valueType": "DWord"
+    }
+  ],
+  "undo": {
+    "mode": "snapshot"
+  },
+  "verify": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\AppPrivacy",
+      "name": "LetAppsRunInBackground",
+      "value": 2
+    }
+  ],
+  "references": [
+    "https://learn.microsoft.com/windows/client-management/mdm/policy-csp-admx-appprivacy"
+  ]
+}

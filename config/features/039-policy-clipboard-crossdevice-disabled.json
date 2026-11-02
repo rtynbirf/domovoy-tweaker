@@ -1,0 +1,31 @@
+{
+  "id": "policy.clipboard.crossdevice.disabled",
+  "title": "Turn off cross-device clipboard sync (Cloud Clipboard)",
+  "version": "1.0.0",
+  "category": "privacy",
+  "risk": "low",
+  "description": "Sets the documented group policy value AllowCrossDeviceClipboard to 0 under HKLM Software Policies Microsoft Windows System: the clipboard history is no longer synced across devices signed in with the same Microsoft account. The previous value and its type are captured in a snapshot before the change and restored by per-feature undo.",
+  "ops": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\System",
+      "name": "AllowCrossDeviceClipboard",
+      "value": 0,
+      "valueType": "DWord"
+    }
+  ],
+  "undo": {
+    "mode": "snapshot"
+  },
+  "verify": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\System",
+      "name": "AllowCrossDeviceClipboard",
+      "value": 0
+    }
+  ],
+  "references": [
+    "https://learn.microsoft.com/windows/client-management/mdm/policy-csp-admx-clipboard"
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "id": "policy.settingsync.disabled",
+  "title": "Turn off settings sync (Microsoft account roaming)",
+  "version": "1.0.0",
+  "category": "privacy",
+  "risk": "low",
+  "description": "Sets the documented group policy values DisableSettingSync to 2 (disabled) and DisableSettingSyncUserOverride to 1 (the user cannot re-enable it) under HKLM Software Policies Microsoft Windows SettingSync. The previous values and their types are captured in a snapshot before the change and restored by per-feature undo.",
+  "ops": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\SettingSync",
+      "name": "DisableSettingSync",
+      "value": 2,
+      "valueType": "DWord"
+    },
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\SettingSync",
+      "name": "DisableSettingSyncUserOverride",
+      "value": 1,
+      "valueType": "DWord"
+    }
+  ],
+  "undo": {
+    "mode": "snapshot"
+  },
+  "verify": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\SettingSync",
+      "name": "DisableSettingSync",
+      "value": 2
+    },
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\SettingSync",
+      "name": "DisableSettingSyncUserOverride",
+      "value": 1
+    }
+  ],
+  "references": [
+    "https://learn.microsoft.com/windows/client-management/mdm/policy-csp-admx-settingsync"
+  ]
+}

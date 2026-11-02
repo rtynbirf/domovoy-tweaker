@@ -1,0 +1,31 @@
+{
+  "id": "policy.remoteassistance.disabled",
+  "title": "Turn off Solicited Remote Assistance",
+  "version": "1.0.0",
+  "category": "security",
+  "risk": "medium",
+  "description": "Sets the documented group policy value fAllowToGetHelp to 0 under HKLM SYSTEM CurrentControlSet Control Remote Assistance. Users can no longer invite a helper over Remote Assistance (ms-raf links and HelpAssistant stay off). Help desk scenarios that rely on solicited assistance should not apply this feature. The previous value and its type are captured in a snapshot before the change and restored by per-feature undo.",
+  "ops": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Remote Assistance",
+      "name": "fAllowToGetHelp",
+      "value": 0,
+      "valueType": "DWord"
+    }
+  ],
+  "undo": {
+    "mode": "snapshot"
+  },
+  "verify": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Remote Assistance",
+      "name": "fAllowToGetHelp",
+      "value": 0
+    }
+  ],
+  "references": [
+    "https://learn.microsoft.com/windows/client-management/mdm/policy-csp-admx-remoteassistance"
+  ]
+}

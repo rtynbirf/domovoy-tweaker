@@ -1,0 +1,57 @@
+{
+  "id": "policy.activityhistory.disabled",
+  "title": "Turn off Activity history (Timeline) collection",
+  "version": "1.0.0",
+  "category": "privacy",
+  "risk": "low",
+  "description": "Sets the documented group policy values EnableActivityFeed, PublishActivityActivities and UploadUserActivities under HKLM Software Policies Microsoft Windows System to 0. The previous values and their types are captured in a snapshot before the change and restored by per-feature undo.",
+  "ops": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\System",
+      "name": "EnableActivityFeed",
+      "value": 0,
+      "valueType": "DWord"
+    },
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\System",
+      "name": "PublishActivityActivities",
+      "value": 0,
+      "valueType": "DWord"
+    },
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\System",
+      "name": "UploadUserActivities",
+      "value": 0,
+      "valueType": "DWord"
+    }
+  ],
+  "undo": {
+    "mode": "snapshot"
+  },
+  "verify": [
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\System",
+      "name": "EnableActivityFeed",
+      "value": 0
+    },
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\System",
+      "name": "PublishActivityActivities",
+      "value": 0
+    },
+    {
+      "type": "registry.set",
+      "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\System",
+      "name": "UploadUserActivities",
+      "value": 0
+    }
+  ],
+  "references": [
+    "https://learn.microsoft.com/windows/client-management/mdm/policy-csp-admx-activityhistory"
+  ]
+}

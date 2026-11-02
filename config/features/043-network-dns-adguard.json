@@ -1,0 +1,28 @@
+{
+  "id": "network.dns.adguard",
+  "title": "DNS preset: AdGuard public resolvers (with ad filtering)",
+  "version": "1.0.0",
+  "category": "network",
+  "risk": "medium",
+  "description": "Sets the documented AdGuard public resolver addresses on every connected network adapter. These resolvers filter advertising and tracking domains at the DNS level. The previous per-adapter DNS lists are captured in a snapshot before the change and restored by per-feature undo (an empty snapshot resets back to the DHCP defaults).",
+  "ops": [
+    {
+      "type": "network.dns",
+      "interfaceAlias": "*",
+      "servers": ["94.140.14.14", "94.140.15.15"]
+    }
+  ],
+  "undo": {
+    "mode": "snapshot"
+  },
+  "verify": [
+    {
+      "type": "network.dns",
+      "interfaceAlias": "*",
+      "servers": ["94.140.14.14", "94.140.15.15"]
+    }
+  ],
+  "references": [
+    "https://adguard-dns.io/kb/general/dns-providers/"
+  ]
+}
