@@ -1,7 +1,9 @@
 BeforeAll {
     $repoRoot = Split-Path -Parent $PSScriptRoot
     $featureFiles = @(Get-ChildItem -LiteralPath (Join-Path -Path $repoRoot -ChildPath 'config/features') -Filter '*.json')
+    $profileFiles = @(Get-ChildItem -LiteralPath (Join-Path -Path $repoRoot -ChildPath 'config/profiles') -Filter '*.json')
     $schemaPath = Join-Path -Path $repoRoot -ChildPath 'schema/features.schema.json'
+    $profileSchemaPath = Join-Path -Path $repoRoot -ChildPath 'schema/profiles.schema.json'
 }
 
 Describe 'Feature manifests' {
@@ -37,7 +39,7 @@ Describe 'Feature manifests' {
         foreach ($file in $featureFiles) {
             $m = Get-Content -LiteralPath $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
             foreach ($op in @($m.ops)) {
-                $op.type | Should -BeIn @('registry.set', 'registry.delete', 'service.startup', 'service.stop') -Because "$file.Name op $($op.type)"
+                $op.type | Should -BeIn @('registry.set', 'registry.delete', 'service.startup', 'service.stop', 'appx.remove', 'file.attribute') -Because "$file.Name op $($op.type)"
             }
         }
     }
@@ -71,5 +73,63 @@ Describe 'Feature manifests' {
                 Test-Json -Json (Get-Content -LiteralPath $file.FullName -Raw -Encoding UTF8) -SchemaFile $schemaPath
             } | Should -Not -Throw -Because "$file.Name must match the schema"
         }
+    }
+}
+
+Describe 'Feature profiles' {
+
+    It 'repository contains at least one profile' {
+        $profileFiles.Count | Should -BeGreaterThan 0
+    }
+
+    It 'every profile has all required fields' {
+        foreach ($file in $profileFiles) {
+            $p = Get-Content -LiteralPath $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
+            foreach ($field in @('id', 'title', 'maxRisk', 'description', 'features')) {
+                $p.PSObject.Properties[$field] | Should -Not -BeNullOrEmpty -Because "$file.Name must define $field"
+            }
+        }
+    }
+
+    It 'every profile validates against the profile JSON schema' {
+        foreach ($file in $profileFiles) {
+            {
+                Test-Json -Json (Get-Content -LiteralPath $file.FullName -Raw -Encoding UTF8) -SchemaFile $profileSchemaPath
+            } | Should -Not -Throw -Because "$file.Name must match the profile schema"
+        }
+    }
+
+    It 'every profile feature id resolves to a real manifest' {
+        $knownIds = foreach ($file in $featureFiles) {
+            (Get-Content -LiteralPath $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json).id
+        }
+        foreach ($file in $profileFiles) {
+            $p = Get-Content -LiteralPath $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
+            foreach ($featureId in @($p.features)) {
+                $featureId | Should -BeIn $knownIds -Because "$file.Name references $featureId"
+            }
+        }
+    }
+
+    It 'no profile feature exceeds the profile risk ceiling' {
+        $riskOrder = @{ low = 0; medium = 1; high = 2 }
+        $risks = @{}
+        foreach ($file in $featureFiles) {
+            $m = Get-Content -LiteralPath $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
+            $risks[$m.id] = $m.risk
+        }
+        foreach ($file in $profileFiles) {
+            $p = Get-Content -LiteralPath $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
+            foreach ($featureId in @($p.features)) {
+                $riskOrder[$risks[$featureId]] | Should -BeLessOrEqual $riskOrder[$p.maxRisk] -Because "$file.Name (max $($p.maxRisk)) includes $featureId ($($risks[$featureId]))"
+            }
+        }
+    }
+
+    It 'profile ids are unique' {
+        $ids = foreach ($file in $profileFiles) {
+            (Get-Content -LiteralPath $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json).id
+        }
+        @($ids).Count | Should -Be (@($ids) | Select-Object -Unique).Count
     }
 }

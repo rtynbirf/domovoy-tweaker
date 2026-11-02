@@ -14,8 +14,8 @@ AfterAll {
 
 Describe 'Module Domovoy' {
 
-    It 'exports exactly 9 public commands' {
-        @(Get-Command -Module Domovoy).Count | Should -Be 9
+    It 'exports exactly 12 public commands' {
+        @(Get-Command -Module Domovoy).Count | Should -Be 12
     }
 
     It 'parses every source file without syntax errors' {
@@ -57,7 +57,7 @@ Describe 'Module Domovoy' {
 
     It 'Get-DomovoyFeature lists the reference manifests' {
         $features = @(Get-DomovoyFeature)
-        $features.Count | Should -Be 10
+        $features.Count | Should -Be 21
         $features.Id | Should -Contain 'services.diagtrack.disabled'
         $features.Id | Should -Contain 'policy.telemetry.level0'
         $features.Id | Should -Contain 'services.dmwappush.disabled'
@@ -68,6 +68,17 @@ Describe 'Module Domovoy' {
         $features.Id | Should -Contain 'privacy.consumerfeatures.disabled'
         $features.Id | Should -Contain 'privacy.cortana.disabled'
         $features.Id | Should -Contain 'privacy.onedrive.filesync.disabled'
+        $features.Id | Should -Contain 'packages.onedrive.store.removed'
+        $features.Id | Should -Contain 'packages.chat.removed'
+        $features.Id | Should -Contain 'packages.xboxgamingoverlay.removed'
+        $features.Id | Should -Contain 'packages.cortana.app.removed'
+        $features.Id | Should -Contain 'packages.gethelp.removed'
+        $features.Id | Should -Contain 'packages.getstarted.removed'
+        $features.Id | Should -Contain 'ui.contextmenu.classic'
+        $features.Id | Should -Contain 'ui.explorer.advanced.visibility'
+        $features.Id | Should -Contain 'ui.widgets.panel.disabled'
+        $features.Id | Should -Contain 'policy.input.personalization.disabled'
+        $features.Id | Should -Contain 'policy.search.cloudsearch.disabled'
     }
 
     It 'Get-DomovoyFeature -Id filters to a single feature' {
@@ -94,5 +105,23 @@ Describe 'Module Domovoy' {
     It 'Get-DomovoyLedger returns the genesis event' {
         $entries = @(Get-DomovoyLedger -Event 'ledger.init')
         $entries.Count | Should -Be 1
+    }
+
+    It 'Get-DomovoyProfile lists both bundled profiles' {
+        $profiles = @(Get-DomovoyProfile)
+        $profiles.Count | Should -Be 2
+        $profiles.Id | Should -Contain 'cautious'
+        $profiles.Id | Should -Contain 'standard'
+        $profiles.MaxRisk | Should -Contain 'low'
+        $profiles.MaxRisk | Should -Contain 'medium'
+    }
+
+    It 'Backup-DomovoyServiceState writes a readable service table snapshot' {
+        $backup = Backup-DomovoyServiceState
+        Test-Path -LiteralPath $backup.File | Should -BeTrue
+        $backup.Services | Should -BeGreaterThan 0
+        $parsed = Get-Content -LiteralPath $backup.File -Raw -Encoding UTF8 | ConvertFrom-Json
+        $parsed.count | Should -Be $backup.Services
+        @($parsed.services).Count | Should -Be $backup.Services
     }
 }

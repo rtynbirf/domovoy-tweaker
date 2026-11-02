@@ -53,12 +53,68 @@ BeforeAll {
         verify = @(@{ type = 'service.status'; name = 'DiagTrack'; expected = 'Stopped' })
         references = @('https://learn.microsoft.com/windows/privacy/configure-windows-telemetry-in-your-organization')
     } | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $stopManifest -Encoding UTF8
+
+    # Fixture file for file.attribute roundtrip tests.
+    $script:testFile = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ("domovoy-file-" + [guid]::NewGuid().ToString('N') + ".txt")
+    Set-Content -LiteralPath $script:testFile -Value 'domovoy' -Encoding ASCII
+
+    # Fixture root for the registry key creation test (intentionally NOT created:
+    # apply must create the whole chain, undo must remove it again).
+    $script:keyRoot = 'HKCU:\Software\DomovoyCI\' + [guid]::NewGuid().ToString('N').Substring(0, 8)
+
+    $attributeManifest = Join-Path -Path $script:manifestDir -ChildPath 'test-attribute.json'
+    @{
+        id = 'test.attribute.file'
+        title = 'Test fixture: set file attributes'
+        version = '1.0.0'
+        category = 'core'
+        risk = 'low'
+        description = 'Test fixture: adds the Hidden attribute to a temporary file.'
+        ops = @(@{ type = 'file.attribute'; path = $script:testFile; attributes = @('Hidden') })
+        undo = @{ mode = 'snapshot' }
+        verify = @(@{ type = 'file.attributes'; path = $script:testFile; attributes = @('Hidden') })
+        references = @($script:registryRef)
+    } | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $attributeManifest -Encoding UTF8
+
+    $keyManifest = Join-Path -Path $script:manifestDir -ChildPath 'test-key-create.json'
+    @{
+        id = 'test.key.create'
+        title = 'Test fixture: set a value in a not-yet-existing key'
+        version = '1.0.0'
+        category = 'core'
+        risk = 'low'
+        description = 'Test fixture: sets a DWORD in a registry key that does not exist yet.'
+        ops = @(@{ type = 'registry.set'; path = "$script:keyRoot\level1\level2"; name = 'LeafValue'; value = 5; valueType = 'DWord' })
+        undo = @{ mode = 'snapshot' }
+        verify = @(@{ type = 'registry.set'; path = "$script:keyRoot\level1\level2"; name = 'LeafValue'; value = 5 })
+        references = @($script:registryRef)
+    } | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $keyManifest -Encoding UTF8
+
+    $appxManifest = Join-Path -Path $script:manifestDir -ChildPath 'test-appx.json'
+    @{
+        id = 'test.appx.remove'
+        title = 'Test fixture: remove an appx package'
+        version = '1.0.0'
+        category = 'core'
+        risk = 'medium'
+        description = 'Test fixture: removes a package that does not exist; used only in dry-run during tests.'
+        ops = @(@{ type = 'appx.remove'; name = 'Domovoy.Test.NonexistentPackage' })
+        undo = @{ mode = 'snapshot' }
+        verify = @(@{ type = 'appx.absent'; name = 'Domovoy.Test.NonexistentPackage' })
+        references = @($script:registryRef)
+    } | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $appxManifest -Encoding UTF8
 }
 
 AfterAll {
     Remove-Module -Name Domovoy -ErrorAction SilentlyContinue
     if (Test-Path -LiteralPath $script:testRoot) {
         Remove-Item -LiteralPath $script:testRoot -Recurse -Force -ErrorAction SilentlyContinue
+    }
+    if (Test-Path -LiteralPath $script:keyRoot) {
+        Remove-Item -LiteralPath $script:keyRoot -Recurse -Force -ErrorAction SilentlyContinue
+    }
+    if (Test-Path -LiteralPath $script:testFile) {
+        Remove-Item -LiteralPath $script:testFile -Force -ErrorAction SilentlyContinue
     }
     if ($env:DOMOVOY_STORE -and (Test-Path -LiteralPath $env:DOMOVOY_STORE)) {
         Remove-Item -LiteralPath $env:DOMOVOY_STORE -Recurse -Force -ErrorAction SilentlyContinue
@@ -114,6 +170,41 @@ Describe 'v0.2 ledger loop (apply - verify - undo)' {
         $dry.Mode | Should -Be 'DryRun'
         $dry.Plan[0].Op | Should -Be 'service.stop'
         @($dry.Plan).Count | Should -Be 1
+    }
+
+    It 'apply file.attribute adds the attribute; undo restores the exact previous set' {
+        $before = [string](Get-Item -LiteralPath $script:testFile).Attributes
+
+        $applied = Invoke-DomovoyFeature -ManifestFile (Join-Path $script:manifestDir 'test-attribute.json') -Apply -SkipRestorePoint
+        $applied.Mode | Should -Be 'Apply'
+        $applied.Verification.AllPass | Should -BeTrue
+        ((Get-Item -LiteralPath $script:testFile).Attributes -band [System.IO.FileAttributes]::Hidden) | Should -Not -Be 0
+
+        $undo = Undo-DomovoyFeature -Id 'test.attribute.file' -Apply
+        $undo.Mode | Should -Be 'Undo'
+        [string](Get-Item -LiteralPath $script:testFile).Attributes | Should -Be $before
+    }
+
+    It 'apply creates the registry key chain; undo removes the value and the created empty keys' {
+        Test-Path -LiteralPath $script:keyRoot | Should -BeFalse
+
+        $applied = Invoke-DomovoyFeature -ManifestFile (Join-Path $script:manifestDir 'test-key-create.json') -Apply -SkipRestorePoint
+        $applied.Mode | Should -Be 'Apply'
+        $applied.Verification.AllPass | Should -BeTrue
+        (Get-ItemProperty -LiteralPath "$script:keyRoot\level1\level2").LeafValue | Should -Be 5
+
+        $undo = Undo-DomovoyFeature -Id 'test.key.create' -Apply
+        $undo.Mode | Should -Be 'Undo'
+        Test-Path -LiteralPath "$script:keyRoot\level1\level2" | Should -BeFalse
+        Test-Path -LiteralPath "$script:keyRoot\level1" | Should -BeFalse
+        Test-Path -LiteralPath $script:keyRoot | Should -BeFalse
+    }
+
+    It 'appx dry-run builds a plan without touching anything' {
+        $dry = Invoke-DomovoyFeature -ManifestFile (Join-Path $script:manifestDir 'test-appx.json')
+        $dry.Mode | Should -Be 'DryRun'
+        $dry.Plan[0].Op | Should -Be 'appx.remove'
+        $dry.Plan[0].Current | Should -Be '<missing>'
     }
 
     It 'ledger records featureSource and survives a torn line' {
