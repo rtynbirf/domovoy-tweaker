@@ -31,8 +31,10 @@ jobs:
       - name: Pester tests
         shell: pwsh
         run: |
-          Install-Module -Name Pester -MinimumVersion 5.5.0 -Scope CurrentUser -Force -SkipPublisherCheck
-          Import-Module -Name Pester
+          # Pinned exact: Pester 6 changed mock/session-state behaviour; the
+          # suite is written and verified against the 5.x line.
+          Install-Module -Name Pester -RequiredVersion 5.7.1 -Scope CurrentUser -Force -SkipPublisherCheck
+          Import-Module -Name Pester -RequiredVersion 5.7.1
           $config = New-PesterConfiguration
           $config.Run.Path = 'tests'
           $config.Run.Exit = $false

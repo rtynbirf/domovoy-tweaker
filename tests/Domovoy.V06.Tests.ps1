@@ -8,11 +8,14 @@ BeforeAll {
     New-Item -Path $script:manifestDir -ItemType Directory -Force | Out-Null
 
     $script:registryRef = 'https://learn.microsoft.com/windows/win32/sysinfo/registry'
-    # Test-DomovoyAdmin is private; resolve it inside the module scope and
-    # treat a non-Windows platform as non-admin (the skips then engage).
+    # Direct elevation check (same logic as the private Test-DomovoyAdmin,
+    # without crossing module scope); non-Windows platforms are non-admin and
+    # the skips engage.
     $script:isAdmin = $false
     try {
-        $script:isAdmin = InModuleScope Domovoy { Test-DomovoyAdmin }
+        $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+        $principal = New-Object -TypeName Security.Principal.WindowsPrincipal -ArgumentList $identity
+        $script:isAdmin = $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
     }
     catch {
         $script:isAdmin = $false
@@ -40,6 +43,11 @@ Describe 'network.dns op (catalog 34)' {
         InModuleScope Domovoy {
             param($State)
 
+            # Mock bodies resolve variables dynamically at invocation time,
+            # long after this block has returned - keep the state in a
+            # module-level variable (same hashtable object, by reference).
+            $script:V06DnsState = $State
+
             Mock Get-NetAdapter {
                 @(
                     [pscustomobject]@{ Name = 'Ethernet'; Status = 'Up' }
@@ -48,17 +56,17 @@ Describe 'network.dns op (catalog 34)' {
             }
             Mock Get-DnsClientServerAddress {
                 param($InterfaceAlias, $AddressFamily)
-                $servers = $State[$InterfaceAlias]
+                $servers = $script:V06DnsState[$InterfaceAlias]
                 if ($null -eq $servers) { return $null }
                 [pscustomobject]@{ InterfaceAlias = $InterfaceAlias; ServerAddresses = @($servers) }
             }
             Mock Set-DnsClientServerAddress {
                 param($InterfaceAlias, $ServerAddresses, $ResetServerAddresses)
                 if ($ResetServerAddresses) {
-                    $State[$InterfaceAlias] = @()
+                    $script:V06DnsState[$InterfaceAlias] = @()
                 }
                 else {
-                    $State[$InterfaceAlias] = @($ServerAddresses)
+                    $script:V06DnsState[$InterfaceAlias] = @($ServerAddresses)
                 }
             }
         } -Parameters @{ State = $script:dnsState }
@@ -181,6 +189,7 @@ Describe 'BitLocker key backup (catalog 50)' {
         $script:recoveryPassword = '111111-222222-333333-444444-555555-666666-777777-888888'
         InModuleScope Domovoy {
             param($Password)
+            $script:V06BitLockerPassword = $Password
             Mock Get-BitLockerVolume {
                 param($MountPoint)
                 [pscustomobject]@{
@@ -188,7 +197,7 @@ Describe 'BitLocker key backup (catalog 50)' {
                     VolumeStatus = 'FullyEncrypted'
                     KeyProtector = @(
                         [pscustomobject]@{ KeyProtectorId = '{TPM-GUID}'; KeyProtectorType = 'Tpm' }
-                        [pscustomobject]@{ KeyProtectorId = '{RECOVERY-GUID}'; KeyProtectorType = 'RecoveryPassword'; RecoveryPassword = $Password }
+                        [pscustomobject]@{ KeyProtectorId = '{RECOVERY-GUID}'; KeyProtectorType = 'RecoveryPassword'; RecoveryPassword = $script:V06BitLockerPassword }
                     )
                 }
             }
@@ -241,6 +250,8 @@ Describe 'Driver dedup (catalog 43/46)' {
         InModuleScope Domovoy {
             param($Calls)
 
+            $script:V06PnputilCalls = $Calls
+
             Mock Get-WindowsDriver {
                 @(
                     [pscustomobject]@{ Driver = 'oem10.inf'; OriginalFileName = 'nvlt.inf'; ProviderName = 'NV'; ClassName = 'Display'; ClassGuid = '{4d36e968-e325-11ce-bfc1-08002be10318}'; Version = '27.21.14.1000'; Date = [datetime]'2020-01-01' }
@@ -249,7 +260,7 @@ Describe 'Driver dedup (catalog 43/46)' {
                 )
             }
             Mock pnputil {
-                $Calls.Add(($args -join ' '))
+                $script:V06PnputilCalls.Add(($args -join ' '))
                 $global:LASTEXITCODE = 0
                 if ($args[0] -eq '/export-driver') {
                     $dest = $args[2]
@@ -334,11 +345,14 @@ Describe 'Watchdog registration (catalog 58)' -Skip:(-not $script:isAdmin) {
         InModuleScope Domovoy {
             param($Registered, $Unregistered)
 
+            $script:V06WatchdogRegistered = $Registered
+            $script:V06WatchdogUnregistered = $Unregistered
+
             Mock New-ScheduledTaskAction { [pscustomobject]@{ Execute = $Execute; Arguments = $Argument } }
             Mock New-ScheduledTaskTrigger { [pscustomobject]@{ StartBoundary = $At } }
             Mock New-ScheduledTaskSettingsSet { [pscustomobject]@{ StartWhenAvailable = $true } }
             Mock Register-ScheduledTask {
-                foreach ($a in $args) { $Registered.Add([string]$a) }
+                foreach ($a in $args) { $script:V06WatchdogRegistered.Add([string]$a) }
                 [pscustomobject]@{ TaskPath = '\Domovoy\'; TaskName = 'DriftWatchdog' }
             }
             Mock Get-ScheduledTask {
@@ -346,7 +360,7 @@ Describe 'Watchdog registration (catalog 58)' -Skip:(-not $script:isAdmin) {
                 [pscustomobject]@{ TaskPath = $TaskPath; TaskName = $TaskName; State = 'Ready' }
             }
             Mock Unregister-ScheduledTask {
-                foreach ($a in $args) { $Unregistered.Add([string]$a) }
+                foreach ($a in $args) { $script:V06WatchdogUnregistered.Add([string]$a) }
             }
         } -Parameters @{ Registered = $script:registered; Unregistered = $script:unregistered }
     }
