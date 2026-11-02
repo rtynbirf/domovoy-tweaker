@@ -10,7 +10,7 @@ function Get-DomovoyNetworkReport {
       Get-DomovoyNetworkReport | Where-Object Section -eq 'dns'
 
     Sources: Get-NetAdapter and Get-NetIPAddress for adapters and addresses,
-    Get-DnsClientServerAddress and Get-DnsClientGlobalSettings for DNS, the
+    Get-DnsClientServerAddress and Get-DnsClientGlobalSetting for DNS, the
     WinINET values for the per-user proxy (the same four values the
     network.proxy op snapshots) and `netsh winhttp show proxy` for the
     machine-wide proxy. Every source is wrapped so a missing subsystem
@@ -75,7 +75,7 @@ function Get-DomovoyNetworkReport {
 
     # Global DNS settings.
     try {
-        $globalDns = Get-DnsClientGlobalSettings -ErrorAction SilentlyContinue
+        $globalDns = Get-DnsClientGlobalSetting -ErrorAction SilentlyContinue
         if ($globalDns) {
             $rows += [pscustomobject]@{
                 Section = 'dns-global'

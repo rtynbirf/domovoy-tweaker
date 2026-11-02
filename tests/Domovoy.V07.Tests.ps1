@@ -270,7 +270,7 @@ Describe 'Network report (catalog 33)' {
                     [pscustomobject]@{ InterfaceAlias = 'Ethernet'; ServerAddresses = @('1.1.1.1', '1.0.0.1') }
                 )
             }
-            Mock Get-DnsClientGlobalSettings {
+            Mock Get-DnsClientGlobalSetting {
                 [pscustomobject]@{ SuffixSearchList = 'corp.local' }
             }
             Mock Get-RegistryValueSafe {
