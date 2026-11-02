@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/rtynbirf/domovoy-tweaker/blob/main/schema/profiles.schema.json",
+  "title": "Domovoy profile",
+  "description": "Declarative bundle of feature ids with a risk ceiling. A profile is JSON, not a script.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "title", "maxRisk", "description", "features"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(\\.[a-z0-9-]+)*$",
+      "description": "Profile id in lowercase latin, digits, dots, hyphens."
+    },
+    "title": {
+      "type": "string",
+      "minLength": 3
+    },
+    "maxRisk": {
+      "enum": ["low", "medium", "high"],
+      "description": "Features with a higher risk are skipped by Invoke-DomovoyProfile and reported honestly."
+    },
+    "description": {
+      "type": "string",
+      "minLength": 10
+    },
+    "features": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(\\.[a-z0-9-]+)+$",
+        "description": "Feature id that must exist in the feature directory."
+      }
+    }
+  }
+}
