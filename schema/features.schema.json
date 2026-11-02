@@ -127,6 +127,28 @@
               ]
             }
           }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "path", "name"],
+          "properties": {
+            "type": { "const": "registry.delete" },
+            "path": {
+              "type": "string",
+              "pattern": "^(HKLM|HKCU|HKCR|HKU):"
+            },
+            "name": { "type": "string", "minLength": 1 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "name"],
+          "properties": {
+            "type": { "const": "service.stop" },
+            "name": { "type": "string", "minLength": 1 }
+          }
         }
       ]
     },
@@ -160,6 +182,31 @@
                 "Disabled",
                 "AutomaticDelayedStart"
               ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "path", "name"],
+          "properties": {
+            "type": { "const": "registry.absent" },
+            "path": {
+              "type": "string",
+              "pattern": "^(HKLM|HKCU|HKCR|HKU):"
+            },
+            "name": { "type": "string", "minLength": 1 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "name", "expected"],
+          "properties": {
+            "type": { "const": "service.status" },
+            "name": { "type": "string", "minLength": 1 },
+            "expected": {
+              "enum": ["Running", "Stopped", "Paused"]
             }
           }
         }
