@@ -652,6 +652,11 @@ Describe 'GUI (Show-Domovoy)' {
         $expectedSelect = InModuleScope Domovoy { (Get-DomovoyStrings).selectFirst }
         $expectedRefreshed = InModuleScope Domovoy { (Get-DomovoyStrings).refreshed }
         $form = Show-Domovoy -Preview
+        # .NET 9+ WinForms silently ignores PerformClick on a control whose
+        # handle was never created - and the preview form is never shown, so
+        # nothing has a handle. Force the handle so the clicks land on every
+        # engine (.NET Framework has no such guard; an extra handle is free).
+        $null = $form.Handle
         try {
             $buttons = $form.Tag.Buttons
             $buttons.DryRun | Should -BeOfType [System.Windows.Forms.Button]
