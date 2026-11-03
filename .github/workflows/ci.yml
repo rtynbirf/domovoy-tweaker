@@ -115,78 +115,6 @@ jobs:
           path: testResults.xml
           retention-days: 7
 
-      - name: Publish failure report to the ci-report branch
-        # A red run must leave readable facts behind: this step turns the
-        # NUnit results into a markdown report (failing tests, messages,
-        # stack traces - including the Should -Because diagnostic matrices)
-        # and force-pushes it to refs/heads/ci-report. Anonymous reads of
-        # Actions logs and the API quota are not assumed to exist.
-        if: failure()
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
-          $lines = @(
-            '# CI failure report',
-            '',
-            ("- run: {0} on {1} ({2})" -f $env:GITHUB_RUN_NUMBER, $env:GITHUB_SHA, $env:GITHUB_REF),
-            ("- workflow: {0}" -f $env:GITHUB_WORKFLOW_REF),
-            ''
-          )
-          $xmlPath = 'testResults.xml'
-          if (Test-Path -LiteralPath $xmlPath) {
-            try {
-              [xml]$nunit = Get-Content -LiteralPath $xmlPath -Raw -Encoding UTF8
-              $cases = @($nunit.SelectNodes("//test-case[@result='Failed']"))
-              $lines += ("- failed test cases: {0}" -f $cases.Count)
-              $lines += ''
-              foreach ($c in $cases) {
-                $lines += ("## FAILED: {0}" -f $c.GetAttribute('fullname'))
-                foreach ($f in @($c.SelectNodes(".//failure"))) {
-                  $lines += '```text'
-                  $lines += [string]$f.GetAttribute('message')
-                  $lines += '```'
-                  foreach ($st in @($f.SelectNodes(".//stack-trace"))) {
-                    $lines += '```text'
-                    $lines += [string]$st.'#text'
-                    $lines += '```'
-                  }
-                }
-                $lines += ''
-              }
-            }
-            catch {
-              $lines += ("testResults.xml could not be parsed: {0}" -f $_.Exception.Message)
-            }
-          }
-          else {
-            $lines += 'testResults.xml is missing - the Pester step failed before writing it.'
-          }
-          if (Test-Path -LiteralPath 'step-trace.txt') {
-            $lines += '## step trace'
-            $lines += '```text'
-            $lines += @(Get-Content -LiteralPath 'step-trace.txt')
-            $lines += '```'
-            $lines += ''
-          }
-          $report = 'ci-failure-report.md'
-          Set-Content -LiteralPath $report -Value $lines -Encoding UTF8
-          git config user.name 'domovoy-ci'
-          git config user.email 'domovoy-ci@users.noreply.github.com'
-          git fetch origin ci-report --depth=1 2>$null
-          if ($LASTEXITCODE -eq 0) {
-            git branch ci-report origin/ci-report
-            git checkout ci-report
-          }
-          else {
-            git checkout --orphan ci-report
-            git rm -rf . 2>$null
-          }
-          Set-Content -LiteralPath $report -Value $lines -Encoding UTF8
-          git add $report
-          git commit -m ("ci: failure report for run {0} ({1})" -f $env:GITHUB_RUN_NUMBER, $env:GITHUB_SHA.Substring(0, 7))
-          git push --force https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git ci-report:ci-report
-          Write-Host 'Failure report pushed to refs/heads/ci-report.'
-
       - name: Validate manifests, profiles and groups against JSON schemas
         shell: pwsh
         run: |
@@ -385,6 +313,86 @@ jobs:
             Write-Host "No signatures present (no signing certificate configured) - accepted by design."
           }
           Add-Content -LiteralPath step-trace.txt -Value 'signature OK'
+
+      - name: Publish failure report to the ci-report branch
+        # A red run must leave readable facts behind. This step turns the
+        # NUnit results into a markdown report (failing tests AND failing
+        # suites, messages, stack traces - including the Should -Because
+        # diagnostic matrices), appends the step trace that names the last
+        # green gate, and force-pushes it to refs/heads/ci-report. The step
+        # is bulletproof by design: every failure inside it lands in the
+        # report itself, and a minimal report still gets pushed.
+        if: failure()
+        shell: pwsh
+        run: |
+          $lines = @(
+            '# CI failure report',
+            '',
+            ("- run: {0} on {1} ({2})" -f $env:GITHUB_RUN_NUMBER, $env:GITHUB_SHA, $env:GITHUB_REF),
+            ''
+          )
+          try {
+            if (Test-Path -LiteralPath 'step-trace.txt') {
+              $lines += '## step trace (the first missing OK names the culprit)'
+              $lines += '```text'
+              $lines += @(Get-Content -LiteralPath 'step-trace.txt')
+              $lines += '```'
+              $lines += ''
+            }
+            if (Test-Path -LiteralPath 'testResults.xml') {
+              [xml]$nunit = Get-Content -LiteralPath 'testResults.xml' -Raw -Encoding UTF8
+              $cases = @($nunit.SelectNodes("//test-case[@result='Failed']"))
+              $suites = @($nunit.SelectNodes("//test-suite[@result='Failed']"))
+              $lines += ("- failed test cases: {0}; failed suites: {1}" -f $cases.Count, $suites.Count)
+              $lines += ''
+              foreach ($c in $cases) {
+                $lines += ("## FAILED: {0}" -f $c.GetAttribute('fullname'))
+                foreach ($f in @($c.SelectNodes(".//failure"))) {
+                  $lines += '```text'
+                  $lines += [string]$f.GetAttribute('message')
+                  $lines += '```'
+                  foreach ($st in @($f.SelectNodes(".//stack-trace"))) {
+                    $lines += '```text'
+                    $lines += [string]$st.'#text'
+                    $lines += '```'
+                  }
+                }
+                $lines += ''
+              }
+              foreach ($s in $suites) {
+                $lines += ("## FAILED SUITE: {0}" -f $s.GetAttribute('fullname'))
+                $lines += ''
+              }
+            }
+            else {
+              $lines += 'testResults.xml is missing - the failing step ran before Pester, or Pester crashed before writing it.'
+            }
+          }
+          catch {
+            $lines += ("report build error: {0}" -f $_.Exception.Message)
+          }
+          Set-Content -LiteralPath 'ci-failure-report.md' -Value $lines -Encoding UTF8
+          try {
+            git config user.name 'domovoy-ci'
+            git config user.email 'domovoy-ci@users.noreply.github.com'
+            $fetched = git fetch origin ci-report --depth=1 2>$null
+            if ($LASTEXITCODE -eq 0) {
+              git branch ci-report origin/ci-report 2>$null
+              git checkout ci-report 2>$null
+            }
+            else {
+              git checkout --orphan ci-report 2>$null
+              git rm -rf . 2>$null
+            }
+            Set-Content -LiteralPath 'ci-failure-report.md' -Value $lines -Encoding UTF8
+            git add ci-failure-report.md
+            git commit -m ("ci: failure report for run {0} ({1})" -f $env:GITHUB_RUN_NUMBER, $env:GITHUB_SHA.Substring(0, 7))
+            git push --force https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git ci-report:ci-report
+            Write-Host 'Failure report pushed to refs/heads/ci-report.'
+          }
+          catch {
+            Write-Host ("::error::the failure report could not be pushed: {0}" -f $_.Exception.Message)
+          }
 
   ps51:
     name: "PS 5.1 leg (windows-latest, experimental)"
