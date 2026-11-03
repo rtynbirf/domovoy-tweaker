@@ -701,8 +701,16 @@ Describe 'GUI (Show-Domovoy)' {
             $tag.Output.Text | Should -Match ([regex]::Escape($expectedSelect))
             $tag.State.busy | Should -BeFalse
 
-            # Select the first catalog row and dry-run it.
+            # Select the first catalog row and dry-run it. The preview
+            # form is headless, so force the native handles first:
+            # ListView.SelectedItems reports state only through one (the
+            # same headless-CI lesson as the v1.5.4 PerformClick hunt,
+            # run 77-79). Selection is asserted so a future WinForms
+            # change cannot silently degrade back to the guard path.
+            $null = $form.Handle
+            $null = $tag.List.Handle
             $tag.List.Items[0].Selected = $true
+            $tag.List.SelectedItems.Count | Should -Be 1
             & $tag.Handlers.DryRun
             $tag.State.busy | Should -BeTrue
             $tag.Output.Text | Should -Match 'CLI: Invoke-DomovoyFeature'
