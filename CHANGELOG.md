@@ -37,6 +37,14 @@
   устаревшего `Publish-Module` на `Publish-PSResource` (PSResourceGet);
   критерий приёмки («release job публикует через PSResourceGet; секрет тот
   же») закрыт, ожидает включения секрета владельцем.
+- v1.6 п.5 исполнен досрочно: обновляемая справка. CI-гейт требует
+  `.SYNOPSIS` и хотя бы один `.EXAMPLE` у каждой из 52 публичных команд
+  (AST-проверка «один файл — одна команда», чтобы маркеры файла не маскировали
+  молчаливую вторую функцию); `HelpInfoUri` в манифесте указывает на
+  `releases/latest/download`; release-job `updatable-help` строит cab через
+  platyPS из того же comment-based help и вкладывает `*.cab` + HelpInfo
+  в релиз, проставляя `HelpContentURI` на cab-ассет — `Update-Help -Module
+  Domovoy` работает с первого релиза, где cab появился (v1.4.1).
 
 ## [1.4.0] — 2026-11-03
 

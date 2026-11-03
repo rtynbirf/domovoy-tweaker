@@ -3,8 +3,11 @@
 #
 @{
     RootModule = 'Domovoy.psm1'
-    ModuleVersion = '1.4.0'
+    ModuleVersion = '1.4.1'
     GUID = '8546e1cf-4418-4133-92f4-4adcb7897011'
+    # v1.6 (item 5): updatable help. The HelpInfo XML and the help cab
+    # are attached to every release; "latest" serves the newest one.
+    HelpInfoUri = 'https://github.com/rtynbirf/domovoy-tweaker/releases/latest/download'
     Author = 'rtynbirf'
     CompanyName = 'Domovoy contributors'
     Copyright = '(c) 2026 rtynbirf. MIT licensed.'

@@ -229,6 +229,44 @@ jobs:
           if ($failed) { exit 1 }
           Write-Host 'Documentation freshness gate passed.'
 
+      - name: Help content gate (.SYNOPSIS + .EXAMPLE on every public command)
+        shell: pwsh
+        run: |
+          # v1.6 (item 5): updatable help is generated from comment-based
+          # help. A public command without .SYNOPSIS or without at least
+          # one .EXAMPLE would ship as a silent entry in the help cab.
+          # One file must hold exactly one public command - the documented
+          # layout - so file-level markers can never mask a silent second
+          # function.
+          $failed = $false
+          $files = Get-ChildItem -Path 'src/Domovoy/Public' -Filter '*.ps1'
+          foreach ($f in $files) {
+            $tokens = $null; $parseErrors = $null
+            $ast = [System.Management.Automation.Language.Parser]::ParseFile($f.FullName, [ref]$tokens, [ref]$parseErrors)
+            if ($parseErrors.Count -gt 0) {
+              Write-Host ("::error::{0}: parse errors - {1}" -f $f.Name, $parseErrors[0].Message)
+              $failed = $true
+              continue
+            }
+            $funcs = @($ast.FindAll({ param($a) $a -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $false))
+            if ($funcs.Count -ne 1) {
+              Write-Host ("::error::{0}: holds {1} function definitions - one file must hold exactly one public command" -f $f.Name, $funcs.Count)
+              $failed = $true
+              continue
+            }
+            $text = Get-Content -LiteralPath $f.FullName -Raw -Encoding UTF8
+            if ($text -notmatch '(?m)^\s*\.SYNOPSIS') {
+              Write-Host "::error::$($f.Name): the public command has no .SYNOPSIS"
+              $failed = $true
+            }
+            if ($text -notmatch '(?m)^\s*\.EXAMPLE') {
+              Write-Host "::error::$($f.Name): the public command has no .EXAMPLE"
+              $failed = $true
+            }
+          }
+          Write-Host ("Help content gate: {0} public command file(s) checked." -f $files.Count)
+          if ($failed) { exit 1 }
+
       - name: Signature check (verifies when a signature is present)
         shell: pwsh
         run: |

@@ -213,3 +213,52 @@ jobs:
           Write-Host "Publishing $($meta.Name) $($meta.Version) to the PowerShell Gallery."
           Publish-PSResource -Path (Join-Path (Get-Location) 'src/Domovoy') -ApiKey $env:PSGALLERY_API_KEY -Repository PSGallery
           Write-Host "Published. Install-Module -Name Domovoy now serves this release."
+
+  # v1.6 (item 5): updatable help. The cab is generated from the same
+  # comment-based help the CI gate (SYNOPSIS + EXAMPLE) proves complete;
+  # platyPS builds the external help XML, MakeCab packs it and the
+  # HelpInfo XML points at the "latest" release asset so Update-Help
+  # resolves the newest cab. Runs after the release is published and
+  # attaches its artifacts to that release.
+  updatable-help:
+    name: Updatable help cab (windows-latest)
+    runs-on: windows-latest
+    needs: [release]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Build the external help cab from comment-based help
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Install-Module -Name platyPS -Scope CurrentUser -Force
+          Import-Module platyPS
+          Import-Module -Name (Join-Path (Get-Location) 'src/Domovoy/Domovoy.psd1') -Force
+          $md = Join-Path $env:RUNNER_TEMP 'md'
+          $xml = Join-Path $env:RUNNER_TEMP 'xml'
+          $cab = Join-Path $env:RUNNER_TEMP 'cab'
+          New-Item -ItemType Directory -Path $md,$xml,$cab -Force | Out-Null
+          $null = New-MarkdownHelp -Module Domovoy -OutputFolder $md -WithModulePage -Force
+          $null = New-ExternalHelp -Path $md -OutputPath $xml -Force
+          $landing = Join-Path $md 'Domovoy.md'
+          New-ExternalHelpCab -CabFilesFolder $xml -LandingPagePath $landing -OutputFolder $cab
+          $cabFile = Get-ChildItem -Path $cab -Filter '*.cab' | Select-Object -First 1
+          $helpInfo = Get-ChildItem -Path $cab -Filter '*HelpInfo.xml' | Select-Object -First 1
+          if (-not $cabFile -or -not $helpInfo) { throw "platyPS did not produce the cab or the HelpInfo file" }
+          # Point HelpContentURI at the release-hosted cab so Update-Help
+          # can actually download it.
+          $uri = "https://github.com/rtynbirf/domovoy-tweaker/releases/latest/download/$($cabFile.Name)"
+          [xml]$doc = Get-Content -LiteralPath $helpInfo.FullName -Raw
+          $doc.HelpInfo.HelpContentURI = $uri
+          $doc.Save($helpInfo.FullName)
+          Write-Host "Help cab built: $($cabFile.Name); HelpContentURI = $uri"
+
+      - name: Attach the cab and HelpInfo to the release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $files = @(Get-ChildItem -Path (Join-Path $env:RUNNER_TEMP 'cab') -File | ForEach-Object { $_.FullName })
+          gh release upload "${{ github.ref_name }}" @files --clobber
+          Write-Host "Attached $($files.Count) help artifact(s) to ${{ github.ref_name }}."
