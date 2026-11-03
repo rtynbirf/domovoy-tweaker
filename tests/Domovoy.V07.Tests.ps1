@@ -641,4 +641,37 @@ Describe 'GUI (Show-Domovoy)' {
         Get-Command Show-Domovoy | Should -Not -BeNullOrEmpty
         (Get-Command Show-Domovoy).Parameters.Keys | Should -Contain 'Preview'
     }
+
+    It 'click handlers resolve the private string table through the module-bound bridge (v1.5.4 portable-exe regression)' -Skip:(-not $script:isWindowsPlatform) {
+        # The v1.5.3 portable exe crashed on EVERY click: the handlers run
+        # inside .GetNewClosure() scopes whose command lookup reaches only
+        # the global session state - the private Get-DomovoyStrings was not
+        # visible there (Button.OnMouseUp -> CommandNotFoundException, and
+        # CI stayed green because -Preview builds the window but never
+        # clicks). This test performs REAL clicks on the preview form.
+        $expectedSelect = InModuleScope Domovoy { (Get-DomovoyStrings).selectFirst }
+        $expectedRefreshed = InModuleScope Domovoy { (Get-DomovoyStrings).refreshed }
+        $form = Show-Domovoy -Preview
+        try {
+            $buttons = $form.Tag.Buttons
+            $buttons.DryRun | Should -BeOfType [System.Windows.Forms.Button]
+
+            # DryRun with no selection: the first bridge call inside a click handler.
+            { $buttons.DryRun.PerformClick() } | Should -Not -Throw
+            $form.Tag.Output.Text | Should -Match ([regex]::Escape($expectedSelect))
+
+            # Refresh: rebuilds the list, appends the live string again.
+            { $buttons.Refresh.PerformClick() } | Should -Not -Throw
+            $form.Tag.Output.Text | Should -Match ([regex]::Escape($expectedRefreshed))
+
+            # A toolbar action through $runAction: every action button first
+            # prints the CLI prefix line resolved through the same bridge.
+            { $buttons.Changes.PerformClick() } | Should -Not -Throw
+            $form.Tag.Output.Text | Should -Match 'CLI: '
+            $form.Tag.Output.Text | Should -Not -Match 'is not recognized'
+        }
+        finally {
+            $form.Dispose()
+        }
+    }
 }

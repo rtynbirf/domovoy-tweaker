@@ -54,6 +54,21 @@ function Show-Domovoy {
     # asks the user to reopen); dynamic messages resolve live.
     $s = Get-DomovoyStrings
 
+    # v1.5.4: every click handler below is bound with .GetNewClosure() - a
+    # fresh dynamic module whose command lookup reaches only the GLOBAL
+    # session state. Public commands resolve there (the shims import the
+    # module -Global), but the PRIVATE string table does not: since the
+    # localization wave every single click died with "Get-DomovoyStrings is
+    # not recognized" - the exact portable-exe crash (Button.OnMouseUp ->
+    # ScriptBlock.InvokeAsDelegateHelper -> CommandNotFoundException,
+    # Windows PowerShell 5.1). This bridge scriptblock is created in module
+    # scope, so the private function resolves inside its own bound session
+    # state; the closures capture it as a plain variable and invoke it
+    # with &. Machine-proven by the closure proof harness and by the click
+    # regression test in Domovoy.V07.Tests.ps1 (PerformClick on the preview
+    # form), which fails on the pre-fix code.
+    $stringsLive = { Get-DomovoyStrings }
+
     # ---- data --------------------------------------------------------------
 
     $welcome = @(
@@ -119,18 +134,18 @@ function Show-Domovoy {
 
     $runAction = {
         param([string]$CliLine, [scriptblock]$Action)
-        & $append ((Get-DomovoyStrings).cliPrefix + $CliLine)
+        & $append ((& $stringsLive).cliPrefix + $CliLine)
         try {
             $result = & $Action
             if ($null -ne $result) {
                 & $append (($result | Out-String -Width 110).TrimEnd())
             }
             else {
-                & $append (Get-DomovoyStrings).noOutput
+                & $append (& $stringsLive).noOutput
             }
         }
         catch {
-            & $append ((Get-DomovoyStrings).errorPrefix + $_.Exception.Message)
+            & $append ((& $stringsLive).errorPrefix + $_.Exception.Message)
         }
         & $append ('-' * 72)
     }.GetNewClosure()
@@ -183,7 +198,7 @@ function Show-Domovoy {
     $btnDryRun.Add_Click({
         $id = & $selectedId
         if (-not $id) {
-            & $append (Get-DomovoyStrings).selectFirst
+            & $append (& $stringsLive).selectFirst
             return
         }
         $cli = "Invoke-DomovoyFeature -Id '$id'"
@@ -194,13 +209,13 @@ function Show-Domovoy {
     $btnApply.Add_Click({
         $id = & $selectedId
         if (-not $id) {
-            & $append (Get-DomovoyStrings).selectFirst
+            & $append (& $stringsLive).selectFirst
             return
         }
         $cli = "Invoke-DomovoyFeature -Id '$id' -Apply"
-        $answer = [System.Windows.Forms.MessageBox]::Show($form, ((Get-DomovoyStrings).applyConfirm -f $cli), (Get-DomovoyStrings).messageBoxTitle, 'YesNo', 'Warning')
+        $answer = [System.Windows.Forms.MessageBox]::Show($form, ((& $stringsLive).applyConfirm -f $cli), (& $stringsLive).messageBoxTitle, 'YesNo', 'Warning')
         if ($answer -ne [System.Windows.Forms.DialogResult]::Yes) {
-            & $append (Get-DomovoyStrings).cancelled
+            & $append (& $stringsLive).cancelled
             return
         }
         & $runAction $cli ([scriptblock]::Create($cli))
@@ -210,13 +225,13 @@ function Show-Domovoy {
     $btnUndo.Add_Click({
         $id = & $selectedId
         if (-not $id) {
-            & $append (Get-DomovoyStrings).selectFirst
+            & $append (& $stringsLive).selectFirst
             return
         }
         $cli = "Undo-DomovoyFeature -Id '$id' -Apply"
-        $answer = [System.Windows.Forms.MessageBox]::Show($form, ((Get-DomovoyStrings).undoConfirm -f $cli), (Get-DomovoyStrings).messageBoxTitle, 'YesNo', 'Warning')
+        $answer = [System.Windows.Forms.MessageBox]::Show($form, ((& $stringsLive).undoConfirm -f $cli), (& $stringsLive).messageBoxTitle, 'YesNo', 'Warning')
         if ($answer -ne [System.Windows.Forms.DialogResult]::Yes) {
-            & $append (Get-DomovoyStrings).cancelled
+            & $append (& $stringsLive).cancelled
             return
         }
         & $runAction $cli ([scriptblock]::Create($cli))
@@ -226,7 +241,7 @@ function Show-Domovoy {
     $btnEffect.Add_Click({
         $id = & $selectedId
         if (-not $id) {
-            & $append (Get-DomovoyStrings).selectFirst
+            & $append (& $stringsLive).selectFirst
             return
         }
         $cli = "Test-DomovoyEffect -Id '$id'"
@@ -262,9 +277,9 @@ function Show-Domovoy {
     $btnTheme = & $newButton $s.btnSwitchTheme
     $btnTheme.Add_Click({
         $cli = 'Switch-DomovoyTheme -Apply'
-        $answer = [System.Windows.Forms.MessageBox]::Show($form, ((Get-DomovoyStrings).themeConfirm -f $cli), (Get-DomovoyStrings).messageBoxTitle, 'YesNo', 'Warning')
+        $answer = [System.Windows.Forms.MessageBox]::Show($form, ((& $stringsLive).themeConfirm -f $cli), (& $stringsLive).messageBoxTitle, 'YesNo', 'Warning')
         if ($answer -ne [System.Windows.Forms.DialogResult]::Yes) {
-            & $append (Get-DomovoyStrings).cancelled
+            & $append (& $stringsLive).cancelled
             return
         }
         & $runAction $cli ([scriptblock]::Create($cli))
@@ -278,7 +293,7 @@ function Show-Domovoy {
     $btnRefresh = & $newButton $s.btnRefresh
     $btnRefresh.Add_Click({
         & $fillList
-        & $append (Get-DomovoyStrings).refreshed
+        & $append (& $stringsLive).refreshed
     }.GetNewClosure())
 
     $btnLanguage = & $newButton ((Get-DomovoyStrings).btnLanguage -f (Get-DomovoyLanguage).Language)
@@ -286,7 +301,7 @@ function Show-Domovoy {
         $target = if ((Get-DomovoyLanguage).Language -eq 'ru') { 'en' } else { 'ru' }
         $cli = "Set-DomovoyLanguage -Language $target"
         & $runAction $cli ([scriptblock]::Create($cli))
-        $sLive = Get-DomovoyStrings
+        $sLive = & $stringsLive
         & $append ($sLive.languageSwitched -f $target)
         $btnLanguage.Text = $sLive.btnLanguage -f $target
     }.GetNewClosure())
@@ -304,9 +319,16 @@ function Show-Domovoy {
 
     if ($Preview) {
         # Expose the two live controls so tests can assert on the built form.
+        # The Buttons expose the live click surface so the regression test
+        # can PerformClick() them headlessly (v1.5.4 closure regression).
         $form.Tag = @{
             List = $list
             Output = $output
+            Buttons = @{
+                DryRun = $btnDryRun
+                Changes = $btnChanges
+                Refresh = $btnRefresh
+            }
         }
         return $form
     }
