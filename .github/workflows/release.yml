@@ -140,9 +140,19 @@ jobs:
           path: ${{ runner.temp }}\shim-stage\Domovoy\domovoy.exe
           retention-days: 7
 
-  release:
-    name: Package + notes (ubuntu-latest)
-    runs-on: ubuntu-latest
+  # v1.5.3: the single-file portable launcher - Domovoy-<version>-Portable.exe.
+  # One download, one double-click: the exe embeds the whole release payload
+  # (module + catalog + schemas + both shims + README + LICENSE), unpacks it
+  # next to itself (or %LOCALAPPDATA% when that folder is read-only) and
+  # opens the Domovoy GUI; arguments are forwarded verbatim to domovoy.ps1.
+  # Built with the same .NET Framework csc as the winget shim (C#5 source:
+  # packaging/shim/DomovoyPortable.cs), the payload carries the shim-exe
+  # artifact so the "one file everywhere" rule holds for this contour too.
+  # --selftest and an end-to-end Get-DomovoyLanguage run through the exe are
+  # hard gates here, before the release job ever sees the artifact.
+  portable-exe:
+    name: Single-file portable launcher (windows-latest)
+    runs-on: windows-latest
     needs: [await-tests, shim-exe]
     steps:
       - name: Checkout
@@ -153,6 +163,66 @@ jobs:
         with:
           name: domovoy-exe
           path: shim-artifact
+
+      - name: Build Domovoy-<version>-Portable.exe
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -ExecutionPolicy Bypass -File tools/Build-PortableExe.ps1 `
+            -RepoDir . `
+            -ShimExe shim-artifact/domovoy.exe `
+            -OutputDir portable-artifact
+          if ($LASTEXITCODE -ne 0) { throw "portable build failed with exit code $LASTEXITCODE" }
+
+      - name: Smoke - selftest of the portable exe (packaging contract)
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem -Path 'portable-artifact' -Filter 'Domovoy-*-Portable.exe' | Select-Object -First 1
+          if (-not $exe) { throw 'the portable build produced no Domovoy-*-Portable.exe' }
+          & $exe.FullName --selftest
+          if ($LASTEXITCODE -ne 0) { throw "portable selftest failed with exit code $LASTEXITCODE" }
+
+      - name: Smoke - end-to-end launch through the portable exe
+        shell: pwsh
+        run: |
+          # The full production path on a clean runner: extraction next to
+          # the exe, engine discovery, module import from the extracted
+          # payload, one public command, exit code propagation.
+          $exe = Get-ChildItem -Path 'portable-artifact' -Filter 'Domovoy-*-Portable.exe' | Select-Object -First 1
+          $out = & $exe.FullName Get-DomovoyLanguage
+          Write-Host ($out -join "`n")
+          if ($LASTEXITCODE -ne 0) { throw "portable exe returned exit code $LASTEXITCODE" }
+          $joined = ($out -join " ")
+          if ($joined -notmatch 'en\s+default') { throw "unexpected portable output: $joined" }
+          Write-Host 'End-to-end portable smoke passed.'
+
+      - name: Upload the portable exe
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: domovoy-portable
+          path: |
+            portable-artifact/Domovoy-*-Portable.exe
+            portable-artifact/Domovoy-*-Portable.exe.sha256
+          retention-days: 7
+
+  release:
+    name: Package + notes (ubuntu-latest)
+    runs-on: ubuntu-latest
+    needs: [await-tests, shim-exe, portable-exe]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Download the compiled shim
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: domovoy-exe
+          path: shim-artifact
+
+      - name: Download the portable exe
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: domovoy-portable
+          path: portable-artifact
 
       - name: Extract changelog section for the tag
         run: |
@@ -226,17 +296,31 @@ jobs:
             v0.*) FLAG="--prerelease" ;;
           esac
           zip -j "Domovoy-${VERSION}-winget-manifests.zip" winget-manifests/*
+          # v1.5.3: the single-file portable launcher ships beside the zip.
+          PORTABLE_EXE=$(ls portable-artifact/Domovoy-*-Portable.exe)
+          if [ ! -s "$PORTABLE_EXE" ]; then
+            echo "::error::Packaging bug: the portable exe artifact is missing or empty"
+            exit 1
+          fi
+          PORTABLE_NAME=$(basename "$PORTABLE_EXE")
+          PORTABLE_SHA256=$(sha256sum "$PORTABLE_EXE" | cut -d' ' -f1)
+          printf '%s  %s\n' "${PORTABLE_SHA256}" "${PORTABLE_NAME}" > "${PORTABLE_NAME}.sha256"
+          echo "portable sha256: ${PORTABLE_SHA256}"
           if gh release view "${GITHUB_REF_NAME}" > /dev/null 2>&1; then
             echo "Release ${GITHUB_REF_NAME} already exists - uploading assets"
             gh release upload "${GITHUB_REF_NAME}" \
               "Domovoy-${VERSION}.zip" \
               "Domovoy-${VERSION}.zip.sha256" \
-              "Domovoy-${VERSION}-winget-manifests.zip" --clobber
+              "Domovoy-${VERSION}-winget-manifests.zip" \
+              "$PORTABLE_EXE" \
+              "${PORTABLE_NAME}.sha256" --clobber
           else
             gh release create "${GITHUB_REF_NAME}" \
               "Domovoy-${VERSION}.zip" \
               "Domovoy-${VERSION}.zip.sha256" \
               "Domovoy-${VERSION}-winget-manifests.zip" \
+              "$PORTABLE_EXE" \
+              "${PORTABLE_NAME}.sha256" \
               --title "${GITHUB_REF_NAME}" --notes-file release_notes.md $FLAG
           fi
 
