@@ -60,13 +60,94 @@ jobs:
           echo "::error::No green CI run for commit ${{ github.sha }} within 20 minutes - refusing to release untested code"
           exit 1
 
-  release:
-    name: Package + notes (ubuntu-latest)
-    runs-on: ubuntu-latest
+  # v1.5.2: the winget portable manifest targets Domovoy/domovoy.exe -
+  # winget-cli accepts ONLY ".exe" for NestedInstallerType portable
+  # (s_AllowedPortableFiletypes in ManifestValidation.cpp; the earlier
+  # domovoy.ps1 target was rejected by the winget-pkgs validation pipeline,
+  # verdict 2026-11-03). The shim is compiled ONCE here from its C# source
+  # (packaging/shim/DomovoyShim.cs) with the .NET Framework csc that ships
+  # on every Windows runner, smoke-tested directly AND through a symlink
+  # (the production winget portable path), and every packaging contour
+  # below ships exactly this artifact - one file everywhere.
+  shim-exe:
+    name: Compile + smoke the portable exe shim (windows-latest)
+    runs-on: windows-latest
     needs: await-tests
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Compile DomovoyShim.cs with the .NET Framework csc
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $csc = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
+          if (-not (Test-Path -LiteralPath $csc -PathType Leaf)) { throw "csc.exe not found at $csc" }
+          $stage = Join-Path $env:RUNNER_TEMP 'shim-stage\Domovoy'
+          New-Item -ItemType Directory -Path $stage -Force | Out-Null
+          # The real package layout: the exe and the ps1 shim sit inside
+          # Domovoy/ next to the module itself.
+          Copy-Item -Path 'src/Domovoy/*' -Destination $stage -Recurse
+          Copy-Item -Path 'config','schema' -Destination "$stage/" -Recurse
+          Copy-Item -Path 'packaging/shim/domovoy.ps1' -Destination $stage
+          & $csc /nologo /target:exe /out:"$stage\domovoy.exe" 'packaging/shim/DomovoyShim.cs'
+          if ($LASTEXITCODE -ne 0) { throw "csc failed with exit code $LASTEXITCODE" }
+          if (-not (Test-Path -LiteralPath "$stage\domovoy.exe" -PathType Leaf)) { throw 'csc produced no executable' }
+          $sha = (Get-FileHash -LiteralPath "$stage\domovoy.exe" -Algorithm SHA256).Hash
+          Write-Host "domovoy.exe compiled, sha256: $sha"
+          "SHIM_SHA256=$sha" | Add-Content -LiteralPath $env:GITHUB_ENV
+
+      - name: Smoke - run the exe directly (the non-symlink path)
+        shell: pwsh
+        run: |
+          $stage = Join-Path $env:RUNNER_TEMP 'shim-stage\Domovoy'
+          $out = & "$stage\domovoy.exe" Get-DomovoyLanguage
+          Write-Host ($out -join "`n")
+          if ($LASTEXITCODE -ne 0) { throw "domovoy.exe returned exit code $LASTEXITCODE" }
+          $joined = ($out -join " ")
+          # Get-DomovoyLanguage prints a Language/Source/PreferenceFile table;
+          # the frozen default is en/default (spec section 10).
+          if ($joined -notmatch 'en\s+default') { throw "unexpected shim output: $joined" }
+
+      - name: Smoke - run the exe through a symlink (the winget portable path)
+        shell: pwsh
+        run: |
+          # winget portable installs symlink the exe into the Links folder.
+          # The shim must find domovoy.ps1 next to the REAL file, not next
+          # to the symlink - that is exactly what this test proves.
+          $ErrorActionPreference = 'Stop'
+          $stage = Join-Path $env:RUNNER_TEMP 'shim-stage\Domovoy'
+          $links = Join-Path $env:RUNNER_TEMP 'links'
+          New-Item -ItemType Directory -Path $links -Force | Out-Null
+          $link = Join-Path $links 'domovoy.exe'
+          New-Item -ItemType SymbolicLink -Path $link -Target "$stage\domovoy.exe" | Out-Null
+          $out = & $link Get-DomovoyLanguage
+          Write-Host ($out -join "`n")
+          if ($LASTEXITCODE -ne 0) { throw "symlinked domovoy.exe returned exit code $LASTEXITCODE" }
+          $joined = ($out -join " ")
+          if ($joined -notmatch 'en\s+default') { throw "unexpected symlinked shim output: $joined" }
+          Write-Host 'Symlink smoke passed: the shim resolved domovoy.ps1 through the link.'
+
+      - name: Upload the compiled shim
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: domovoy-exe
+          path: ${{ runner.temp }}\shim-stage\Domovoy\domovoy.exe
+          retention-days: 7
+
+  release:
+    name: Package + notes (ubuntu-latest)
+    runs-on: ubuntu-latest
+    needs: [await-tests, shim-exe]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Download the compiled shim
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: domovoy-exe
+          path: shim-artifact
 
       - name: Extract changelog section for the tag
         run: |
@@ -98,9 +179,19 @@ jobs:
           # there is no repository checkout next to the module.
           cp -r config schema staging/Domovoy/
           cp README.md LICENSE staging/
-          # The CLI shim travels inside the package: the winget portable
-          # manifest targets Domovoy/domovoy.ps1 as the command entry point.
+          # The CLI shims travel inside the package: the winget portable
+          # manifest targets Domovoy/domovoy.exe (v1.5.2, compiled by the
+          # shim-exe job) and domovoy.ps1 forwards to the module. Both
+          # shims must be present - a missing one is a packaging bug.
           cp packaging/shim/domovoy.ps1 staging/Domovoy/domovoy.ps1
+          cp shim-artifact/domovoy.exe staging/Domovoy/domovoy.exe
+          for f in staging/Domovoy/domovoy.ps1 staging/Domovoy/domovoy.exe; do
+            if [ ! -s "$f" ]; then
+              echo "::error::Packaging bug: $f is missing or empty - the winget portable target would break"
+              exit 1
+            fi
+          done
+          sha256sum staging/Domovoy/domovoy.exe
           cd staging
           zip -r "../Domovoy-${VERSION}.zip" .
           cd ..
@@ -147,13 +238,19 @@ jobs:
   sign:
     name: Optional Authenticode signing (windows-latest)
     runs-on: windows-latest
-    needs: [await-tests, release]
+    needs: [await-tests, shim-exe, release]
     env:
       CODE_SIGNING_PFX: ${{ secrets.CODE_SIGNING_PFX }}
       CODE_SIGNING_PASSWORD: ${{ secrets.CODE_SIGNING_PASSWORD }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Download the compiled shim
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: domovoy-exe
+          path: shim-artifact
 
       - name: Sign module files when a certificate is configured
         shell: pwsh
@@ -180,6 +277,8 @@ jobs:
           Copy-Item -Recurse -Path 'config','schema' -Destination 'staging/Domovoy/'
           Copy-Item 'README.md','LICENSE' 'staging/'
           Copy-Item 'packaging/shim/domovoy.ps1' 'staging/Domovoy/domovoy.ps1'
+          Copy-Item 'shim-artifact/domovoy.exe' 'staging/Domovoy/domovoy.exe'
+          if (-not (Test-Path 'staging/Domovoy/domovoy.exe')) { throw 'packaging bug: domovoy.exe missing from the signed zip' }
           Compress-Archive -Path 'staging/*' -DestinationPath "Domovoy-$VERSION-signed.zip" -Force
 
       - name: Upload the signed zip to the release
@@ -195,12 +294,18 @@ jobs:
   publish-psgallery:
     name: Optional PSGallery publish (windows-latest)
     runs-on: windows-latest
-    needs: [await-tests, release]
+    needs: [await-tests, shim-exe, release]
     env:
       PSGALLERY_API_KEY: ${{ secrets.PSGALLERY_API_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Download the compiled shim
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: domovoy-exe
+          path: shim-artifact
 
       - name: Publish to the PowerShell Gallery when the API key is configured
         shell: pwsh
@@ -219,9 +324,10 @@ jobs:
           # The gallery package must carry the feature catalog the same way the
           # zip does - otherwise an installed module cannot list any features.
           Copy-Item -Recurse -Path 'config','schema' -Destination 'src/Domovoy/'
-          # Package parity: the CLI shim ships in the zip, so it ships to the
-          # gallery too.
+          # Package parity: the CLI shims ship in the zip, so they ship to
+          # the gallery too - the exe shim and its ps1 forwarder together.
           Copy-Item 'packaging/shim/domovoy.ps1' 'src/Domovoy/domovoy.ps1'
+          Copy-Item 'shim-artifact/domovoy.exe' 'src/Domovoy/domovoy.exe'
           Import-Module -Name (Join-Path (Get-Location) 'src/Domovoy/Domovoy.psd1') -Force
           $meta = Test-ModuleManifest -Path (Join-Path (Get-Location) 'src/Domovoy/Domovoy.psd1')
           Write-Host "Publishing $($meta.Name) $($meta.Version) to the PowerShell Gallery."

@@ -443,6 +443,40 @@ NestedInstallerType — честная запись») это покрывает
 - [x] CI зелёный на тегированном SHA (runs 62–63 на ecf7b30), релиз
       опубликован гейтованным прогоном (Release run 17).
 
+## v1.5.2 — Вердикт валидатора и exe-шим (v1.6 п.3 по существу) ✅ (2026-11-03)
+
+Валидационный пайплайн winget-pkgs ответил на PR
+[#469700](https://github.com/microsoft/winget-pkgs/pull/469700) ошибкой
+content-валидации. Корневая причина доказана по исходникам winget-cli:
+`NestedInstallerType: portable` допускает ровно `.exe`
+(`s_AllowedPortableFiletypes` в ManifestValidation.cpp,
+`InvalidPortableFiletype`) — цель `domovoy.ps1` не проходит валидацию
+никогда. DoD вехи v1.5.1 («если ревью не примет NestedInstallerType —
+честная запись») исполнен, и канал добит по существу:
+
+- `packaging/shim/DomovoyShim.cs` — компилируемый exe-шим: резолвит
+  реальный путь своего exe через `GetFinalPathNameByHandle` (winget
+  запускает portable через symlink из Links-каталога) и форвардит вызов
+  `domovoy.ps1`; ноль собственной логики, исходник в репо, компиляция —
+  штатным `csc.exe` .NET Framework на CI.
+- Манифесты: цель `Domovoy/domovoy.exe`; `ManifestVersion` 1.9.0 → 1.12.0
+  (спецификация валидатора; подъём добавляет одно новое обязательное поле —
+  `DefaultLocale: en-US` в version-манифесте, поймано машинной валидацией
+  против схемы 1.12.0 до подачи); добавлены требуемые Validation.md
+  заголовки `# yaml-language-server: $schema=...`.
+- CI: шаг «Portable exe shim gate» — компиляция + прямая прогонка +
+  symlink-прогонка + гейты шаблонов, на каждый пуш; release-джоб `shim-exe`
+  собирает exe один раз, zip / подписанный zip / галерейный пакет несут
+  ровно этот файл.
+
+**Критерии приёмки:**
+- [x] Вердикт валидации зафиксирован в docs/distribution.md с корневой
+      причиной (исходник winget-cli), не пересказом.
+- [x] Манифесты соответствуют Validation.md winget-pkgs: exe-цель,
+      заголовки схем, ManifestVersion 1.12.0.
+- [x] Продакшен-путь winget portable (symlink) доказан CI-прогоном, а не
+      заявлен.
+
 ## Beyond v1.0 (идеи, не обещания)
 
 - Мульти-машина: журнал и профили как вход для Intune/SCCM-конвейеров.

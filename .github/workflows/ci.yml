@@ -191,6 +191,62 @@ jobs:
             exit 1
           }
 
+      - name: Portable exe shim gate (compile + smoke + winget templates)
+        shell: pwsh
+        run: |
+          # v1.5.2: the winget portable manifest targets Domovoy/domovoy.exe -
+          # winget-cli accepts ONLY ".exe" for NestedInstallerType portable
+          # (s_AllowedPortableFiletypes in ManifestValidation.cpp); the earlier
+          # domovoy.ps1 target was rejected by the winget-pkgs validation
+          # pipeline (PR microsoft/winget-pkgs#469700, verdict 2026-11-03).
+          # This gate proves, on every push, that the shim source compiles,
+          # works directly AND through a symlink (the production winget
+          # portable path), and that the winget templates carry the
+          # validator-required shape.
+          $ErrorActionPreference = 'Stop'
+          try {
+            # (a) compile with the .NET Framework csc shipped on the runner
+            $csc = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
+            if (-not (Test-Path -LiteralPath $csc -PathType Leaf)) { throw "csc.exe not found at $csc" }
+            $stage = Join-Path $env:RUNNER_TEMP 'shim-stage\Domovoy'
+            New-Item -ItemType Directory -Path $stage -Force | Out-Null
+            Copy-Item -Path 'src/Domovoy/*' -Destination $stage -Recurse
+            Copy-Item -Path 'config','schema' -Destination "$stage/" -Recurse
+            Copy-Item -Path 'packaging/shim/domovoy.ps1' -Destination $stage
+            & $csc /nologo /target:exe /out:"$stage\domovoy.exe" 'packaging/shim/DomovoyShim.cs'
+            if ($LASTEXITCODE -ne 0) { throw "csc failed with exit code $LASTEXITCODE" }
+            # (b) direct smoke
+            $out = & "$stage\domovoy.exe" Get-DomovoyLanguage
+            if ($LASTEXITCODE -ne 0) { throw "domovoy.exe returned exit code $LASTEXITCODE" }
+            $joined = ($out -join ' ')
+            if ($joined -notmatch 'en\s+default') { throw "unexpected shim output: $joined" }
+            # (c) symlink smoke - the winget portable production path
+            $links = Join-Path $env:RUNNER_TEMP 'links'
+            New-Item -ItemType Directory -Path $links -Force | Out-Null
+            $link = Join-Path $links 'domovoy.exe'
+            New-Item -ItemType SymbolicLink -Path $link -Target "$stage\domovoy.exe" | Out-Null
+            $out = & $link Get-DomovoyLanguage
+            if ($LASTEXITCODE -ne 0) { throw "symlinked domovoy.exe returned exit code $LASTEXITCODE" }
+            $joined = ($out -join ' ')
+            if ($joined -notmatch 'en\s+default') { throw "unexpected symlinked shim output: $joined" }
+            # (d) the winget templates must carry the validator-required shape
+            $installer = Get-Content -LiteralPath 'packaging/winget/Rtynbirf.Domovoy.installer.template.yaml' -Raw
+            if ($installer -notmatch 'RelativeFilePath:\s*Domovoy/domovoy\.exe') { throw 'installer template does not target Domovoy/domovoy.exe' }
+            if ($installer -match 'RelativeFilePath:\s*Domovoy/domovoy\.ps1') { throw 'installer template still targets the rejected domovoy.ps1' }
+            foreach ($t in @('version', 'installer', 'locale.en-US')) {
+              $path = "packaging/winget/Rtynbirf.Domovoy.$t.template.yaml"
+              $text = Get-Content -LiteralPath $path -Raw
+              if ($text -notmatch 'ManifestVersion:\s*1\.12\.0') { throw "$path does not declare ManifestVersion 1.12.0" }
+              if ($text -notmatch '(?m)^#\s*yaml-language-server:\s*\$schema=https://aka\.ms/winget-manifest\.') { throw "$path misses the yaml-language-server schema header" }
+            }
+            Write-Host 'Portable exe shim gate passed: compile OK, direct smoke OK, symlink smoke OK, templates OK.'
+            Add-Content -LiteralPath step-trace.txt -Value 'shim-gate OK'
+          }
+          catch {
+            Write-Host ("::error::Portable exe shim gate failed: {0}" -f $_.Exception.Message)
+            exit 1
+          }
+
       - name: Documentation freshness gate
         shell: pwsh
         run: |

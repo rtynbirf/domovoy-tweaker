@@ -1,16 +1,20 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.installer.1.12.0.schema.json
 PackageIdentifier: Rtynbirf.Domovoy
 PackageVersion: __VERSION__
 Installers:
   - Architecture: x64
     InstallerType: zip
     InstallerUrl: https://github.com/rtynbirf/domovoy-tweaker/releases/download/v__VERSION__/Domovoy-__VERSION__.zip
-    InstallerSha256: __SHA256__
+    InstallerSha256: "__SHA256__"
     NestedInstallerType: portable
     NestedInstallerFiles:
-      # The portable target is the CLI shim shipped inside the zip (a real
-      # executable entry point), not Domovoy.psd1 - a data file is not a
-      # portable command.
-      - RelativeFilePath: Domovoy/domovoy.ps1
+      # The portable target is the compiled exe shim shipped inside the zip
+      # (packaging/shim/DomovoyShim.cs, built by CI). winget-cli accepts
+      # ONLY ".exe" for NestedInstallerType portable
+      # (s_AllowedPortableFiletypes in ManifestValidation.cpp) - the earlier
+      # Domovoy/domovoy.ps1 target was rejected by the winget-pkgs
+      # validation pipeline (verdict 2026-11-03, fixed in v1.5.2).
+      - RelativeFilePath: Domovoy/domovoy.exe
         PortableCommandAlias: domovoy
 ManifestType: installer
-ManifestVersion: 1.9.0
+ManifestVersion: 1.12.0

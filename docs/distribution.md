@@ -22,9 +22,9 @@ Import-Module Domovoy
 ### Из zip-архива релиза
 
 Каждый релиз на GitHub вкладывает `Domovoy-<версия>.zip` (модуль + каталог
-манифестов `config/` + схемы `schema/` + README + LICENSE + CLI-shim
-`Domovoy/domovoy.ps1`). Распаковать и импортировать — каталог функций
-работает сразу, без git-клона:
+манифестов `config/` + схемы `schema/` + README + LICENSE + CLI-шимы
+`Domovoy/domovoy.ps1` и `Domovoy/domovoy.exe`). Распаковать и импортировать —
+каталог функций работает сразу, без git-клона:
 
 ```powershell
 Import-Module .\Domovoy\Domovoy.psd1 -Force
@@ -88,27 +88,44 @@ CI зелёный. Никаких следов секретов в коде не
 [`microsoft/winget-pkgs`](https://github.com/microsoft/winget-pkgs)
 (`manifests/r/Rtynbirf/Domovoy/<версия>/`).
 
-С v1.5.1 манифесты готовы к подаче без ручных правок:
+С v1.5.2 манифесты готовы к подаче без ручных правок:
 
 - файл локали назван по требованию валидатора winget-pkgs —
   `Rtynbirf.Domovoy.locale.en-US.yaml` (локаль в имени файла);
-- `ManifestVersion` — 1.9.0;
-- `NestedInstallerType: portable` целяется в `Domovoy/domovoy.ps1` —
-  CLI-shim, который едет внутри zip (тонкая точка входа: импортирует модуль
-  рядом с собой и форвардит вызов ровно одной публичной команде).
-  На `.psd1` portable целяться нельзя — это файл данных, а не команда.
+- каждый файл манифеста несёт заголовок
+  `# yaml-language-server: $schema=https://aka.ms/winget-manifest.<тип>.1.12.0.schema.json`
+  — его требует Validation.md winget-pkgs;
+- `ManifestVersion` — 1.12.0 (спецификация, на которую ссылается валидатор;
+  подъём добавляет ровно одно новое обязательное поле — `DefaultLocale:
+  en-US` в version-манифесте, остальные требования для используемых полей
+  идентичны — сверено по JSON-схемам winget-cli);
+- `NestedInstallerType: portable` целяется в `Domovoy/domovoy.exe` —
+  компилируемый exe-шим (`packaging/shim/DomovoyShim.cs`, сборка на CI),
+  который резолвит реальный путь своего exe (winget запускает portable
+  через symlink из Links-каталога) и форвардит вызов `domovoy.ps1` рядом
+  с собой. На `.psd1` portable целяться нельзя — это файл данных; на `.ps1`
+  — тоже: см. вердикт ниже.
 
-Порядок подачи (исполнен для v1.5.1, см. ТЗ-дорожную карту):
-форк `microsoft/winget-pkgs` аккаунтом владельца → ветка → три файла в
-`manifests/r/Rtynbirf/Domovoy/1.5.1/` → PR («New package: Rtynbirf.Domovoy
-version 1.5.1») → комментарий CLA-боту `@microsoft-github-policy-service
-agree`. Вердикт модераторов и ботов валидации фиксируется здесь и в ТЗ.
+### Вердикт валидации winget-pkgs (зафиксирован 2026-11-03)
 
-Оговорка, сказанная прямо: winget рассчитан на исполняемые/portable
-приложения, а ДОМОВОЙ — PowerShell-модуль; портативный target на `.ps1`
-валидатор может не принять. Основной канал дистрибуции — PSGallery;
-winget-манифесты — готовая отправная точка, и если ревью их не примет —
-это не ломает ни один критерий вехи (записано в ТЗ v1.6 п.3).
+Первый PR ([#469700](https://github.com/microsoft/winget-pkgs/pull/469700),
+манифесты v1.5.1 с целью `Domovoy/domovoy.ps1`) получил от пайплайна
+валидации ошибку content-валидации. Корневая причина доказана по
+исходникам winget-cli: для `NestedInstallerType: portable` допустим ровно
+один тип файла — `.exe` (`s_AllowedPortableFiletypes` в
+`src/AppInstallerCommonCore/Manifest/ManifestValidation.cpp`, ошибка
+`InvalidPortableFiletype: The file type of the referenced file is not
+allowed.`). CLA-гейт при этом пройден (`license/cla` success).
+Решение — exe-шим, исполнено в v1.5.2 (см. CHANGELOG); гейт CI
+«Portable exe shim gate» компилирует шим и доказывает прямую и symlink-
+прогонку на каждый пуш, чтобы канал winget не смог протухнуть молча.
+
+Порядок подачи: форк `microsoft/winget-pkgs` аккаунтом владельца → ветка →
+три файла в `manifests/r/Rtynbirf/Domovoy/<версия>/` → PR → комментарий
+CLA-боту `@microsoft-github-policy-service agree`. Открытый PR
+new-package допустимо обновлять до новой версии (замена каталога версии в
+том же PR) — их бот сам просит поднимать устаревшие версии; вердикт
+модераторов и ботов фиксируется здесь и в ТЗ по мере прихода.
 
 ## Именование артефактов релиза
 

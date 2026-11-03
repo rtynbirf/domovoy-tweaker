@@ -3,6 +3,43 @@
 Формат — [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
 версионирование — [SemVer](https://semver.org/lang/ru/).
 
+## [1.5.2] — 2026-11-03
+
+### Fixed
+- **Portable-цель winget-манифеста снова исполнимая**: вердикт валидации
+  winget-pkgs по PR [#469700](https://github.com/microsoft/winget-pkgs/pull/469700)
+  показал, что `NestedInstallerType: portable` допускает ровно один тип
+  файла — `.exe` (`s_AllowedPortableFiletypes` в ManifestValidation.cpp
+  winget-cli; ошибка `InvalidPortableFiletype`). Прежняя цель
+  `Domovoy/domovoy.ps1` не проходит content-валидацию никогда.
+  - В пакет добавлен **компилируемый exe-шим**: `packaging/shim/DomovoyShim.cs`
+    (C#-исходник в репо, компиляция — .NET Framework `csc.exe` на CI),
+    который резолвит РЕАЛЬНЫЙ путь своего exe через `GetFinalPathNameByHandle`
+    (winget portable запускает его через symlink из Links-каталога) и
+    форвардит вызов `domovoy.ps1` рядом с собой — та же схема тонкого
+    клиента, ноль собственной логики.
+  - Манифест-цель: `Domovoy/domovoy.ps1` → `Domovoy/domovoy.exe`.
+  - Доказательство в CI: новый шаг «Portable exe shim gate» компилирует шим,
+    прогоняет его напрямую И через symlink (продакшен-путь winget) на каждый
+    пуш; release-джоб `shim-exe` собирает exe один раз, и все упаковочные
+    контуры (zip, подписанный zip, галерейный пакет) везут РОВНО этот файл.
+- **Заголовки `yaml-language-server` в манифестах**: Validation.md
+  winget-pkgs требует `# yaml-language-server: $schema=...` в каждом файле
+  манифеста — у подаваемых манифестов их не было. Добавлены ака.ссылки на
+  схемы 1.12.0.
+- **ManifestVersion 1.9.0 → 1.12.0** во всех трёх шаблонах: спецификация,
+  на которую ссылается валидатор winget-pkgs. Подъём сверен по JSON-схемам
+  winget-cli и добавляет ровно одно новое обязательное поле — `DefaultLocale:
+  en-US` в version-манифесте (в 1.9.0 его не было; поймано машинной
+  валидацией против схемы 1.12.0 ещё до подачи); остальные требования для
+  используемых полей идентичны. Заодно плейсхолдер суммы закавычен
+  (`InstallerSha256: "__SHA256__"`), чтобы всецифровой хеш не распарсился
+  YAML-ом числом.
+
+### Changed
+- `docs/distribution.md`: вердикт валидатора зафиксирован, схема подачи
+  обновлена на v1.5.2 (exe-цель, заголовки, 1.12.0).
+
 ## [1.5.1] — 2026-11-03
 
 ### Added
