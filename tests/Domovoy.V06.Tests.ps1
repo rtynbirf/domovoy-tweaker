@@ -61,17 +61,28 @@ Describe 'network.dns op (catalog 34)' {
             }
             Mock Get-DnsClientServerAddress {
                 param($InterfaceAlias, $AddressFamily)
-                $servers = $script:V06DnsState[$InterfaceAlias]
+                # Pester 5.7.1 copies the REAL cmdlet's parameter metadata onto
+                # the mock: -InterfaceAlias is declared [String[]], so a scalar
+                # argument arrives inside the mock wrapped in a one-element
+                # array (CI run 51, PS 7.6 fallout). An array used as a
+                # fake-state key silently splits the state in two, and PS 7.6
+                # ConvertTo-Json refuses non-string dictionary keys outright -
+                # normalize to the plain scalar before any use.
+                $alias = [string](@($InterfaceAlias)[0])
+                $servers = $script:V06DnsState[$alias]
                 if ($null -eq $servers) { return $null }
-                [pscustomobject]@{ InterfaceAlias = $InterfaceAlias; ServerAddresses = @($servers) }
+                [pscustomobject]@{ InterfaceAlias = $alias; ServerAddresses = @($servers) }
             }
             Mock Set-DnsClientServerAddress {
                 param($InterfaceAlias, $ServerAddresses, $ResetServerAddresses)
+                # Same metadata rule: -InterfaceAlias is [String[]] on the real
+                # cmdlet, the scalar arrives wrapped (run 51).
+                $alias = [string](@($InterfaceAlias)[0])
                 if ($ResetServerAddresses) {
-                    $script:V06DnsState[$InterfaceAlias] = @()
+                    $script:V06DnsState[$alias] = @()
                 }
                 else {
-                    $script:V06DnsState[$InterfaceAlias] = @($ServerAddresses)
+                    $script:V06DnsState[$alias] = @($ServerAddresses)
                 }
             }
         } -Parameters @{ State = $script:dnsState }

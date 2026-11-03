@@ -21,3 +21,6 @@ Thumbs.db
 # Pester / analyzer results
 TestResults/
 PSScriptAnalyzer*.xml
+
+# Local repro harnesses (forced elevation flags) - never commit (tests/_local.*):
+tests/_local.*

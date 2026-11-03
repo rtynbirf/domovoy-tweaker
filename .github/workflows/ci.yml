@@ -344,12 +344,19 @@ jobs:
             }
             if (Test-Path -LiteralPath 'testResults.xml') {
               [xml]$nunit = Get-Content -LiteralPath 'testResults.xml' -Raw -Encoding UTF8
-              $cases = @($nunit.SelectNodes("//test-case[@result='Failed']"))
-              $suites = @($nunit.SelectNodes("//test-suite[@result='Failed']"))
+              # Pester's NUnit 2.5 writer spells the failing result 'Failure',
+              # not 'Failed' (run 51: the XPath matched nothing and the report
+              # claimed "failed test cases: 0" while the very same XML carried
+              # failures="2"). Match both spellings so the report cannot go
+              # blind again if the writer's vocabulary changes.
+              $cases = @($nunit.SelectNodes("//test-case[@result='Failed' or @result='Failure']"))
+              $suites = @($nunit.SelectNodes("//test-suite[@result='Failed' or @result='Failure']") | Where-Object { $_.GetAttribute('type') -eq 'TestFixture' })
               $lines += ("- failed test cases: {0}; failed suites: {1}" -f $cases.Count, $suites.Count)
               $lines += ''
               foreach ($c in $cases) {
-                $lines += ("## FAILED: {0}" -f $c.GetAttribute('fullname'))
+                $fullName = $c.GetAttribute('fullname')
+                if (-not $fullName) { $fullName = $c.GetAttribute('name') }
+                $lines += ("## FAILED: {0}" -f $fullName)
                 foreach ($f in @($c.SelectNodes(".//failure"))) {
                   $lines += '```text'
                   $lines += [string]$f.GetAttribute('message')
@@ -363,7 +370,9 @@ jobs:
                 $lines += ''
               }
               foreach ($s in $suites) {
-                $lines += ("## FAILED SUITE: {0}" -f $s.GetAttribute('fullname'))
+                $suiteName = $s.GetAttribute('fullname')
+                if (-not $suiteName) { $suiteName = $s.GetAttribute('name') }
+                $lines += ("## FAILED SUITE: {0}" -f $suiteName)
                 $lines += ''
               }
             }

@@ -167,7 +167,11 @@ Describe 'Proxy off profile (catalog 85)' {
             }
             Mock Remove-ItemProperty {
                 param($LiteralPath, $Name)
-                $script:V11Proxy[$Name] = '<unset>'
+                # Remove-ItemProperty -Name is [String[]] and Pester copies the
+                # cmdlet's parameter metadata onto the mock: the scalar arrives
+                # wrapped (CI run 51) - normalize before using it as a key.
+                $valueName = [string](@($Name)[0])
+                $script:V11Proxy[$valueName] = '<unset>'
                 return $null
             }
             Mock Test-DomovoyAdmin { return $true }

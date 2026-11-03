@@ -126,12 +126,23 @@ Describe 'network.proxy op (v0.7.0)' {
             } -ParameterFilter { $Path -like 'HK*:*' }
             Mock New-ItemProperty {
                 param($LiteralPath, $Name, $Value, $PropertyType, $Force)
-                $script:V07ProxyState[$Name] = [string]$Value
+                # Pester 5.7.1 copies the real cmdlet's parameter metadata onto
+                # the mock; parameters declared as [String[]] arrive wrapped in
+                # a one-element array even for scalar input (CI run 51). An
+                # array key silently writes a shadow entry the assertions never
+                # see - normalize to the plain scalar first.
+                $valueName = [string](@($Name)[0])
+                $script:V07ProxyState[$valueName] = [string](@($Value)[0])
                 return $null
             }
             Mock Remove-ItemProperty {
                 param($LiteralPath, $Name)
-                $script:V07ProxyState[$Name] = '<unset>'
+                # Remove-ItemProperty -Name is [String[]]: the scalar arrives
+                # wrapped (run 51) - the undo's '<unset>' write landed on a
+                # shadow array-keyed entry while the assertions read the
+                # original string key and saw the pre-undo value.
+                $valueName = [string](@($Name)[0])
+                $script:V07ProxyState[$valueName] = '<unset>'
                 return $null
             }
             Mock Test-DomovoyAdmin { return $true }
