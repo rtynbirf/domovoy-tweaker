@@ -1,4 +1,4 @@
-﻿# Дорожная карта ДОМОВОЙ
+# Дорожная карта ДОМОВОЙ
 
 Принцип версионирования: каждая веха имеет проверяемые критерии приёмки.
 Полный каталог функций с привязкой к вехам — `features.md`.
@@ -570,6 +570,34 @@ PowerShell 5.1, журнал исключений владельца). Хенд�
       ModuleVersion 1.5.4, фикс в `Domovoy/Public/Show-Domovoy.ps1`
       (17 ссылок на мост), оба шима на месте.
 - [x] CHANGELOG-секция [1.5.4] перенесена в release notes конвейером.
+
+## v1.6.0 — evidence (2026-11-04)
+
+- [x] Аудит прод-практик: `docs/analysis/release-practices-audit.md`
+      (Microsoft Learn: SmartScreen reputation, thread-safe WinForms calls,
+      UX checklist; DigiCert: репутация не равна подписи). Колхоз v1.5.4
+      задокументирован по пунктам: консоль-окна, UI-фризы, JIT-диалоги,
+      безымянный exe без иконки и версии.
+- [x] Лаунчер: detached no-console GUI-старт, `--wait` для CI, selftest
+      сверяет AssemblyInformationalVersion с payload; иконка + VERSIONINFO
+      1.6.0.0 (двуязычный FileDescription). Песочница: Roslyn принял
+      канонический .res (нужен null-блок rc.exe с cbHdr=32 — это и есть
+      причина прежнего "malformed at 0x0"); COFF-обход в scripts/
+      res_to_coff.py оставлен как артефакт исследования (Emit валидировал).
+- [x] GUI: фоновый ранспейс на каждое действие (синхронизированная очередь
+      + таймер), Стоп, ThreadException-guard с копированием и журналом в
+      %LOCALAPPDATA%\Domovoy\logs, статус-бар с элевацией и UAC-рестартом,
+      живой поиск по каталогу, EnableVisualStyles + DPI-aware, иконка окна.
+- [x] CI: run 84 поймал честный баг головного теста (ListView.SelectedItems
+      пуст без хендла — select-first guard маскировал async-поверхность);
+      фикс 3cc3f1e (форс хендлов + assert на выборку), runs 85/86 зелёные.
+- [x] Релиз v1.6.0 собран конвейером: ассеты v1.6.0 на GitHub Releases.
+      `Domovoy-1.6.0-Portable.exe` sha256
+      0028048e320252f970d7060c9fcdf7ddea787162d9516bed82ea9bfd261526da == 
+      `Domovoy-1.6.0-Portable.exe.sha256`; pefile-верификация CI-сборки:
+      RT_ICON ×5 + GROUP_ICON (5 записей) + RT_VERSION (FileVersion
+      1.6.0.0, FileDescription кириллицей) + RT_MANIFEST; selftest PASS
+      (версии payload == манифеста == сборки).
 
 ## Beyond v1.0 (идеи, не обещания)
 
