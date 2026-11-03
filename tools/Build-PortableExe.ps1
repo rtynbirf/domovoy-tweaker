@@ -74,6 +74,22 @@ if (-not $versionLine) { throw "ModuleVersion not found in $manifestPath" }
 $version = $versionLine.Matches[0].Groups[1].Value
 Write-Host "Portable build for Domovoy $version"
 
+# v1.6.0 gates: the exe must carry the product identity (icon + VERSIONINFO),
+# and the AssemblyInfo version can never drift away from the manifest version.
+$assemblyInfoPath = Join-Path $RepoDir 'packaging/shim/AssemblyInfo.cs'
+$iconPath = Join-Path $RepoDir 'src/Domovoy/domovoy.ico'
+foreach ($file in @($assemblyInfoPath, $iconPath)) {
+    if (-not (Test-Path -LiteralPath $file -PathType Leaf)) {
+        throw "Required product-identity file not found: $file"
+    }
+}
+$assemblyVersionLine = Select-String -LiteralPath $assemblyInfoPath -Pattern 'AssemblyInformationalVersion\("([^"]+)"\)'
+if (-not $assemblyVersionLine) { throw "AssemblyInformationalVersion not found in $assemblyInfoPath" }
+$assemblyVersion = $assemblyVersionLine.Matches[0].Groups[1].Value
+if ($assemblyVersion -ne $version) {
+    throw "Version drift: manifest ModuleVersion '$version' != AssemblyInfo '$assemblyVersion' (update both together)"
+}
+
 if (-not $OutputDir) { $OutputDir = Join-Path $env:TEMP "domovoy-portable-$version" }
 $OutputDir = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($OutputDir)
 $buildDir = Join-Path $OutputDir '_build'
@@ -116,6 +132,7 @@ $required = @(
     'Domovoy/Domovoy.psm1',
     'Domovoy/domovoy.ps1',
     'Domovoy/domovoy.exe',
+    'Domovoy/domovoy.ico',
     'Domovoy/config',
     'Domovoy/schema',
     'README.md',
@@ -156,12 +173,13 @@ $exePath = Join-Path $OutputDir "Domovoy-$version-Portable.exe"
     /optimize+ `
     /langversion:5 `
     /win32manifest:"$(Join-Path $RepoDir 'packaging/shim/DomovoyPortable.manifest')" `
+    /win32icon:"$iconPath" `
     /out:"$exePath" `
     /r:System.IO.Compression.dll `
     /r:System.IO.Compression.FileSystem.dll `
     /res:"$payloadZip,Domovoy.Portable.payload.zip" `
     /res:"$payloadVersion,Domovoy.Portable.payload.version" `
-    "$launcherCopy"
+    "$launcherCopy" "$assemblyInfoPath"
 if ($LASTEXITCODE -ne 0) { throw "csc failed compiling the portable launcher (exit code $LASTEXITCODE)" }
 if (-not (Test-Path -LiteralPath $exePath -PathType Leaf)) { throw 'csc produced no portable executable' }
 Write-Host "Compiled: $exePath"

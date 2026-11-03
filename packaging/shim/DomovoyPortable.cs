@@ -10,6 +10,18 @@
 // file doubles as the CLI entry point:
 //   Domovoy-Portable.exe Get-DomovoyFeature
 //
+// GUI launch contract (v1.6.0, production ergonomics):
+//   - the double-click path shows NO console windows. The launcher hides
+//     its own console right before starting the engine and starts the
+//     engine with CreateNoWindow=true; the launcher process then exits and
+//     the GUI lives on its own (closing the console-host is irrelevant to
+//     the GUI). `--wait` restores the v1.5.x blocking behavior for CI and
+//     diagnostics: the console stays, the launcher waits for the engine
+//     and surfaces its exit code;
+//   - a fatal error inside the engine (module import failure etc.) is
+//     surfaced by the domovoy.ps1 shim as a WinForms MessageBox + a log
+//     file, because there is no visible console to print to.
+//
 // Thin-client rule, same as the winget shim (DomovoyShim.cs): the launcher
 // adds NO tweaker logic of its own - extraction and process start only.
 // Every semantic lives in the module and the domovoy.ps1 shim inside the
@@ -22,22 +34,28 @@
 //     payload is never unpacked twice, and a half-finished extraction
 //     (no marker) is redone on the next run;
 //   - --selftest: extraction into a temp directory, required-file checks,
-//     catalog/schema non-emptiness and a module-manifest-version ==
-//     payload-version comparison. Cross-platform on purpose - this is how
-//     the build gate machine-checks the packaging without Windows;
+//     catalog/schema non-emptiness, a module-manifest-version ==
+//     payload-version comparison AND an assembly informational-version ==
+//     payload-version comparison (the version metadata gate). Cross-
+//     platform on purpose - this is how the build gate machine-checks the
+//     packaging without Windows;
 //   - --extract [dir]: unpack without starting anything (transparency).
 //
 // How it is built: compiled with the .NET Framework csc.exe that ships on
 // every Windows runner (C# 5 source, .NET Framework 4.5+ API surface only)
-// by tools/Build-PortableExe.ps1; the payload zip and the payload version
-// file travel as managed resources named "Domovoy.Portable.payload.zip"
-// and "Domovoy.Portable.payload.version". The compiled executable is never
-// committed to the repository - it is a release asset only.
+// by tools/Build-PortableExe.ps1 (/win32icon + assembly-attribute version
+// resources), or with Roslyn against the net48 reference assemblies in the
+// sandbox (a generated Win32 .res carries the same icon and VERSIONINFO).
+// The payload zip and the payload version file travel as managed resources
+// named "Domovoy.Portable.payload.zip" and "Domovoy.Portable.payload.version".
+// The compiled executable is never committed to the repository - it is a
+// release asset only.
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -51,6 +69,15 @@ internal static class DomovoyPortable
     private const string ShimFileName = "domovoy.ps1";
     private const string GuiCommand = "Show-Domovoy";
     private const string RepoUrl = "https://github.com/rtynbirf/domovoy-tweaker";
+
+    private const int SwHide = 0;
+    private const int SwShow = 5;
+
+    [DllImport("kernel32.dll", SetLastError = false)]
+    private static extern IntPtr GetConsoleWindow();
+
+    [DllImport("user32.dll", SetLastError = false)]
+    private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
     private static int Main(string[] args)
     {
@@ -69,6 +96,11 @@ internal static class DomovoyPortable
         {
             return SelfTest(version, payloadSha);
         }
+
+        // GUI mode = no arguments at all (double-click) and no --wait.
+        // Anything else is the CLI forwarding path with a visible console.
+        bool waitMode = Contains(args, "--wait");
+        bool guiMode = args.Length == 0 && !waitMode;
 
         Banner(version, payloadSha);
 
@@ -131,17 +163,21 @@ internal static class DomovoyPortable
             return Fail("neither pwsh.exe nor powershell.exe was found (set DOMOVOY_PSEXE to override)", args);
         }
 
-        bool guiMode = args.Length == 0;
-        ProcessStartInfo start = new ProcessStartInfo();
-        start.FileName = engine;
-        start.Arguments = BuildEngineArguments(shim, args, guiMode);
-        start.WorkingDirectory = root;
-        start.UseShellExecute = false;
         if (guiMode)
         {
-            // The GUI opens as its own top-level window; the host console is
-            // minimized, not hidden, so an engine error stays reachable in
-            // the taskbar instead of vanishing with the child process.
+            return LaunchGuiDetached(engine, shim, args);
+        }
+
+        ProcessStartInfo start = new ProcessStartInfo();
+        start.FileName = engine;
+        start.Arguments = BuildEngineArguments(shim, args, false);
+        start.WorkingDirectory = root;
+        start.UseShellExecute = false;
+        if (args.Length == 0)
+        {
+            // --wait with no arguments: the GUI opens as its own top-level
+            // window; the host console is minimized, not hidden, so an
+            // engine error stays reachable in the taskbar.
             start.WindowStyle = ProcessWindowStyle.Minimized;
         }
 
@@ -156,13 +192,72 @@ internal static class DomovoyPortable
             code = p.ExitCode;
         }
 
-        if (guiMode && code != 0)
+        if (args.Length == 0 && code != 0)
         {
             Console.Error.WriteLine("Exit code " + code + " - restore this window to see the error output.");
             Console.Error.Write("Press Enter to close... ");
             Console.ReadLine();
         }
         return code;
+    }
+
+    // v1.6.0: the double-click path. No console windows at all:
+    // 1) hide the launcher console (the payload is ready, errors after this
+    //    point are surfaced by the engine shim's MessageBox);
+    // 2) start the engine with CreateNoWindow=true - the PowerShell process
+    //    never flashes a console;
+    // 3) exit immediately - the GUI is fully detached and outlives us.
+    private static int LaunchGuiDetached(string engine, string shim, string[] args)
+    {
+        HideLauncherConsole();
+        try
+        {
+            ProcessStartInfo start = new ProcessStartInfo();
+            start.FileName = engine;
+            start.Arguments = BuildEngineArguments(shim, args, true);
+            start.WorkingDirectory = Path.GetDirectoryName(shim);
+            start.UseShellExecute = false;
+            start.CreateNoWindow = true;
+            Process.Start(start);
+        }
+        catch (Exception ex)
+        {
+            RestoreLauncherConsole();
+            return Fail("cannot start the GUI engine: " + ex.Message, args);
+        }
+        return 0;
+    }
+
+    private static void HideLauncherConsole()
+    {
+        try
+        {
+            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+            {
+                IntPtr console = GetConsoleWindow();
+                if (console != IntPtr.Zero)
+                {
+                    ShowWindow(console, SwHide);
+                }
+            }
+        }
+        catch { /* non-Windows or console-less - nothing to hide */ }
+    }
+
+    private static void RestoreLauncherConsole()
+    {
+        try
+        {
+            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+            {
+                IntPtr console = GetConsoleWindow();
+                if (console != IntPtr.Zero)
+                {
+                    ShowWindow(console, SwShow);
+                }
+            }
+        }
+        catch { /* best effort */ }
     }
 
     private static void Banner(string version, string payloadSha)
@@ -195,7 +290,8 @@ internal static class DomovoyPortable
                 "Domovoy/Domovoy.psd1",
                 "Domovoy/Domovoy.psm1",
                 "Domovoy/domovoy.ps1",
-                "Domovoy/domovoy.exe"
+                "Domovoy/domovoy.exe",
+                "Domovoy/domovoy.ico"
             };
             foreach (string rel in required)
             {
@@ -224,6 +320,28 @@ internal static class DomovoyPortable
             {
                 string found = m.Success ? m.Groups[1].Value : "(not found)";
                 Console.Error.WriteLine("SelfTest FAIL: module manifest version " + found + " != payload version " + version);
+                return 1;
+            }
+
+            // Version metadata gate: the assembly must declare the same
+            // version it ships (Explorer/SmartScreen/winget read this).
+            Assembly self = typeof(DomovoyPortable).Assembly;
+            AssemblyInformationalVersionAttribute attr = null;
+            try
+            {
+                object[] all = self.GetCustomAttributes(typeof(AssemblyInformationalVersionAttribute), false);
+                if (all != null && all.Length > 0)
+                {
+                    attr = (AssemblyInformationalVersionAttribute)all[0];
+                }
+            }
+            catch { /* the gate below reports the mismatch */ }
+            string asmVersion = attr == null ? null : attr.InformationalVersion;
+            if (asmVersion == null || !string.Equals(asmVersion, version, StringComparison.Ordinal))
+            {
+                Console.Error.WriteLine(
+                    "SelfTest FAIL: assembly informational version " +
+                    (asmVersion ?? "(missing)") + " != payload version " + version);
                 return 1;
             }
 
@@ -389,7 +507,8 @@ internal static class DomovoyPortable
         line.Append("-NoLogo -NoProfile -ExecutionPolicy Bypass");
         if (guiMode)
         {
-            line.Append(" -WindowStyle Minimized");
+            // v1.6.0 detached launch: the engine hides its own console too.
+            line.Append(" -WindowStyle Hidden");
         }
         line.Append(" -File \"");
         line.Append(shim);

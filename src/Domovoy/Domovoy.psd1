@@ -3,7 +3,7 @@
 #
 @{
     RootModule = 'Domovoy.psm1'
-    ModuleVersion = '1.5.4'
+    ModuleVersion = '1.6.0'
     GUID = '8546e1cf-4418-4133-92f4-4adcb7897011'
     # v1.6 (item 5): updatable help. The HelpInfo XML and the help cab
     # are attached to every release; "latest" serves the newest one.
@@ -81,7 +81,7 @@
             Tags = @('Windows', 'Tweaker', 'Privacy', 'Telemetry', 'Debloat', 'Undo', 'Ledger', 'Drift', 'Network', 'Security', 'Drivers')
             LicenseUri = 'https://github.com/rtynbirf/domovoy-tweaker/blob/main/LICENSE'
             ProjectUri = 'https://github.com/rtynbirf/domovoy-tweaker'
-            ReleaseNotes = 'v1.3.0: feature groups with dependencies on top of profiles (an honest resolved order with attribution, catalog 102), the explicit journal schema migration mechanism with an honest verdict when there is nothing to migrate (catalog 101), and the read-only shell menu audit: context-menu shell extensions and Open-with associations (catalog 104, groundwork of 81). Also: componentstore.apply is now a first-class ledger event filter.'
+            ReleaseNotes = 'v1.6.0: production ergonomics pass for the GUI and the portable exe - async background execution (the window never freezes, Stop button), a global error guard with a technical log instead of JIT crash dialogs, a status bar with elevation state and one-click UAC restart, catalog search, product icon and version metadata on the exe, and a detached no-console GUI launch.'
         }
     }
 }

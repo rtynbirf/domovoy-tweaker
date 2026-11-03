@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Packaging contract of the portable single-file launcher (v1.5.3).
 
@@ -19,10 +19,13 @@ Describe 'Portable launcher packaging contract' {
         $builderPath = Join-Path $repoRoot 'tools/Build-PortableExe.ps1'
         $manifestPath = Join-Path $repoRoot 'packaging/shim/DomovoyPortable.manifest'
         $workflowPath = Join-Path $repoRoot '.github/workflows/release.yml'
+        $assemblyInfoPath = Join-Path $repoRoot 'packaging/shim/AssemblyInfo.cs'
+        $iconPath = Join-Path $repoRoot 'src/Domovoy/domovoy.ico'
 
         $launcher = Get-Content -LiteralPath $launcherPath -Raw
         $builder = Get-Content -LiteralPath $builderPath -Raw
         $workflow = Get-Content -LiteralPath $workflowPath -Raw
+        $assemblyInfo = Get-Content -LiteralPath $assemblyInfoPath -Raw
     }
 
     It 'the launcher source exists with the manifest and the builder' {
@@ -56,6 +59,31 @@ Describe 'Portable launcher packaging contract' {
     It 'launcher stays C#5 - no string interpolation, no null-conditional' {
         $launcher | Should -Not -Match '\$"'
         $launcher | Should -Not -Match '\?\.'
+    }
+
+    It 'the launcher ships product identity: AssemblyInfo + icon, wired into the builder' {
+        Test-Path -LiteralPath $assemblyInfoPath -PathType Leaf | Should -BeTrue
+        Test-Path -LiteralPath $iconPath -PathType Leaf | Should -BeTrue
+        $builder | Should -Match '/win32icon'
+        $builder | Should -Match 'AssemblyInfo\.cs'
+        $builder | Should -Match 'Version drift'
+        $launcher | Should -Match 'LaunchGuiDetached'
+        $launcher | Should -Match 'assembly informational version'
+    }
+
+    It 'AssemblyInfo version matches the module manifest - identity cannot drift' {
+        $manifest = Get-Content -LiteralPath (Join-Path $repoRoot 'src/Domovoy/Domovoy.psd1') -Raw
+        $manifestVersion = [regex]::Match($manifest, "ModuleVersion\s*=\s*'([^']+)'").Groups[1].Value
+        $assemblyVersion = [regex]::Match($assemblyInfo, 'AssemblyInformationalVersion\("([^"]+)"\)').Groups[1].Value
+        $assemblyVersion | Should -Not -BeNullOrEmpty
+        $assemblyVersion | Should -Be $manifestVersion
+    }
+
+    It 'AssemblyInfo stays C#5-clean and declares the product strings' {
+        $assemblyInfo | Should -Not -Match '\$"'
+        $assemblyInfo | Should -Not -Match '\?\.'
+        $assemblyInfo | Should -Match 'AssemblyTitle'
+        $assemblyInfo | Should -Match 'AssemblyFileVersion'
     }
 
     It 'release workflow compiles, smoke-tests and ships the portable exe' {

@@ -682,4 +682,64 @@ Describe 'GUI (Show-Domovoy)' {
             $form.Dispose()
         }
     }
+
+    It 'runs a catalog action through the background worker to done (v1.6.0 async surface)' -Skip:(-not $script:isWindowsPlatform) {
+        # v1.6.0: actions leave the UI thread. The handler prints the CLI
+        # line synchronously, flips State.busy, the worker executes the
+        # exact command in a fresh runspace, and Drain (the timer's body)
+        # marshals the output back and re-enables the buttons. The dry-run
+        # is read-only, so the test is safe to run against the test store.
+        $form = Show-Domovoy -Preview
+        try {
+            $tag = $form.Tag
+            $tag.State.busy | Should -BeFalse
+
+            # Guard path without a selection stays synchronous and never
+            # touches the worker.
+            & $tag.Handlers.DryRun
+            $expectedSelect = InModuleScope Domovoy { (Get-DomovoyStrings).selectFirst }
+            $tag.Output.Text | Should -Match ([regex]::Escape($expectedSelect))
+            $tag.State.busy | Should -BeFalse
+
+            # Select the first catalog row and dry-run it.
+            $tag.List.Items[0].Selected = $true
+            & $tag.Handlers.DryRun
+            $tag.State.busy | Should -BeTrue
+            $tag.Output.Text | Should -Match 'CLI: Invoke-DomovoyFeature'
+            $tag.Buttons.DryRun.Enabled | Should -BeFalse
+
+            # Drain until the worker reports done (max ~10s of wall time).
+            $maxDrains = 200
+            while ($tag.State.busy -and $maxDrains -gt 0) {
+                & $tag.Drain
+                if ($tag.State.busy) { Start-Sleep -Milliseconds 50 }
+                $maxDrains--
+            }
+            $tag.State.busy | Should -BeFalse
+            $tag.State.worker | Should -BeNullOrEmpty
+            $tag.Buttons.DryRun.Enabled | Should -BeTrue
+            $tag.Status.Text | Should -Not -BeNullOrEmpty
+        }
+        finally {
+            $form.Dispose()
+        }
+    }
+
+    It 'the catalog filter narrows the list live (v1.6.0 search)' -Skip:(-not $script:isWindowsPlatform) {
+        $form = Show-Domovoy -Preview
+        try {
+            $tag = $form.Tag
+            $all = $tag.List.Items.Count
+            $all | Should -BeGreaterThan 0
+
+            $tag.Search.Text = 'zzz-no-such-feature-zzz'
+            $tag.List.Items.Count | Should -Be 0
+
+            $tag.Search.Text = ''
+            $tag.List.Items.Count | Should -Be $all
+        }
+        finally {
+            $form.Dispose()
+        }
+    }
 }

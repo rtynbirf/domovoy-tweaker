@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domovoy CLI shim - the thin executable entry point for winget portable
     installs (NestedInstallerType: portable targets this file).
@@ -54,4 +54,46 @@ if ($Command -notmatch '^(\w+-)?Domovoy(\w+)?$') {
     throw "Unknown command '$Command' - the shim forwards public Domovoy commands only (see: Get-Command -Module Domovoy)"
 }
 
-& $Command @Arguments
+if ($Command -eq 'Show-Domovoy') {
+    # v1.6.0: the portable launcher starts the GUI detached with no console
+    # window - a fatal error here (module import failure, missing WinForms)
+    # must not vanish into a hidden console. Surface it: log file + dialog.
+    try {
+        & $Command @Arguments
+    }
+    catch {
+        $fatal = $_
+        $logDir = Join-Path ([Environment]::GetFolderPath([Environment+SpecialFolder]::LocalApplicationData)) 'Domovoy\logs'
+        try { $null = New-Item -Path $logDir -ItemType Directory -Force } catch { }
+        $logFile = Join-Path $logDir ("domovoy-fatal-{0}.log" -f (Get-Date -Format 'yyyyMMdd-HHmmss'))
+        try {
+            $detail = @(
+                $fatal.ToString(),
+                '',
+                ($fatal.InvocationInfo | Out-String),
+                $fatal.ScriptStackTrace
+            ) -join "`r`n"
+            Set-Content -LiteralPath $logFile -Value $detail -Encoding UTF8
+        }
+        catch { $logFile = '(log write failed)' }
+        $message = @(
+            'ДОМОВОЙ: фатальная ошибка запуска GUI / fatal GUI startup error',
+            '',
+            $fatal.Exception.Message,
+            '',
+            ('Журнал / log: ' + $logFile),
+            'Issues: https://github.com/rtynbirf/domovoy-tweaker/issues'
+        ) -join "`r`n"
+        try {
+            Add-Type -AssemblyName System.Windows.Forms
+            [void][System.Windows.Forms.MessageBox]::Show($message, 'Domovoy', [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Error)
+        }
+        catch {
+            Write-Error -ErrorRecord $fatal
+        }
+        exit 1
+    }
+}
+else {
+    & $Command @Arguments
+}
