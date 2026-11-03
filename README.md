@@ -82,6 +82,24 @@ Import-Module Domovoy
 Import-Module .\Domovoy\Domovoy.psd1 -Force
 ```
 
+Портативный EXE — один файл, без установки:
+
+```text
+Domovoy-<версия>-Portable.exe                 # двойной клик -> GUI (Show-Domovoy)
+Domovoy-<версия>-Portable.exe Get-DomovoyFeature   # аргументы идут в CLI-шиму
+Domovoy-<версия>-Portable.exe --selftest      # машинная проверка упаковки
+Domovoy-<версия>-Portable.exe --extract C:\путь    # распаковать без запуска
+```
+
+Весь пакет (модуль, каталог функций, схемы, оба CLI-шима) встроен в exe:
+он распакуется в `Domovoy-<версия>\` рядом с собой (если каталог только
+для чтения — в `%LOCALAPPDATA%\Domovoy\app`) и откроет окно программы.
+exe не подписан (сертификат — v1.6 п.4): SmartScreen покажет
+«неизвестный издатель» — «Подробнее → Выполнить в любом случае»;
+исходник, сборщик и проверка открыты:
+`packaging/shim/DomovoyPortable.cs`, `tools/Build-PortableExe.ps1`,
+`--selftest`.
+
 Подробности (PSGallery-публикация, подпись кода, winget) - [docs/distribution.md](docs/distribution.md).
 
 ## Быстрый старт

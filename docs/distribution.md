@@ -30,6 +30,19 @@ Import-Module Domovoy
 Import-Module .\Domovoy\Domovoy.psd1 -Force
 ```
 
+### Портативный EXE (один файл, без установки)
+
+С v1.5.3 релиз вкладывает `Domovoy-<версия>-Portable.exe`: весь пакет
+(модуль, каталог, схемы, оба CLI-шима, README, LICENSE) встроен в один exe.
+Двойной клик — распаковка в `Domovoy-<версия>\` рядом с exe (или в
+`%LOCALAPPDATA%\Domovoy\app`, если каталог только для чтения) и запуск GUI
+(`Show-Domovoy`); аргументы командной строки форвардятся CLI-шиму дословно;
+`--selftest` — машинная проверка упаковки, `--extract [каталог]` —
+распаковка без запуска. Исходник — `packaging/shim/DomovoyPortable.cs`
+(C#5, машинный `csc.exe` на CI), сборщик — `tools/Build-PortableExe.ps1`;
+exe не подписан (сертификат — v1.6 п.4), SmartScreen предупредит об
+«неизвестном издателе» — это ожидаемо для неподписанного открытого кода.
+
 ## Что делает release-конвейер при теге `v*`
 
 1. **Заметки релиза** — секция CHANGELOG `[x.y.z]` вырезается автоматически
@@ -41,20 +54,26 @@ Import-Module .\Domovoy\Domovoy.psd1 -Force
 3. **Winget-манифесты** — `packaging/winget/generate.py` собирает из шаблонов
    три YAML (version / installer / defaultLocale) в `winget-manifests/` и
    вкладывает их в релиз как `Domovoy-<версия>-winget-manifests.zip`.
-4. **Подпись кода (опционально)** — job `sign`: если в секретах репозитория
+4. **Портативный exe (v1.5.3)** — джоб `portable-exe` (windows-latest):
+   `tools/Build-PortableExe.ps1` собирает однофайловый лаунчер
+   `Domovoy-<версия>-Portable.exe` (payload встроен ресурсом, шим берётся из
+   артефакта `shim-exe` — правило «один файл везде»), гейтит его
+   `--selftest`-ом и сквозным прогоном `Get-DomovoyLanguage` через exe;
+   release-джоб вкладывает exe и его `.sha256` в релиз наравне с zip.
+5. **Подпись кода (опционально)** — job `sign`: если в секретах репозитория
    заданы `CODE_SIGNING_PFX` (base64 от .pfx) и `CODE_SIGNING_PASSWORD`,
    все `*.ps1/*.psm1/*.psd1` подписываются Authenticode (SHA256, сервер
    меток времени digicert), и в релиз докладывается
    `Domovoy-<версия>-signed.zip`. Без сертификата модуль выходит
    неподписанным **по задумке** — job честно пишет об этом и не падает.
-5. **PSGallery (опционально)** — job `publish-psgallery`: если задан секрет
+6. **PSGallery (опционально)** — job `publish-psgallery`: если задан секрет
    `PSGALLERY_API_KEY`, модуль публикуется через `Publish-PSResource`
    (PSResourceGet; v1.6 п.1 — устаревший `Publish-Module` заменён в v1.4.1).
    Каталог и схемы уже внутри пакета — P0-1 закрыт. Гейт v1.5: релиз
    стартует только после зелёного CI-прогона ровно тегированного коммита
    (job `await-tests`), а пустая секция CHANGELOG валит релиз вместо
    публикации заглушки. Ключа нет — job честно пропускается.
-6. **Обновляемая справка (v1.6 п.5)** — job `updatable-help`: platyPS
+7. **Обновляемая справка (v1.6 п.5)** — job `updatable-help`: platyPS
    строит внешнюю справку из comment-based (полноту которой гарантирует
    CI-гейт «у каждой публичной команды есть `.SYNOPSIS` и хотя бы один
    `.EXAMPLE`»), MakeCab пакует `Domovoy_<GUID>_<культура>_<версия>.cab`,

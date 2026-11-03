@@ -3,9 +3,28 @@
 Формат — [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
 версионирование — [SemVer](https://semver.org/lang/ru/).
 
-## [Не выпущено]
+## [1.5.3] — 2026-11-04
 
 ### Added
+- **Портативный однофайловый `Domovoy-<версия>-Portable.exe`** — релиз
+  вкладывает готовый exe: весь релизный payload (модуль + каталог
+  манифестов + схемы + оба CLI-шима + README + LICENSE) встроен в один
+  файл. Двойной клик — распаковка рядом с exe (или в
+  `%LOCALAPPDATA%\Domovoy\app`, если каталог только для чтения) и запуск
+  GUI (`Show-Domovoy`); аргументы командной строки форвардятся CLI-шиму
+  `domovoy.ps1` дословно (правило тонкого клиента: лаунчер не добавляет
+  никакой собственной логики — только распаковку и старт). Гарантии:
+  `requestedExecutionLevel asInvoker` в манифесте, защита от path
+  traversal при распаковке, маркер с SHA-256 payload (готовый payload не
+  распаковывается повторно), `--selftest` (распаковка во временный
+  каталог + обязательные файлы + сверка версии манифеста с версией
+  payload), `--extract [каталог]` — распаковка без запуска. Исходник —
+  `packaging/shim/DomovoyPortable.cs` (C#5, .NET Framework 4.5+, ноль
+  внешних зависимостей); сборщик — `tools/Build-PortableExe.ps1`
+  (машинный `csc.exe`); CI — release-джоб `portable-exe` собирает exe,
+  гейтит selftest-ом и сквозным прогоном `Get-DomovoyLanguage` через exe
+  и вкладывает `Domovoy-<версия>-Portable.exe` (+ `.sha256`) в релиз;
+  контракт упаковки закреплён `tests/Domovoy.Portable.Tests.ps1`.
 - **Локальный one-click прогон**: `DOMOVOY-ONECLICK.bat` в корне репо +
   `tools/Invoke-DomovoyLocalCI.ps1`. Двойной клик: клонирование/обновление
   локальной копии (`%USERPROFILE%\domovoy-tweaker`), установка Pester 5.7.1
