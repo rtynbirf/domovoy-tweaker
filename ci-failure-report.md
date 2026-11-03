@@ -1,7 +1,12 @@
 # CI failure report
 
-- run: 47 on f6798b51ea1d692df076f2294e17d776324e69e1 (refs/heads/main)
-- workflow: rtynbirf/domovoy-tweaker/.github/workflows/ci.yml@refs/heads/main
+- run: 50 on d5c5842b9bca0f6d5e6cc00a7d2155eb75adcc99 (refs/heads/main)
 
-- failed test cases: 0
+## step trace (the first missing OK names the culprit)
+```text
+analyzer OK
+pester OK - passed 164, failed 2, containers failed 0
+```
+
+- failed test cases: 0; failed suites: 0
 
