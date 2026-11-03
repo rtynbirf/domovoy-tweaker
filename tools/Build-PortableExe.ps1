@@ -124,7 +124,11 @@ $required = @(
 foreach ($rel in $required) {
     $p = Join-Path $stage $rel
     if (-not (Test-Path -LiteralPath $p)) { throw "Staging bug: $rel is missing from the payload stage" }
-    if ((Get-Item -LiteralPath $p).Length -eq 0) { throw "Staging bug: $rel is empty" }
+    # Directories have no Length property - guard files only (strict mode
+    # makes a bare .Length on DirectoryInfo a hard error, caught live by
+    # release run 18).
+    $item = Get-Item -LiteralPath $p
+    if (-not $item.PSIsContainer -and $item.Length -eq 0) { throw "Staging bug: $rel is empty" }
 }
 Write-Host ("Staging OK: {0} required paths present" -f $required.Count)
 
