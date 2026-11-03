@@ -20,19 +20,26 @@
 .EXAMPLE
     domovoy Show-Domovoy
 #>
-[CmdletBinding()]
-param(
-    # The public Domovoy command to invoke, e.g. Get-DomovoyFeature.
-    [Parameter(Mandatory = $true, Position = 0)]
-    [ValidateNotNullOrEmpty()]
-    [string]$Command,
+# Deliberately a PLAIN script with no [Parameter()]/[CmdletBinding()]
+# attributes at all: `powershell.exe -File` (and `pwsh -File` alike) appends
+# a phantom empty argument to a script that carries parameter attributes -
+# the probe proves it (argsCount=1 with [Parameter()], argsCount=0 without),
+# and that phantom is what failed the CI smoke with "A positional parameter
+# cannot be found that accepts argument '$null'" (runs 65-66). A plain
+# param + the automatic $args + a manual guard keeps the forwarding honest
+# on every engine, and simple-function token passing sends '-Flag value'
+# pairs through verbatim.
+param([string]$Command)
 
-    # Everything after the command name is forwarded verbatim.
-    [Parameter(Position = 1, ValueFromRemainingArguments = $true)]
-    [object[]]$Arguments
-)
+# Everything after the command name is forwarded verbatim via the
+# automatic $args collection.
+$Arguments = @($args)
 
 $ErrorActionPreference = 'Stop'
+
+if ([string]::IsNullOrWhiteSpace($Command)) {
+    throw "Usage: domovoy <DomovoyCommand> [args...] - the shim forwards public Domovoy commands only (see: Get-Command -Module Domovoy)"
+}
 
 $moduleManifest = Join-Path -Path $PSScriptRoot -ChildPath 'Domovoy.psd1'
 if (-not (Test-Path -LiteralPath $moduleManifest -PathType Leaf)) {
