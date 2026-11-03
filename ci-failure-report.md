@@ -1,6 +1,6 @@
 # CI failure report
 
-- run: 79 on 805ae8a2e33195f38ddadec694bf3937230dc758 (refs/heads/main)
+- run: 83 on 73545d8707884ca2518ce70fca2c02fc6a0af13b (refs/heads/main)
 
 ## step trace (the first missing OK names the culprit)
 ```text
@@ -9,13 +9,13 @@ analyzer OK
 
 - failed test cases: 1; failed suites: 3
 
-## FAILED: GUI (Show-Domovoy).click handlers resolve the private string table through the module-bound bridge (v1.5.4 portable-exe regression)
+## FAILED: GUI (Show-Domovoy).runs a catalog action through the background worker to done (v1.6.0 async surface)
 ```text
 
 ```
 ```text
-at $form.Tag.Output.Text | Should -Match ([regex]::Escape($expectedSelect)), D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.V07.Tests.ps1:674
-at <ScriptBlock>, D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.V07.Tests.ps1:674
+at $tag.State.busy | Should -BeTrue, D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.V07.Tests.ps1:707
+at <ScriptBlock>, D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.V07.Tests.ps1:707
 ```
 
 ## FAILED SUITE: Pester

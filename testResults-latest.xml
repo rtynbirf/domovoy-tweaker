@@ -1,455 +1,458 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
-<test-results xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="nunit_schema_2.5.xsd" name="Pester" total="186" errors="0" failures="1" not-run="0" inconclusive="0" ignored="0" skipped="3" invalid="0" date="2026-11-03" time="20:42:29">
-  <environment platform="Microsoft Windows Server 2025 Datacenter|C:\Windows|\Device\Harddisk0\Partition3" os-version="10.0.26100" user-domain="runnervmhao91" cwd="D:\a\domovoy-tweaker\domovoy-tweaker" nunit-version="2.5.8.0" user="runneradmin" clr-version="10.0.14" machine-name="runnervmhao91" />
+<test-results xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="nunit_schema_2.5.xsd" name="Pester" total="191" errors="0" failures="1" not-run="0" inconclusive="0" ignored="0" skipped="3" invalid="0" date="2026-11-03" time="22:25:27">
+  <environment os-version="10.0.26100" platform="Microsoft Windows Server 2025 Datacenter|C:\Windows|\Device\Harddisk0\Partition3" cwd="D:\a\domovoy-tweaker\domovoy-tweaker" machine-name="runnervmhao91" user="runneradmin" clr-version="10.0.14" user-domain="runnervmhao91" nunit-version="2.5.8.0" />
   <culture-info current-culture="en-US" current-uiculture="en-US" />
-  <test-suite type="TestFixture" name="Pester" executed="True" result="Failure" success="False" time="93.7466" asserts="0" description="Pester">
+  <test-suite type="TestFixture" name="Pester" executed="True" result="Failure" success="False" time="100.7703" asserts="0" description="Pester">
     <results>
-      <test-suite type="TestFixture" name="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.Language.Tests.ps1" executed="True" result="Success" success="True" time="1.4543" asserts="0" description="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.Language.Tests.ps1">
+      <test-suite type="TestFixture" name="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.Language.Tests.ps1" executed="True" result="Success" success="True" time="1.5533" asserts="0" description="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.Language.Tests.ps1">
         <results>
-          <test-suite type="TestFixture" name="Strings table (v1.6 item 6)" executed="True" result="Success" success="True" time="0.2488" asserts="0" description="Strings table (v1.6 item 6)">
+          <test-suite type="TestFixture" name="Strings table (v1.6 item 6)" executed="True" result="Success" success="True" time="0.262" asserts="0" description="Strings table (v1.6 item 6)">
             <results>
-              <test-case description="returns the EN table on the default branch without throwing (regression: runs 54-55)" name="Strings table (v1.6 item 6).returns the EN table on the default branch without throwing (regression: runs 54-55)" time="0.1283" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="resolves to en by default with a fresh store" name="Strings table (v1.6 item 6).resolves to en by default with a fresh store" time="0.0103" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="carries the same key set for every language - parity is machine-checked, not promised" name="Strings table (v1.6 item 6).carries the same key set for every language - parity is machine-checked, not promised" time="0.0189" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="switches the session language and persists the preference file" name="Strings table (v1.6 item 6).switches the session language and persists the preference file" time="0.042" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="falls back to en on an unknown stored language" name="Strings table (v1.6 item 6).falls back to en on an unknown stored language" time="0.0144" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="the strings file carries a UTF-8 BOM so PS 5.1 reads the Cyrillic table honestly" name="Strings table (v1.6 item 6).the strings file carries a UTF-8 BOM so PS 5.1 reads the Cyrillic table honestly" time="0.0087" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="returns the EN table on the default branch without throwing (regression: runs 54-55)" name="Strings table (v1.6 item 6).returns the EN table on the default branch without throwing (regression: runs 54-55)" time="0.1322" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="resolves to en by default with a fresh store" name="Strings table (v1.6 item 6).resolves to en by default with a fresh store" time="0.0111" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="carries the same key set for every language - parity is machine-checked, not promised" name="Strings table (v1.6 item 6).carries the same key set for every language - parity is machine-checked, not promised" time="0.0237" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="switches the session language and persists the preference file" name="Strings table (v1.6 item 6).switches the session language and persists the preference file" time="0.0449" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="falls back to en on an unknown stored language" name="Strings table (v1.6 item 6).falls back to en on an unknown stored language" time="0.0141" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="the strings file carries a UTF-8 BOM so PS 5.1 reads the Cyrillic table honestly" name="Strings table (v1.6 item 6).the strings file carries a UTF-8 BOM so PS 5.1 reads the Cyrillic table honestly" time="0.0095" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="Change report speaks the active language (v1.6 item 6)" executed="True" result="Success" success="True" time="0.3615" asserts="0" description="Change report speaks the active language (v1.6 item 6)">
+          <test-suite type="TestFixture" name="Change report speaks the active language (v1.6 item 6)" executed="True" result="Success" success="True" time="0.3968" asserts="0" description="Change report speaks the active language (v1.6 item 6)">
             <results>
-              <test-case description="the human summary switches with the language while event names stay frozen" name="Change report speaks the active language (v1.6 item 6).the human summary switches with the language while event names stay frozen" time="0.1093" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="the human summary switches with the language while event names stay frozen" name="Change report speaks the active language (v1.6 item 6).the human summary switches with the language while event names stay frozen" time="0.1312" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="Language commands are first-class public commands (v1.6 item 6)" executed="True" result="Success" success="True" time="0.4047" asserts="0" description="Language commands are first-class public commands (v1.6 item 6)">
+          <test-suite type="TestFixture" name="Language commands are first-class public commands (v1.6 item 6)" executed="True" result="Success" success="True" time="0.4181" asserts="0" description="Language commands are first-class public commands (v1.6 item 6)">
             <results>
-              <test-case description="both are exported with a validate-set guarded parameter" name="Language commands are first-class public commands (v1.6 item 6).both are exported with a validate-set guarded parameter" time="0.0155" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="both are exported with a validate-set guarded parameter" name="Language commands are first-class public commands (v1.6 item 6).both are exported with a validate-set guarded parameter" time="0.0151" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
         </results>
       </test-suite>
-      <test-suite type="TestFixture" name="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.Loop.Tests.ps1" executed="True" result="Ignored" success="True" time="17.2985" asserts="0" description="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.Loop.Tests.ps1">
+      <test-suite type="TestFixture" name="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.Loop.Tests.ps1" executed="True" result="Ignored" success="True" time="15.8048" asserts="0" description="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.Loop.Tests.ps1">
         <results>
-          <test-suite type="TestFixture" name="v0.2 ledger loop (apply - verify - undo)" executed="True" result="Success" success="True" time="2.3514" asserts="0" description="v0.2 ledger loop (apply - verify - undo)">
+          <test-suite type="TestFixture" name="v0.2 ledger loop (apply - verify - undo)" executed="True" result="Success" success="True" time="2.1739" asserts="0" description="v0.2 ledger loop (apply - verify - undo)">
             <results>
-              <test-case description="apply on absent value creates it; undo removes it because it was absent before" name="v0.2 ledger loop (apply - verify - undo).apply on absent value creates it; undo removes it because it was absent before" time="0.2985" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="apply delete removes an existing value; undo restores the exact value and type" name="v0.2 ledger loop (apply - verify - undo).apply delete removes an existing value; undo restores the exact value and type" time="0.1239" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="undo dry-run shows the snapshot without changing anything" name="v0.2 ledger loop (apply - verify - undo).undo dry-run shows the snapshot without changing anything" time="0.0249" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="service.stop dry-run builds a plan without touching the service" name="v0.2 ledger loop (apply - verify - undo).service.stop dry-run builds a plan without touching the service" time="0.8799" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="apply file.attribute adds the attribute; undo restores the exact previous set" name="v0.2 ledger loop (apply - verify - undo).apply file.attribute adds the attribute; undo restores the exact previous set" time="0.1153" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="apply creates the registry key chain; undo removes the value and the created empty keys" name="v0.2 ledger loop (apply - verify - undo).apply creates the registry key chain; undo removes the value and the created empty keys" time="0.157" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="appx dry-run builds a plan without touching anything" name="v0.2 ledger loop (apply - verify - undo).appx dry-run builds a plan without touching anything" time="0.2868" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="ledger records featureSource and survives a torn line" name="v0.2 ledger loop (apply - verify - undo).ledger records featureSource and survives a torn line" time="0.1404" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="drift scan resolves manifests from featureSource after a rename" name="v0.2 ledger loop (apply - verify - undo).drift scan resolves manifests from featureSource after a rename" time="0.3193" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="apply on absent value creates it; undo removes it because it was absent before" name="v0.2 ledger loop (apply - verify - undo).apply on absent value creates it; undo removes it because it was absent before" time="0.3169" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="apply delete removes an existing value; undo restores the exact value and type" name="v0.2 ledger loop (apply - verify - undo).apply delete removes an existing value; undo restores the exact value and type" time="0.1276" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="undo dry-run shows the snapshot without changing anything" name="v0.2 ledger loop (apply - verify - undo).undo dry-run shows the snapshot without changing anything" time="0.0251" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="service.stop dry-run builds a plan without touching the service" name="v0.2 ledger loop (apply - verify - undo).service.stop dry-run builds a plan without touching the service" time="0.7052" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="apply file.attribute adds the attribute; undo restores the exact previous set" name="v0.2 ledger loop (apply - verify - undo).apply file.attribute adds the attribute; undo restores the exact previous set" time="0.1046" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="apply creates the registry key chain; undo removes the value and the created empty keys" name="v0.2 ledger loop (apply - verify - undo).apply creates the registry key chain; undo removes the value and the created empty keys" time="0.1481" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="appx dry-run builds a plan without touching anything" name="v0.2 ledger loop (apply - verify - undo).appx dry-run builds a plan without touching anything" time="0.2901" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="ledger records featureSource and survives a torn line" name="v0.2 ledger loop (apply - verify - undo).ledger records featureSource and survives a torn line" time="0.14" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="drift scan resolves manifests from featureSource after a rename" name="v0.2 ledger loop (apply - verify - undo).drift scan resolves manifests from featureSource after a rename" time="0.3109" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="v0.4 drift sentinel" executed="True" result="Success" success="True" time="2.6719" asserts="0" description="v0.4 drift sentinel">
+          <test-suite type="TestFixture" name="v0.4 drift sentinel" executed="True" result="Success" success="True" time="2.5361" asserts="0" description="v0.4 drift sentinel">
             <results>
-              <test-case description="scan catches a value reverted after apply; the report carries dates and the verified baseline" name="v0.4 drift sentinel.scan catches a value reverted after apply; the report carries dates and the verified baseline" time="0.191" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="scan skips features whose latest ledger event is an undo" name="v0.4 drift sentinel.scan skips features whose latest ledger event is an undo" time="0.0102" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="-Since limits the scan to features applied after the given moment" name="v0.4 drift sentinel.-Since limits the scan to features applied after the given moment" time="0.1152" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="scan catches a value reverted after apply; the report carries dates and the verified baseline" name="v0.4 drift sentinel.scan catches a value reverted after apply; the report carries dates and the verified baseline" time="0.2305" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="scan skips features whose latest ledger event is an undo" name="v0.4 drift sentinel.scan skips features whose latest ledger event is an undo" time="0.0183" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="-Since limits the scan to features applied after the given moment" name="v0.4 drift sentinel.-Since limits the scan to features applied after the given moment" time="0.1082" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="v0.4 scheduler.task roundtrip" executed="True" result="Ignored" success="True" time="2.6884" asserts="0" description="v0.4 scheduler.task roundtrip">
+          <test-suite type="TestFixture" name="v0.4 scheduler.task roundtrip" executed="True" result="Ignored" success="True" time="2.5531" asserts="0" description="v0.4 scheduler.task roundtrip">
             <results>
-              <test-case description="dry-run builds a plan without touching the task" name="v0.4 scheduler.task roundtrip.dry-run builds a plan without touching the task" time="0.009" asserts="0" success="False" result="Ignored" executed="False" />
-              <test-case description="apply disables the task; undo returns the previous state" name="v0.4 scheduler.task roundtrip.apply disables the task; undo returns the previous state" time="0.0035" asserts="0" success="False" result="Ignored" executed="False" />
+              <test-case description="dry-run builds a plan without touching the task" name="v0.4 scheduler.task roundtrip.dry-run builds a plan without touching the task" time="0.0092" asserts="0" success="False" result="Ignored" executed="False" />
+              <test-case description="apply disables the task; undo returns the previous state" name="v0.4 scheduler.task roundtrip.apply disables the task; undo returns the previous state" time="0.0032" asserts="0" success="False" result="Ignored" executed="False" />
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="v0.4 temp cleanup" executed="True" result="Success" success="True" time="2.9844" asserts="0" description="v0.4 temp cleanup">
+          <test-suite type="TestFixture" name="v0.4 temp cleanup" executed="True" result="Success" success="True" time="2.7568" asserts="0" description="v0.4 temp cleanup">
             <results>
-              <test-case description="dry-run reports volume without deleting; apply removes old files and records the ledger event" name="v0.4 temp cleanup.dry-run reports volume without deleting; apply removes old files and records the ledger event" time="0.2924" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="dry-run reports volume without deleting; apply removes old files and records the ledger event" name="v0.4 temp cleanup.dry-run reports volume without deleting; apply removes old files and records the ledger event" time="0.1999" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="v0.5 effect reports" executed="True" result="Success" success="True" time="15.899" asserts="0" description="v0.5 effect reports">
+          <test-suite type="TestFixture" name="v0.5 effect reports" executed="True" result="Success" success="True" time="14.381" asserts="0" description="v0.5 effect reports">
             <results>
-              <test-case description="apply reports what really changed: snapshot before vs probes after" name="v0.5 effect reports.apply reports what really changed: snapshot before vs probes after" time="0.4169" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="appx.present probe answers honestly for a missing package" name="v0.5 effect reports.appx.present probe answers honestly for a missing package" time="0.1294" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="change report answers from the ledger with dates" name="v0.5 effect reports.change report answers from the ledger with dates" time="0.1365" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="memory trim dry-run measures without touching anything" name="v0.5 effect reports.memory trim dry-run measures without touching anything" time="0.031" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="memory trim apply trims the current process and records measured bytes" name="v0.5 effect reports.memory trim apply trims the current process and records measured bytes" time="0.107" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="network reset dry-run shows the plan; undo without a reset fails honestly" name="v0.5 effect reports.network reset dry-run shows the plan; undo without a reset fails honestly" time="0.0571" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="network reset undo restores nothing when nothing disappeared" name="v0.5 effect reports.network reset undo restores nothing when nothing disappeared" time="0.0197" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="event log cleanup dry-run counts records without clearing" name="v0.5 effect reports.event log cleanup dry-run counts records without clearing" time="3.6673" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="telemetry report lists actual policy values from privacy manifests" name="v0.5 effect reports.telemetry report lists actual policy values from privacy manifests" time="0.2071" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="startup inventory lists documented Run/RunOnce entries read-only" name="v0.5 effect reports.startup inventory lists documented Run/RunOnce entries read-only" time="0.0516" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="driver inventory lists drivers and exports a JSON snapshot" name="v0.5 effect reports.driver inventory lists drivers and exports a JSON snapshot" time="6.7075" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="integrity check dry-run shows the plan without running anything" name="v0.5 effect reports.integrity check dry-run shows the plan without running anything" time="0.0197" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="bitlocker status is read-only and honest" name="v0.5 effect reports.bitlocker status is read-only and honest" time="1.3592" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="apply reports what really changed: snapshot before vs probes after" name="v0.5 effect reports.apply reports what really changed: snapshot before vs probes after" time="0.473" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="appx.present probe answers honestly for a missing package" name="v0.5 effect reports.appx.present probe answers honestly for a missing package" time="0.1521" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="change report answers from the ledger with dates" name="v0.5 effect reports.change report answers from the ledger with dates" time="0.13" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="memory trim dry-run measures without touching anything" name="v0.5 effect reports.memory trim dry-run measures without touching anything" time="0.0249" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="memory trim apply trims the current process and records measured bytes" name="v0.5 effect reports.memory trim apply trims the current process and records measured bytes" time="0.1026" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="network reset dry-run shows the plan; undo without a reset fails honestly" name="v0.5 effect reports.network reset dry-run shows the plan; undo without a reset fails honestly" time="0.0331" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="network reset undo restores nothing when nothing disappeared" name="v0.5 effect reports.network reset undo restores nothing when nothing disappeared" time="0.016" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="event log cleanup dry-run counts records without clearing" name="v0.5 effect reports.event log cleanup dry-run counts records without clearing" time="3.2276" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="telemetry report lists actual policy values from privacy manifests" name="v0.5 effect reports.telemetry report lists actual policy values from privacy manifests" time="0.2139" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="startup inventory lists documented Run/RunOnce entries read-only" name="v0.5 effect reports.startup inventory lists documented Run/RunOnce entries read-only" time="0.0765" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="driver inventory lists drivers and exports a JSON snapshot" name="v0.5 effect reports.driver inventory lists drivers and exports a JSON snapshot" time="5.9293" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="integrity check dry-run shows the plan without running anything" name="v0.5 effect reports.integrity check dry-run shows the plan without running anything" time="0.0118" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="bitlocker status is read-only and honest" name="v0.5 effect reports.bitlocker status is read-only and honest" time="1.2287" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
         </results>
       </test-suite>
-      <test-suite type="TestFixture" name="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.Manifest.Tests.ps1" executed="True" result="Success" success="True" time="1.7982" asserts="0" description="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.Manifest.Tests.ps1">
+      <test-suite type="TestFixture" name="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.Manifest.Tests.ps1" executed="True" result="Success" success="True" time="1.8589" asserts="0" description="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.Manifest.Tests.ps1">
         <results>
-          <test-suite type="TestFixture" name="Feature manifests" executed="True" result="Success" success="True" time="1.5227" asserts="0" description="Feature manifests">
+          <test-suite type="TestFixture" name="Feature manifests" executed="True" result="Success" success="True" time="1.5906" asserts="0" description="Feature manifests">
             <results>
-              <test-case description="repository contains at least one feature manifest" name="Feature manifests.repository contains at least one feature manifest" time="0.004" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="every manifest has all required fields" name="Feature manifests.every manifest has all required fields" time="0.2396" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="all manifest ids are unique" name="Feature manifests.all manifest ids are unique" time="0.0315" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="all manifest ids match the naming convention" name="Feature manifests.all manifest ids match the naming convention" time="0.1249" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="all ops use supported op types" name="Feature manifests.all ops use supported op types" time="0.0823" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="undo mode is snapshot in every manifest" name="Feature manifests.undo mode is snapshot in every manifest" time="0.0573" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="every manifest has at least one verify probe" name="Feature manifests.every manifest has at least one verify probe" time="0.0473" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="every verify probe type is implemented in Test-DomovoyEffect (100% coverage)" name="Feature manifests.every verify probe type is implemented in Test-DomovoyEffect (100% coverage)" time="0.0535" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="all references are https links" name="Feature manifests.all references are https links" time="0.0449" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="every manifest validates against the JSON schema" name="Feature manifests.every manifest validates against the JSON schema" time="0.834" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="repository contains at least one feature manifest" name="Feature manifests.repository contains at least one feature manifest" time="0.0048" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="every manifest has all required fields" name="Feature manifests.every manifest has all required fields" time="0.3811" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="all manifest ids are unique" name="Feature manifests.all manifest ids are unique" time="0.0188" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="all manifest ids match the naming convention" name="Feature manifests.all manifest ids match the naming convention" time="0.0426" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="all ops use supported op types" name="Feature manifests.all ops use supported op types" time="0.0542" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="undo mode is snapshot in every manifest" name="Feature manifests.undo mode is snapshot in every manifest" time="0.0527" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="every manifest has at least one verify probe" name="Feature manifests.every manifest has at least one verify probe" time="0.0538" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="every verify probe type is implemented in Test-DomovoyEffect (100% coverage)" name="Feature manifests.every verify probe type is implemented in Test-DomovoyEffect (100% coverage)" time="0.0557" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="all references are https links" name="Feature manifests.all references are https links" time="0.0627" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="every manifest validates against the JSON schema" name="Feature manifests.every manifest validates against the JSON schema" time="0.8605" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="Feature profiles" executed="True" result="Success" success="True" time="1.622" asserts="0" description="Feature profiles">
+          <test-suite type="TestFixture" name="Feature profiles" executed="True" result="Success" success="True" time="1.7097" asserts="0" description="Feature profiles">
             <results>
-              <test-case description="repository contains at least one profile" name="Feature profiles.repository contains at least one profile" time="0.0044" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="every profile has all required fields" name="Feature profiles.every profile has all required fields" time="0.0078" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="every profile validates against the profile JSON schema" name="Feature profiles.every profile validates against the profile JSON schema" time="0.0128" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="every profile feature id resolves to a real manifest" name="Feature profiles.every profile feature id resolves to a real manifest" time="0.0312" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="no profile feature exceeds the profile risk ceiling" name="Feature profiles.no profile feature exceeds the profile risk ceiling" time="0.0357" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="profile ids are unique" name="Feature profiles.profile ids are unique" time="0.0041" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="repository contains at least one profile" name="Feature profiles.repository contains at least one profile" time="0.0049" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="every profile has all required fields" name="Feature profiles.every profile has all required fields" time="0.0128" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="every profile validates against the profile JSON schema" name="Feature profiles.every profile validates against the profile JSON schema" time="0.0092" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="every profile feature id resolves to a real manifest" name="Feature profiles.every profile feature id resolves to a real manifest" time="0.0431" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="no profile feature exceeds the profile risk ceiling" name="Feature profiles.no profile feature exceeds the profile risk ceiling" time="0.0353" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="profile ids are unique" name="Feature profiles.profile ids are unique" time="0.0104" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="Feature groups" executed="True" result="Success" success="True" time="1.7175" asserts="0" description="Feature groups">
+          <test-suite type="TestFixture" name="Feature groups" executed="True" result="Success" success="True" time="1.7997" asserts="0" description="Feature groups">
             <results>
-              <test-case description="repository contains at least one group" name="Feature groups.repository contains at least one group" time="0.0084" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="every group has all required fields and a content source" name="Feature groups.every group has all required fields and a content source" time="0.0067" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="every group validates against the group JSON schema" name="Feature groups.every group validates against the group JSON schema" time="0.0078" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="group ids are unique" name="Feature groups.group ids are unique" time="0.0037" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="every dependency, profile and feature reference resolves" name="Feature groups.every dependency, profile and feature reference resolves" time="0.0259" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="no group content exceeds the group risk ceiling" name="Feature groups.no group content exceeds the group risk ceiling" time="0.0321" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="the bundled group graph has no cycles" name="Feature groups.the bundled group graph has no cycles" time="0.0078" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="repository contains at least one group" name="Feature groups.repository contains at least one group" time="0.0048" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="every group has all required fields and a content source" name="Feature groups.every group has all required fields and a content source" time="0.0073" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="every group validates against the group JSON schema" name="Feature groups.every group validates against the group JSON schema" time="0.0089" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="group ids are unique" name="Feature groups.group ids are unique" time="0.004" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="every dependency, profile and feature reference resolves" name="Feature groups.every dependency, profile and feature reference resolves" time="0.031" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="no group content exceeds the group risk ceiling" name="Feature groups.no group content exceeds the group risk ceiling" time="0.0219" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="the bundled group graph has no cycles" name="Feature groups.the bundled group graph has no cycles" time="0.0086" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
         </results>
       </test-suite>
-      <test-suite type="TestFixture" name="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.Module.Tests.ps1" executed="True" result="Success" success="True" time="3.2586" asserts="0" description="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.Module.Tests.ps1">
+      <test-suite type="TestFixture" name="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.Module.Tests.ps1" executed="True" result="Success" success="True" time="3.0128" asserts="0" description="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.Module.Tests.ps1">
         <results>
-          <test-suite type="TestFixture" name="Module Domovoy" executed="True" result="Success" success="True" time="2.7961" asserts="0" description="Module Domovoy">
+          <test-suite type="TestFixture" name="Module Domovoy" executed="True" result="Success" success="True" time="2.5378" asserts="0" description="Module Domovoy">
             <results>
-              <test-case description="exports exactly the commands the manifest declares (54 at v1.5.0)" name="Module Domovoy.exports exactly the commands the manifest declares (54 at v1.5.0)" time="0.0087" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="parses every source file without syntax errors" name="Module Domovoy.parses every source file without syntax errors" time="0.0495" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="contains no network cmdlets in module source (invariant I4)" name="Module Domovoy.contains no network cmdlets in module source (invariant I4)" time="0.0182" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="Initialize-Domovoy creates the store and a genesis entry" name="Module Domovoy.Initialize-Domovoy creates the store and a genesis entry" time="0.0118" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="genesis ledger entry records the module version" name="Module Domovoy.genesis ledger entry records the module version" time="0.008" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="Initialize-Domovoy is idempotent" name="Module Domovoy.Initialize-Domovoy is idempotent" time="0.0079" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="Get-DomovoyFeature lists the reference manifests" name="Module Domovoy.Get-DomovoyFeature lists the reference manifests" time="0.0601" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="Get-DomovoyFeature -Id filters to a single feature" name="Module Domovoy.Get-DomovoyFeature -Id filters to a single feature" time="0.0316" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="Invoke-DomovoyFeature dry-run returns a plan and changes nothing" name="Module Domovoy.Invoke-DomovoyFeature dry-run returns a plan and changes nothing" time="0.0403" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="Test-DomovoyEffect returns an honest probe matrix" name="Module Domovoy.Test-DomovoyEffect returns an honest probe matrix" time="0.031" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="Get-DomovoyLedger returns the genesis event" name="Module Domovoy.Get-DomovoyLedger returns the genesis event" time="0.0108" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="Get-DomovoyProfile lists both bundled profiles" name="Module Domovoy.Get-DomovoyProfile lists both bundled profiles" time="0.0131" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="Backup-DomovoyServiceState writes a readable service table snapshot" name="Module Domovoy.Backup-DomovoyServiceState writes a readable service table snapshot" time="2.5013" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="exports exactly the commands the manifest declares (54 at v1.5.0)" name="Module Domovoy.exports exactly the commands the manifest declares (54 at v1.5.0)" time="0.01" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="parses every source file without syntax errors" name="Module Domovoy.parses every source file without syntax errors" time="0.0582" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="contains no network cmdlets in module source (invariant I4)" name="Module Domovoy.contains no network cmdlets in module source (invariant I4)" time="0.021" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="Initialize-Domovoy creates the store and a genesis entry" name="Module Domovoy.Initialize-Domovoy creates the store and a genesis entry" time="0.0163" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="genesis ledger entry records the module version" name="Module Domovoy.genesis ledger entry records the module version" time="0.0094" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="Initialize-Domovoy is idempotent" name="Module Domovoy.Initialize-Domovoy is idempotent" time="0.0089" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="Get-DomovoyFeature lists the reference manifests" name="Module Domovoy.Get-DomovoyFeature lists the reference manifests" time="0.0588" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="Get-DomovoyFeature -Id filters to a single feature" name="Module Domovoy.Get-DomovoyFeature -Id filters to a single feature" time="0.0331" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="Invoke-DomovoyFeature dry-run returns a plan and changes nothing" name="Module Domovoy.Invoke-DomovoyFeature dry-run returns a plan and changes nothing" time="0.0455" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="Test-DomovoyEffect returns an honest probe matrix" name="Module Domovoy.Test-DomovoyEffect returns an honest probe matrix" time="0.0376" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="Get-DomovoyLedger returns the genesis event" name="Module Domovoy.Get-DomovoyLedger returns the genesis event" time="0.0058" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="Get-DomovoyProfile lists both bundled profiles" name="Module Domovoy.Get-DomovoyProfile lists both bundled profiles" time="0.0153" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="Backup-DomovoyServiceState writes a readable service table snapshot" name="Module Domovoy.Backup-DomovoyServiceState writes a readable service table snapshot" time="2.214" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
         </results>
       </test-suite>
-      <test-suite type="TestFixture" name="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.Portable.Tests.ps1" executed="True" result="Success" success="True" time="0.0776" asserts="0" description="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.Portable.Tests.ps1">
+      <test-suite type="TestFixture" name="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.Portable.Tests.ps1" executed="True" result="Success" success="True" time="0.0989" asserts="0" description="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.Portable.Tests.ps1">
         <results>
-          <test-suite type="TestFixture" name="Portable launcher packaging contract" executed="True" result="Success" success="True" time="0.0338" asserts="0" description="Portable launcher packaging contract">
+          <test-suite type="TestFixture" name="Portable launcher packaging contract" executed="True" result="Success" success="True" time="0.0577" asserts="0" description="Portable launcher packaging contract">
             <results>
-              <test-case description="the launcher source exists with the manifest and the builder" name="Portable launcher packaging contract.the launcher source exists with the manifest and the builder" time="0.0049" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="the launcher source exists with the manifest and the builder" name="Portable launcher packaging contract.the launcher source exists with the manifest and the builder" time="0.005" asserts="0" success="True" result="Success" executed="True" />
               <test-case description="embeds the payload under the contract resource names" name="Portable launcher packaging contract.embeds the payload under the contract resource names" time="0.0033" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="builder produces exactly those contract-named resources" name="Portable launcher packaging contract.builder produces exactly those contract-named resources" time="0.0031" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="launcher selftest requires the full release payload layout" name="Portable launcher packaging contract.launcher selftest requires the full release payload layout" time="0.0045" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="launcher selftest compares the module manifest version with the payload version" name="Portable launcher packaging contract.launcher selftest compares the module manifest version with the payload version" time="0.0034" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="launcher stays C#5 - no string interpolation, no null-conditional" name="Portable launcher packaging contract.launcher stays C#5 - no string interpolation, no null-conditional" time="0.0032" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="release workflow compiles, smoke-tests and ships the portable exe" name="Portable launcher packaging contract.release workflow compiles, smoke-tests and ships the portable exe" time="0.0038" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="builder produces exactly those contract-named resources" name="Portable launcher packaging contract.builder produces exactly those contract-named resources" time="0.0032" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="launcher selftest requires the full release payload layout" name="Portable launcher packaging contract.launcher selftest requires the full release payload layout" time="0.0047" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="launcher selftest compares the module manifest version with the payload version" name="Portable launcher packaging contract.launcher selftest compares the module manifest version with the payload version" time="0.0036" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="launcher stays C#5 - no string interpolation, no null-conditional" name="Portable launcher packaging contract.launcher stays C#5 - no string interpolation, no null-conditional" time="0.0031" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="the launcher ships product identity: AssemblyInfo + icon, wired into the builder" name="Portable launcher packaging contract.the launcher ships product identity: AssemblyInfo + icon, wired into the builder" time="0.0102" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="AssemblyInfo version matches the module manifest - identity cannot drift" name="Portable launcher packaging contract.AssemblyInfo version matches the module manifest - identity cannot drift" time="0.0087" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="AssemblyInfo stays C#5-clean and declares the product strings" name="Portable launcher packaging contract.AssemblyInfo stays C#5-clean and declares the product strings" time="0.004" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="release workflow compiles, smoke-tests and ships the portable exe" name="Portable launcher packaging contract.release workflow compiles, smoke-tests and ships the portable exe" time="0.0039" asserts="0" success="True" result="Success" executed="True" />
               <test-case description="release job waits for the portable job and downloads its artifact" name="Portable launcher packaging contract.release job waits for the portable job and downloads its artifact" time="0.0031" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
         </results>
       </test-suite>
-      <test-suite type="TestFixture" name="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.Profile.Tests.ps1" executed="True" result="Success" success="True" time="2.9388" asserts="0" description="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.Profile.Tests.ps1">
+      <test-suite type="TestFixture" name="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.Profile.Tests.ps1" executed="True" result="Success" success="True" time="2.9774" asserts="0" description="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.Profile.Tests.ps1">
         <results>
-          <test-suite type="TestFixture" name="Domovoy profiles" executed="True" result="Success" success="True" time="2.4877" asserts="0" description="Domovoy profiles">
+          <test-suite type="TestFixture" name="Domovoy profiles" executed="True" result="Success" success="True" time="2.5271" asserts="0" description="Domovoy profiles">
             <results>
-              <test-case description="cautious profile produces a full dry-run plan without skipping anything" name="Domovoy profiles.cautious profile produces a full dry-run plan without skipping anything" time="1.0648" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="standard profile plans every bundled feature" name="Domovoy profiles.standard profile plans every bundled feature" time="1.3558" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="unknown profile id throws" name="Domovoy profiles.unknown profile id throws" time="0.0057" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="risk ceiling skips higher-risk features and reports them honestly" name="Domovoy profiles.risk ceiling skips higher-risk features and reports them honestly" time="0.0577" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="cautious profile produces a full dry-run plan without skipping anything" name="Domovoy profiles.cautious profile produces a full dry-run plan without skipping anything" time="1.037" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="standard profile plans every bundled feature" name="Domovoy profiles.standard profile plans every bundled feature" time="1.4253" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="unknown profile id throws" name="Domovoy profiles.unknown profile id throws" time="0.0077" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="risk ceiling skips higher-risk features and reports them honestly" name="Domovoy profiles.risk ceiling skips higher-risk features and reports them honestly" time="0.0539" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
         </results>
       </test-suite>
-      <test-suite type="TestFixture" name="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.V06.Tests.ps1" executed="True" result="Success" success="True" time="3.9665" asserts="0" description="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.V06.Tests.ps1">
+      <test-suite type="TestFixture" name="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.V06.Tests.ps1" executed="True" result="Success" success="True" time="4.1806" asserts="0" description="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.V06.Tests.ps1">
         <results>
-          <test-suite type="TestFixture" name="network.dns op (catalog 34)" executed="True" result="Success" success="True" time="1.868" asserts="0" description="network.dns op (catalog 34)">
+          <test-suite type="TestFixture" name="network.dns op (catalog 34)" executed="True" result="Success" success="True" time="1.9081" asserts="0" description="network.dns op (catalog 34)">
             <results>
-              <test-case description="dry-run shows the per-adapter plan and changes nothing" name="network.dns op (catalog 34).dry-run shows the per-adapter plan and changes nothing" time="1.5822" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="apply sets the servers, the probe passes honestly" name="network.dns op (catalog 34).apply sets the servers, the probe passes honestly" time="0.138" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="undo restores the previous per-adapter server lists" name="network.dns op (catalog 34).undo restores the previous per-adapter server lists" time="0.1446" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="dry-run shows the per-adapter plan and changes nothing" name="network.dns op (catalog 34).dry-run shows the per-adapter plan and changes nothing" time="1.6358" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="apply sets the servers, the probe passes honestly" name="network.dns op (catalog 34).apply sets the servers, the probe passes honestly" time="0.1253" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="undo restores the previous per-adapter server lists" name="network.dns op (catalog 34).undo restores the previous per-adapter server lists" time="0.1427" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="Token privileges (catalog 52)" executed="True" result="Success" success="True" time="2.0222" asserts="0" description="Token privileges (catalog 52)">
+          <test-suite type="TestFixture" name="Token privileges (catalog 52)" executed="True" result="Success" success="True" time="2.0618" asserts="0" description="Token privileges (catalog 52)">
             <results>
-              <test-case description="lists the privileges of the current token, read only" name="Token privileges (catalog 52).lists the privileges of the current token, read only" time="0.0611" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="enables and disables a held privilege with a ledger record each time" name="Token privileges (catalog 52).enables and disables a held privilege with a ledger record each time" time="0.0878" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="lists the privileges of the current token, read only" name="Token privileges (catalog 52).lists the privileges of the current token, read only" time="0.0542" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="enables and disables a held privilege with a ledger record each time" name="Token privileges (catalog 52).enables and disables a held privilege with a ledger record each time" time="0.0935" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="File owner (catalog 48)" executed="True" result="Success" success="True" time="2.1622" asserts="0" description="File owner (catalog 48)">
+          <test-suite type="TestFixture" name="File owner (catalog 48)" executed="True" result="Success" success="True" time="2.2191" asserts="0" description="File owner (catalog 48)">
             <results>
-              <test-case description="dry-run shows the plan, apply changes the owner, undo restores it" name="File owner (catalog 48).dry-run shows the plan, apply changes the owner, undo restores it" time="0.1364" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="dry-run shows the plan, apply changes the owner, undo restores it" name="File owner (catalog 48).dry-run shows the plan, apply changes the owner, undo restores it" time="0.1484" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="File attribute clearing (catalog 47)" executed="True" result="Success" success="True" time="2.2052" asserts="0" description="File attribute clearing (catalog 47)">
+          <test-suite type="TestFixture" name="File attribute clearing (catalog 47)" executed="True" result="Success" success="True" time="2.2651" asserts="0" description="File attribute clearing (catalog 47)">
             <results>
-              <test-case description="dry-run shows what would be cleared, apply clears only those flags" name="File attribute clearing (catalog 47).dry-run shows what would be cleared, apply clears only those flags" time="0.0394" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="dry-run shows what would be cleared, apply clears only those flags" name="File attribute clearing (catalog 47).dry-run shows what would be cleared, apply clears only those flags" time="0.0416" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="BitLocker key backup (catalog 50)" executed="True" result="Success" success="True" time="2.3037" asserts="0" description="BitLocker key backup (catalog 50)">
+          <test-suite type="TestFixture" name="BitLocker key backup (catalog 50)" executed="True" result="Success" success="True" time="2.3849" asserts="0" description="BitLocker key backup (catalog 50)">
             <results>
-              <test-case description="dry-run shows protectors but never the key" name="BitLocker key backup (catalog 50).dry-run shows protectors but never the key" time="0.0655" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="apply writes the key to the file only, the ledger never sees it" name="BitLocker key backup (catalog 50).apply writes the key to the file only, the ledger never sees it" time="0.0294" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="dry-run shows protectors but never the key" name="BitLocker key backup (catalog 50).dry-run shows protectors but never the key" time="0.085" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="apply writes the key to the file only, the ledger never sees it" name="BitLocker key backup (catalog 50).apply writes the key to the file only, the ledger never sees it" time="0.0306" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="Driver dedup (catalog 43/46)" executed="True" result="Success" success="True" time="3.1016" asserts="0" description="Driver dedup (catalog 43/46)">
+          <test-suite type="TestFixture" name="Driver dedup (catalog 43/46)" executed="True" result="Success" success="True" time="3.2514" asserts="0" description="Driver dedup (catalog 43/46)">
             <results>
-              <test-case description="ConvertTo-DomovoyCab packs a directory into a real .cab" name="Driver dedup (catalog 43/46).ConvertTo-DomovoyCab packs a directory into a real .cab" time="0.0956" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="dry-run reports candidates, apply backs up first and removes only old copies" name="Driver dedup (catalog 43/46).dry-run reports candidates, apply backs up first and removes only old copies" time="0.6891" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="ConvertTo-DomovoyCab packs a directory into a real .cab" name="Driver dedup (catalog 43/46).ConvertTo-DomovoyCab packs a directory into a real .cab" time="0.08" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="dry-run reports candidates, apply backs up first and removes only old copies" name="Driver dedup (catalog 43/46).dry-run reports candidates, apply backs up first and removes only old copies" time="0.772" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="Drift auto-heal (catalog 58)" executed="True" result="Success" success="True" time="3.3533" asserts="0" description="Drift auto-heal (catalog 58)">
+          <test-suite type="TestFixture" name="Drift auto-heal (catalog 58)" executed="True" result="Success" success="True" time="3.531" asserts="0" description="Drift auto-heal (catalog 58)">
             <results>
-              <test-case description="dry-run lists candidates, apply heals and stays undoable, the cycle is journaled" name="Drift auto-heal (catalog 58).dry-run lists candidates, apply heals and stays undoable, the cycle is journaled" time="0.2483" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="dry-run lists candidates, apply heals and stays undoable, the cycle is journaled" name="Drift auto-heal (catalog 58).dry-run lists candidates, apply heals and stays undoable, the cycle is journaled" time="0.2627" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="Watchdog registration (catalog 58)" executed="True" result="Success" success="True" time="3.5351" asserts="0" description="Watchdog registration (catalog 58)">
+          <test-suite type="TestFixture" name="Watchdog registration (catalog 58)" executed="True" result="Success" success="True" time="3.7357" asserts="0" description="Watchdog registration (catalog 58)">
             <results>
-              <test-case description="dry-run shows the task definition, apply registers with a journal event" name="Watchdog registration (catalog 58).dry-run shows the task definition, apply registers with a journal event" time="0.1136" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="unregister removes the task and journals the fact" name="Watchdog registration (catalog 58).unregister removes the task and journals the fact" time="0.0647" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="dry-run shows the task definition, apply registers with a journal event" name="Watchdog registration (catalog 58).dry-run shows the task definition, apply registers with a journal event" time="0.1242" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="unregister removes the task and journals the fact" name="Watchdog registration (catalog 58).unregister removes the task and journals the fact" time="0.0767" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
         </results>
       </test-suite>
-      <test-suite type="TestFixture" name="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.V07.Tests.ps1" executed="True" result="Failure" success="False" time="4.9463" asserts="0" description="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.V07.Tests.ps1">
+      <test-suite type="TestFixture" name="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.V07.Tests.ps1" executed="True" result="Failure" success="False" time="8.8938" asserts="0" description="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.V07.Tests.ps1">
         <results>
-          <test-suite type="TestFixture" name="Registry.pol (PReg) format (catalog 62)" executed="True" result="Success" success="True" time="0.105" asserts="0" description="Registry.pol (PReg) format (catalog 62)">
+          <test-suite type="TestFixture" name="Registry.pol (PReg) format (catalog 62)" executed="True" result="Success" success="True" time="0.1042" asserts="0" description="Registry.pol (PReg) format (catalog 62)">
             <results>
-              <test-case description="round-trips dword, qword, string, expandstring, delete markers and the default value name" name="Registry.pol (PReg) format (catalog 62).round-trips dword, qword, string, expandstring, delete markers and the default value name" time="0.0953" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="rejects a file with a bad signature" name="Registry.pol (PReg) format (catalog 62).rejects a file with a bad signature" time="0.0066" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="round-trips dword, qword, string, expandstring, delete markers and the default value name" name="Registry.pol (PReg) format (catalog 62).round-trips dword, qword, string, expandstring, delete markers and the default value name" time="0.0943" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="rejects a file with a bad signature" name="Registry.pol (PReg) format (catalog 62).rejects a file with a bad signature" time="0.0068" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="network.proxy op (v0.7.0)" executed="True" result="Success" success="True" time="0.8085" asserts="0" description="network.proxy op (v0.7.0)">
+          <test-suite type="TestFixture" name="network.proxy op (v0.7.0)" executed="True" result="Success" success="True" time="0.8503" asserts="0" description="network.proxy op (v0.7.0)">
             <results>
-              <test-case description="dry-run shows the WinINET plan and changes nothing" name="network.proxy op (v0.7.0).dry-run shows the WinINET plan and changes nothing" time="0.0816" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="apply sets the proxy values, the probe and the change report agree" name="network.proxy op (v0.7.0).apply sets the proxy values, the probe and the change report agree" time="0.1864" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="undo removes what did not exist and restores what did" name="network.proxy op (v0.7.0).undo removes what did not exist and restores what did" time="0.3389" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="mode &quot;off&quot; disables the proxy without touching the server strings" name="network.proxy op (v0.7.0).mode &quot;off&quot; disables the proxy without touching the server strings" time="0.0928" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="dry-run shows the WinINET plan and changes nothing" name="network.proxy op (v0.7.0).dry-run shows the WinINET plan and changes nothing" time="0.0885" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="apply sets the proxy values, the probe and the change report agree" name="network.proxy op (v0.7.0).apply sets the proxy values, the probe and the change report agree" time="0.1986" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="undo removes what did not exist and restores what did" name="network.proxy op (v0.7.0).undo removes what did not exist and restores what did" time="0.3649" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="mode &quot;off&quot; disables the proxy without touching the server strings" name="network.proxy op (v0.7.0).mode &quot;off&quot; disables the proxy without touching the server strings" time="0.0904" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="Theme switch (catalog 29)" executed="True" result="Success" success="True" time="0.9041" asserts="0" description="Theme switch (catalog 29)">
+          <test-suite type="TestFixture" name="Theme switch (catalog 29)" executed="True" result="Success" success="True" time="0.95" asserts="0" description="Theme switch (catalog 29)">
             <results>
-              <test-case description="dry-run resolves the toggle direction and calls nothing" name="Theme switch (catalog 29).dry-run resolves the toggle direction and calls nothing" time="0.0402" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="a live dark theme toggles back to light" name="Theme switch (catalog 29).a live dark theme toggles back to light" time="0.0182" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="-Theme forces the direction" name="Theme switch (catalog 29).-Theme forces the direction" time="0.0113" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="apply drives the resolved theme manifest through the standard pipeline" name="Theme switch (catalog 29).apply drives the resolved theme manifest through the standard pipeline" time="0.0215" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="dry-run resolves the toggle direction and calls nothing" name="Theme switch (catalog 29).dry-run resolves the toggle direction and calls nothing" time="0.0407" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="a live dark theme toggles back to light" name="Theme switch (catalog 29).a live dark theme toggles back to light" time="0.0099" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="-Theme forces the direction" name="Theme switch (catalog 29).-Theme forces the direction" time="0.0153" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="apply drives the resolved theme manifest through the standard pipeline" name="Theme switch (catalog 29).apply drives the resolved theme manifest through the standard pipeline" time="0.0303" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="Network report (catalog 33)" executed="True" result="Success" success="True" time="1.7807" asserts="0" description="Network report (catalog 33)">
+          <test-suite type="TestFixture" name="Network report (catalog 33)" executed="True" result="Success" success="True" time="1.9311" asserts="0" description="Network report (catalog 33)">
             <results>
-              <test-case description="reports adapters, dns and both proxy layers read-only" name="Network report (catalog 33).reports adapters, dns and both proxy layers read-only" time="0.872" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="reports adapters, dns and both proxy layers read-only" name="Network report (catalog 33).reports adapters, dns and both proxy layers read-only" time="0.9772" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="Network state export/restore (catalog 35)" executed="True" result="Success" success="True" time="2.0663" asserts="0" description="Network state export/restore (catalog 35)">
+          <test-suite type="TestFixture" name="Network state export/restore (catalog 35)" executed="True" result="Success" success="True" time="2.2131" asserts="0" description="Network state export/restore (catalog 35)">
             <results>
-              <test-case description="exports dns and proxy to a JSON file, read-only" name="Network state export/restore (catalog 35).exports dns and proxy to a JSON file, read-only" time="0.0589" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="restore dry-run builds a generated manifest; adapters without captured dns are skipped" name="Network state export/restore (catalog 35).restore dry-run builds a generated manifest; adapters without captured dns are skipped" time="0.0617" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="restore apply runs the full pipeline: execute, probes, journal" name="Network state export/restore (catalog 35).restore apply runs the full pipeline: execute, probes, journal" time="0.1103" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="a never-configured proxy is honestly skipped, not recreated as disabled" name="Network state export/restore (catalog 35).a never-configured proxy is honestly skipped, not recreated as disabled" time="0.048" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="exports dns and proxy to a JSON file, read-only" name="Network state export/restore (catalog 35).exports dns and proxy to a JSON file, read-only" time="0.0571" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="restore dry-run builds a generated manifest; adapters without captured dns are skipped" name="Network state export/restore (catalog 35).restore dry-run builds a generated manifest; adapters without captured dns are skipped" time="0.0451" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="restore apply runs the full pipeline: execute, probes, journal" name="Network state export/restore (catalog 35).restore apply runs the full pipeline: execute, probes, journal" time="0.1254" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="a never-configured proxy is honestly skipped, not recreated as disabled" name="Network state export/restore (catalog 35).a never-configured proxy is honestly skipped, not recreated as disabled" time="0.0485" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="Policy export (catalog 62)" executed="True" result="Success" success="True" time="2.4279" asserts="0" description="Policy export (catalog 62)">
+          <test-suite type="TestFixture" name="Policy export (catalog 62)" executed="True" result="Success" success="True" time="2.5773" asserts="0" description="Policy export (catalog 62)">
             <results>
-              <test-case description="exports verified registry-backed features into a gpedit-loadable bundle" name="Policy export (catalog 62).exports verified registry-backed features into a gpedit-loadable bundle" time="0.1649" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="the machine pol parses back; the newer feature wins the shared value" name="Policy export (catalog 62).the machine pol parses back; the newer feature wins the shared value" time="0.0706" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="the admx declares one policy per feature class with pinned elements" name="Policy export (catalog 62).the admx declares one policy per feature class with pinned elements" time="0.1007" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="exports verified registry-backed features into a gpedit-loadable bundle" name="Policy export (catalog 62).exports verified registry-backed features into a gpedit-loadable bundle" time="0.1595" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="the machine pol parses back; the newer feature wins the shared value" name="Policy export (catalog 62).the machine pol parses back; the newer feature wins the shared value" time="0.0765" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="the admx declares one policy per feature class with pinned elements" name="Policy export (catalog 62).the admx declares one policy per feature class with pinned elements" time="0.0974" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="GUI (Show-Domovoy)" executed="True" result="Failure" success="False" time="4.4293" asserts="0" description="GUI (Show-Domovoy)">
+          <test-suite type="TestFixture" name="GUI (Show-Domovoy)" executed="True" result="Failure" success="False" time="8.3772" asserts="0" description="GUI (Show-Domovoy)">
             <results>
-              <test-case description="builds the whole window in preview mode: catalog in, journal status on" name="GUI (Show-Domovoy).builds the whole window in preview mode: catalog in, journal status on" time="1.7587" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="is exported as a public command" name="GUI (Show-Domovoy).is exported as a public command" time="0.0058" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="click handlers resolve the private string table through the module-bound bridge (v1.5.4 portable-exe regression)" name="GUI (Show-Domovoy).click handlers resolve the private string table through the module-bound bridge (v1.5.4 portable-exe regression)" time="0.2335" asserts="0" success="False" result="Failure" executed="True">
+              <test-case description="builds the whole window in preview mode: catalog in, journal status on" name="GUI (Show-Domovoy).builds the whole window in preview mode: catalog in, journal status on" time="2.7332" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="is exported as a public command" name="GUI (Show-Domovoy).is exported as a public command" time="0.0059" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="GUI click-handler surface resolves the private string table through the module-bound bridge (v1.5.4 portable-exe regression)" name="GUI (Show-Domovoy).GUI click-handler surface resolves the private string table through the module-bound bridge (v1.5.4 portable-exe regression)" time="1.0357" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="runs a catalog action through the background worker to done (v1.6.0 async surface)" name="GUI (Show-Domovoy).runs a catalog action through the background worker to done (v1.6.0 async surface)" time="1.0551" asserts="0" success="False" result="Failure" executed="True">
                 <failure>
-                  <message>Expected regular expression 'Select\ a\ feature\ first\.' to match 'Domovoy GUI - thin client over the CLI (module 1.5.4).
-Every action below first prints the CLI command it runs, then runs exactly that command.
-', but it did not match.</message>
-                  <stack-trace>at $form.Tag.Output.Text | Should -Match ([regex]::Escape($expectedSelect)), D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.V07.Tests.ps1:674
-at &lt;ScriptBlock&gt;, D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.V07.Tests.ps1:674</stack-trace>
+                  <message>Expected $true, but got $false.</message>
+                  <stack-trace>at $tag.State.busy | Should -BeTrue, D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.V07.Tests.ps1:707
+at &lt;ScriptBlock&gt;, D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.V07.Tests.ps1:707</stack-trace>
                 </failure>
               </test-case>
+              <test-case description="the catalog filter narrows the list live (v1.6.0 search)" name="GUI (Show-Domovoy).the catalog filter narrows the list live (v1.6.0 search)" time="0.9664" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
         </results>
       </test-suite>
-      <test-suite type="TestFixture" name="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.V11.Tests.ps1" executed="True" result="Success" success="True" time="1.7261" asserts="0" description="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.V11.Tests.ps1">
+      <test-suite type="TestFixture" name="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.V11.Tests.ps1" executed="True" result="Success" success="True" time="1.7443" asserts="0" description="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.V11.Tests.ps1">
         <results>
-          <test-suite type="TestFixture" name="Second service wave (catalog 65)" executed="True" result="Success" success="True" time="0.2696" asserts="0" description="Second service wave (catalog 65)">
+          <test-suite type="TestFixture" name="Second service wave (catalog 65)" executed="True" result="Success" success="True" time="0.2789" asserts="0" description="Second service wave (catalog 65)">
             <results>
-              <test-case description="dry-run builds a plan for each service without touching anything" name="Second service wave (catalog 65).dry-run builds a plan for each service without touching anything" time="0.1261" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="apply disables and undo restores the previous startup type (mocked pipeline)" name="Second service wave (catalog 65).apply disables and undo restores the previous startup type (mocked pipeline)" time="0.1407" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="dry-run builds a plan for each service without touching anything" name="Second service wave (catalog 65).dry-run builds a plan for each service without touching anything" time="0.1229" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="apply disables and undo restores the previous startup type (mocked pipeline)" name="Second service wave (catalog 65).apply disables and undo restores the previous startup type (mocked pipeline)" time="0.1522" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="Second UWP wave (catalog 76)" executed="True" result="Success" success="True" time="0.4758" asserts="0" description="Second UWP wave (catalog 76)">
+          <test-suite type="TestFixture" name="Second UWP wave (catalog 76)" executed="True" result="Success" success="True" time="0.4839" asserts="0" description="Second UWP wave (catalog 76)">
             <results>
-              <test-case description="dry-run builds a plan for each package without touching anything" name="Second UWP wave (catalog 76).dry-run builds a plan for each package without touching anything" time="0.1259" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="apply removes the package; the probe answers honestly" name="Second UWP wave (catalog 76).apply removes the package; the probe answers honestly" time="0.0769" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="dry-run builds a plan for each package without touching anything" name="Second UWP wave (catalog 76).dry-run builds a plan for each package without touching anything" time="0.1282" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="apply removes the package; the probe answers honestly" name="Second UWP wave (catalog 76).apply removes the package; the probe answers honestly" time="0.0729" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="Proxy off profile (catalog 85)" executed="True" result="Success" success="True" time="0.8301" asserts="0" description="Proxy off profile (catalog 85)">
+          <test-suite type="TestFixture" name="Proxy off profile (catalog 85)" executed="True" result="Success" success="True" time="0.832" asserts="0" description="Proxy off profile (catalog 85)">
             <results>
-              <test-case description="apply turns the proxy off, keeps the server values, undo restores the triple" name="Proxy off profile (catalog 85).apply turns the proxy off, keeps the server values, undo restores the triple" time="0.3513" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="apply turns the proxy off, keeps the server values, undo restores the triple" name="Proxy off profile (catalog 85).apply turns the proxy off, keeps the server values, undo restores the triple" time="0.3451" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="Task state export (catalog 66)" executed="True" result="Success" success="True" time="0.8717" asserts="0" description="Task state export (catalog 66)">
+          <test-suite type="TestFixture" name="Task state export (catalog 66)" executed="True" result="Success" success="True" time="0.8663" asserts="0" description="Task state export (catalog 66)">
             <results>
-              <test-case description="exports the task table read-only as JSON" name="Task state export (catalog 66).exports the task table read-only as JSON" time="0.0362" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="exports the task table read-only as JSON" name="Task state export (catalog 66).exports the task table read-only as JSON" time="0.0296" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="Winget hints in undo (catalog 75)" executed="True" result="Success" success="True" time="1.011" asserts="0" description="Winget hints in undo (catalog 75)">
+          <test-suite type="TestFixture" name="Winget hints in undo (catalog 75)" executed="True" result="Success" success="True" time="0.9994" asserts="0" description="Winget hints in undo (catalog 75)">
             <results>
-              <test-case description="maps known packages and stays honest about unknown ones" name="Winget hints in undo (catalog 75).maps known packages and stays honest about unknown ones" time="0.01" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="the undo result carries the machine-readable hint when files are gone" name="Winget hints in undo (catalog 75).the undo result carries the machine-readable hint when files are gone" time="0.126" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="maps known packages and stays honest about unknown ones" name="Winget hints in undo (catalog 75).maps known packages and stays honest about unknown ones" time="0.0103" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="the undo result carries the machine-readable hint when files are gone" name="Winget hints in undo (catalog 75).the undo result carries the machine-readable hint when files are gone" time="0.1194" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="Cleanup thumb cache (catalog 89)" executed="True" result="Success" success="True" time="1.0409" asserts="0" description="Cleanup thumb cache (catalog 89)">
+          <test-suite type="TestFixture" name="Cleanup thumb cache (catalog 89)" executed="True" result="Success" success="True" time="1.0357" asserts="0" description="Cleanup thumb cache (catalog 89)">
             <results>
-              <test-case description="dry-run measures the thumbcache directory honestly" name="Cleanup thumb cache (catalog 89).dry-run measures the thumbcache directory honestly" time="0.0106" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="temp target keeps its documented shape" name="Cleanup thumb cache (catalog 89).temp target keeps its documented shape" time="0.0168" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="dry-run measures the thumbcache directory honestly" name="Cleanup thumb cache (catalog 89).dry-run measures the thumbcache directory honestly" time="0.0155" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="temp target keeps its documented shape" name="Cleanup thumb cache (catalog 89).temp target keeps its documented shape" time="0.018" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="Watchdog cleanup report (catalog 87)" executed="True" result="Success" success="True" time="1.1245" asserts="0" description="Watchdog cleanup report (catalog 87)">
+          <test-suite type="TestFixture" name="Watchdog cleanup report (catalog 87)" executed="True" result="Success" success="True" time="1.1224" asserts="0" description="Watchdog cleanup report (catalog 87)">
             <results>
-              <test-case description="the dry-run shows whether the cleanup report is enabled" name="Watchdog cleanup report (catalog 87).the dry-run shows whether the cleanup report is enabled" time="0.0069" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="the generated runner appends the measured dry-run report" name="Watchdog cleanup report (catalog 87).the generated runner appends the measured dry-run report" time="0.0741" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="the dry-run shows whether the cleanup report is enabled" name="Watchdog cleanup report (catalog 87).the dry-run shows whether the cleanup report is enabled" time="0.0076" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="the generated runner appends the measured dry-run report" name="Watchdog cleanup report (catalog 87).the generated runner appends the measured dry-run report" time="0.0762" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="LSA audit (catalog 94)" executed="True" result="Success" success="True" time="1.1564" asserts="0" description="LSA audit (catalog 94)">
+          <test-suite type="TestFixture" name="LSA audit (catalog 94)" executed="True" result="Success" success="True" time="1.1569" asserts="0" description="LSA audit (catalog 94)">
             <results>
-              <test-case description="reports the documented values read-only" name="LSA audit (catalog 94).reports the documented values read-only" time="0.0293" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="reports the documented values read-only" name="LSA audit (catalog 94).reports the documented values read-only" time="0.0314" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="Batch policy export for profiles (catalog 100)" executed="True" result="Success" success="True" time="1.2733" asserts="0" description="Batch policy export for profiles (catalog 100)">
+          <test-suite type="TestFixture" name="Batch policy export for profiles (catalog 100)" executed="True" result="Success" success="True" time="1.2768" asserts="0" description="Batch policy export for profiles (catalog 100)">
             <results>
-              <test-case description="exports exactly the profile features; the outsider stays out" name="Batch policy export for profiles (catalog 100).exports exactly the profile features; the outsider stays out" time="0.0573" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="an unknown profile throws honestly" name="Batch policy export for profiles (catalog 100).an unknown profile throws honestly" time="0.0429" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="exports exactly the profile features; the outsider stays out" name="Batch policy export for profiles (catalog 100).exports exactly the profile features; the outsider stays out" time="0.0628" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="an unknown profile throws honestly" name="Batch policy export for profiles (catalog 100).an unknown profile throws honestly" time="0.0399" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
         </results>
       </test-suite>
-      <test-suite type="TestFixture" name="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.V12.Tests.ps1" executed="True" result="Success" success="True" time="49.7067" asserts="0" description="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.V12.Tests.ps1">
+      <test-suite type="TestFixture" name="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.V12.Tests.ps1" executed="True" result="Success" success="True" time="53.9539" asserts="0" description="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.V12.Tests.ps1">
         <results>
-          <test-suite type="TestFixture" name="Ledger hash chain (catalog 103)" executed="True" result="Success" success="True" time="0.1643" asserts="0" description="Ledger hash chain (catalog 103)">
+          <test-suite type="TestFixture" name="Ledger hash chain (catalog 103)" executed="True" result="Success" success="True" time="0.1723" asserts="0" description="Ledger hash chain (catalog 103)">
             <results>
-              <test-case description="binds every new entry to its predecessor by hash" name="Ledger hash chain (catalog 103).binds every new entry to its predecessor by hash" time="0.0429" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="an edited entry breaks the chain at its exact line" name="Ledger hash chain (catalog 103).an edited entry breaks the chain at its exact line" time="0.0392" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="a reordered entry is caught through the predecessor binding" name="Ledger hash chain (catalog 103).a reordered entry is caught through the predecessor binding" time="0.0268" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="a legacy journal answers honestly: no chain, not a failure" name="Ledger hash chain (catalog 103).a legacy journal answers honestly: no chain, not a failure" time="0.011" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="a mixed journal verifies the hashed tail and counts the head" name="Ledger hash chain (catalog 103).a mixed journal verifies the hashed tail and counts the head" time="0.0205" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="the canonical serializer is deterministic and key-order independent" name="Ledger hash chain (catalog 103).the canonical serializer is deterministic and key-order independent" time="0.0172" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="binds every new entry to its predecessor by hash" name="Ledger hash chain (catalog 103).binds every new entry to its predecessor by hash" time="0.0448" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="an edited entry breaks the chain at its exact line" name="Ledger hash chain (catalog 103).an edited entry breaks the chain at its exact line" time="0.0388" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="a reordered entry is caught through the predecessor binding" name="Ledger hash chain (catalog 103).a reordered entry is caught through the predecessor binding" time="0.0281" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="a legacy journal answers honestly: no chain, not a failure" name="Ledger hash chain (catalog 103).a legacy journal answers honestly: no chain, not a failure" time="0.0128" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="a mixed journal verifies the hashed tail and counts the head" name="Ledger hash chain (catalog 103).a mixed journal verifies the hashed tail and counts the head" time="0.0216" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="the canonical serializer is deterministic and key-order independent" name="Ledger hash chain (catalog 103).the canonical serializer is deterministic and key-order independent" time="0.02" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="file.timestamp op (catalog 91)" executed="True" result="Success" success="True" time="0.4014" asserts="0" description="file.timestamp op (catalog 91)">
+          <test-suite type="TestFixture" name="file.timestamp op (catalog 91)" executed="True" result="Success" success="True" time="0.4028" asserts="0" description="file.timestamp op (catalog 91)">
             <results>
-              <test-case description="the fixture manifest validates against the schema (op and probe)" name="file.timestamp op (catalog 91).the fixture manifest validates against the schema (op and probe)" time="0.0223" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="dry-run plans the stamps and says  for unpinned fields" name="file.timestamp op (catalog 91).dry-run plans the stamps and says  for unpinned fields" time="0.0287" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="apply sets the stamps, the probe compares instants, undo restores exactly" name="file.timestamp op (catalog 91).apply sets the stamps, the probe compares instants, undo restores exactly" time="0.1296" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="a missing path fails the apply honestly, allowMissing skips and the probe answers FAIL" name="file.timestamp op (catalog 91).a missing path fails the apply honestly, allowMissing skips and the probe answers FAIL" time="0.0447" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="the fixture manifest validates against the schema (op and probe)" name="file.timestamp op (catalog 91).the fixture manifest validates against the schema (op and probe)" time="0.0179" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="dry-run plans the stamps and says  for unpinned fields" name="file.timestamp op (catalog 91).dry-run plans the stamps and says  for unpinned fields" time="0.0272" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="apply sets the stamps, the probe compares instants, undo restores exactly" name="file.timestamp op (catalog 91).apply sets the stamps, the probe compares instants, undo restores exactly" time="0.1285" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="a missing path fails the apply honestly, allowMissing skips and the probe answers FAIL" name="file.timestamp op (catalog 91).a missing path fails the apply honestly, allowMissing skips and the probe answers FAIL" time="0.0462" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="Documented catalog wave (80/82/86/74)" executed="True" result="Success" success="True" time="0.7504" asserts="0" description="Documented catalog wave (80/82/86/74)">
+          <test-suite type="TestFixture" name="Documented catalog wave (80/82/86/74)" executed="True" result="Success" success="True" time="0.7662" asserts="0" description="Documented catalog wave (80/82/86/74)">
             <results>
-              <test-case description="each new manifest dry-runs as a registry plan without touching anything" name="Documented catalog wave (80/82/86/74).each new manifest dry-runs as a registry plan without touching anything" time="0.2414" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="the Office manifest carries both documented policy values" name="Documented catalog wave (80/82/86/74).the Office manifest carries both documented policy values" time="0.0985" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="each new manifest dry-runs as a registry plan without touching anything" name="Documented catalog wave (80/82/86/74).each new manifest dry-runs as a registry plan without touching anything" time="0.2818" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="the Office manifest carries both documented policy values" name="Documented catalog wave (80/82/86/74).the Office manifest carries both documented policy values" time="0.0787" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="Driver rollback report (catalog 90)" executed="True" result="Success" success="True" time="0.7806" asserts="0" description="Driver rollback report (catalog 90)">
+          <test-suite type="TestFixture" name="Driver rollback report (catalog 90)" executed="True" result="Success" success="True" time="0.8018" asserts="0" description="Driver rollback report (catalog 90)">
             <results>
-              <test-case description="flags drivers with an older package in the store and is honest about the rest" name="Driver rollback report (catalog 90).flags drivers with an older package in the store and is honest about the rest" time="0.027" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="flags drivers with an older package in the store and is honest about the rest" name="Driver rollback report (catalog 90).flags drivers with an older package in the store and is honest about the rest" time="0.0328" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="Component store cleanup (catalog 88)" executed="True" result="Success" success="True" time="49.235" asserts="0" description="Component store cleanup (catalog 88)">
+          <test-suite type="TestFixture" name="Component store cleanup (catalog 88)" executed="True" result="Success" success="True" time="53.4956" asserts="0" description="Component store cleanup (catalog 88)">
             <results>
-              <test-case description="the dry-run measures the store and reports the task state" name="Component store cleanup (catalog 88).the dry-run measures the store and reports the task state" time="0.0343" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="apply triggers the built-in task, journals it, and the chain stays verifiable" name="Component store cleanup (catalog 88).apply triggers the built-in task, journals it, and the chain stays verifiable" time="0.058" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="a missing servicing task refuses to trigger anything (backup gate)" name="Component store cleanup (catalog 88).a missing servicing task refuses to trigger anything (backup gate)" time="48.359" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="the dry-run measures the store and reports the task state" name="Component store cleanup (catalog 88).the dry-run measures the store and reports the task state" time="0.0344" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="apply triggers the built-in task, journals it, and the chain stays verifiable" name="Component store cleanup (catalog 88).apply triggers the built-in task, journals it, and the chain stays verifiable" time="0.0574" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="a missing servicing task refuses to trigger anything (backup gate)" name="Component store cleanup (catalog 88).a missing servicing task refuses to trigger anything (backup gate)" time="52.5279" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
         </results>
       </test-suite>
-      <test-suite type="TestFixture" name="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.V13.Tests.ps1" executed="True" result="Success" success="True" time="4.8361" asserts="0" description="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.V13.Tests.ps1">
+      <test-suite type="TestFixture" name="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.V13.Tests.ps1" executed="True" result="Success" success="True" time="4.9514" asserts="0" description="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.V13.Tests.ps1">
         <results>
-          <test-suite type="TestFixture" name="Feature groups (catalog 102)" executed="True" result="Success" success="True" time="2.1459" asserts="0" description="Feature groups (catalog 102)">
+          <test-suite type="TestFixture" name="Feature groups (catalog 102)" executed="True" result="Success" success="True" time="2.2645" asserts="0" description="Feature groups (catalog 102)">
             <results>
-              <test-case description="lists the bundled groups" name="Feature groups (catalog 102).lists the bundled groups" time="0.0198" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="a group without any content source is an honest error" name="Feature groups (catalog 102).a group without any content source is an honest error" time="0.0107" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="resolves dependencies before dependents and attributes every row" name="Feature groups (catalog 102).resolves dependencies before dependents and attributes every row" time="0.1348" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="attributes profile features and reports duplicates with their first source" name="Feature groups (catalog 102).attributes profile features and reports duplicates with their first source" time="0.533" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="skips features above the risk ceiling honestly" name="Feature groups (catalog 102).skips features above the risk ceiling honestly" time="0.1111" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="skips missing profiles and missing manifests honestly" name="Feature groups (catalog 102).skips missing profiles and missing manifests honestly" time="0.0594" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="a dependency cycle names the whole chain" name="Feature groups (catalog 102).a dependency cycle names the whole chain" time="0.0183" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="a self-dependency is a cycle of length one" name="Feature groups (catalog 102).a self-dependency is a cycle of length one" time="0.0148" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="a missing dependency group names the requirer" name="Feature groups (catalog 102).a missing dependency group names the requirer" time="0.0172" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="bundled home-essentials resolves the dependency first and dedups the overlap" name="Feature groups (catalog 102).bundled home-essentials resolves the dependency first and dedups the overlap" time="0.9179" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="apply drives the pipeline and records one group.apply entry" name="Feature groups (catalog 102).apply drives the pipeline and records one group.apply entry" time="0.2443" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="under -WhatIf nothing is applied and nothing is written" name="Feature groups (catalog 102).under -WhatIf nothing is applied and nothing is written" time="0.0611" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="lists the bundled groups" name="Feature groups (catalog 102).lists the bundled groups" time="0.0231" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="a group without any content source is an honest error" name="Feature groups (catalog 102).a group without any content source is an honest error" time="0.0128" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="resolves dependencies before dependents and attributes every row" name="Feature groups (catalog 102).resolves dependencies before dependents and attributes every row" time="0.1574" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="attributes profile features and reports duplicates with their first source" name="Feature groups (catalog 102).attributes profile features and reports duplicates with their first source" time="0.5755" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="skips features above the risk ceiling honestly" name="Feature groups (catalog 102).skips features above the risk ceiling honestly" time="0.1067" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="skips missing profiles and missing manifests honestly" name="Feature groups (catalog 102).skips missing profiles and missing manifests honestly" time="0.0639" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="a dependency cycle names the whole chain" name="Feature groups (catalog 102).a dependency cycle names the whole chain" time="0.0239" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="a self-dependency is a cycle of length one" name="Feature groups (catalog 102).a self-dependency is a cycle of length one" time="0.021" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="a missing dependency group names the requirer" name="Feature groups (catalog 102).a missing dependency group names the requirer" time="0.0225" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="bundled home-essentials resolves the dependency first and dedups the overlap" name="Feature groups (catalog 102).bundled home-essentials resolves the dependency first and dedups the overlap" time="0.9644" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="apply drives the pipeline and records one group.apply entry" name="Feature groups (catalog 102).apply drives the pipeline and records one group.apply entry" time="0.2193" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="under -WhatIf nothing is applied and nothing is written" name="Feature groups (catalog 102).under -WhatIf nothing is applied and nothing is written" time="0.0706" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="Journal schema inventory and migration (catalog 101)" executed="True" result="Success" success="True" time="2.3949" asserts="0" description="Journal schema inventory and migration (catalog 101)">
+          <test-suite type="TestFixture" name="Journal schema inventory and migration (catalog 101)" executed="True" result="Success" success="True" time="2.5362" asserts="0" description="Journal schema inventory and migration (catalog 101)">
             <results>
-              <test-case description="a missing journal answers honestly" name="Journal schema inventory and migration (catalog 101).a missing journal answers honestly" time="0.0107" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="a current-schema journal inventories cleanly" name="Journal schema inventory and migration (catalog 101).a current-schema journal inventories cleanly" time="0.0413" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="counts legacy, future and schema-less entries separately" name="Journal schema inventory and migration (catalog 101).counts legacy, future and schema-less entries separately" time="0.0132" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="an already-current journal: -Apply is an honest no-op that writes nothing" name="Journal schema inventory and migration (catalog 101).an already-current journal: -Apply is an honest no-op that writes nothing" time="0.0233" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="a newer journal is refused loudly on -Apply and never downgraded" name="Journal schema inventory and migration (catalog 101).a newer journal is refused loudly on -Apply and never downgraded" time="0.0275" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="a missing journal answers honestly" name="Journal schema inventory and migration (catalog 101).a missing journal answers honestly" time="0.0269" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="a current-schema journal inventories cleanly" name="Journal schema inventory and migration (catalog 101).a current-schema journal inventories cleanly" time="0.0269" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="counts legacy, future and schema-less entries separately" name="Journal schema inventory and migration (catalog 101).counts legacy, future and schema-less entries separately" time="0.014" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="an already-current journal: -Apply is an honest no-op that writes nothing" name="Journal schema inventory and migration (catalog 101).an already-current journal: -Apply is an honest no-op that writes nothing" time="0.0388" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="a newer journal is refused loudly on -Apply and never downgraded" name="Journal schema inventory and migration (catalog 101).a newer journal is refused loudly on -Apply and never downgraded" time="0.012" asserts="0" success="True" result="Success" executed="True" />
               <test-case description="a journal with older entries honestly says the rule is not defined yet" name="Journal schema inventory and migration (catalog 101).a journal with older entries honestly says the rule is not defined yet" time="0.0127" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="the rewrite engine backs up, rebuilds the chain and keeps the journal verifiable" name="Journal schema inventory and migration (catalog 101).the rewrite engine backs up, rebuilds the chain and keeps the journal verifiable" time="0.0679" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="the audit entry chains onto the migrated tail and is filterable" name="Journal schema inventory and migration (catalog 101).the audit entry chains onto the migrated tail and is filterable" time="0.0317" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="a torn line stops the rewrite before any byte changes" name="Journal schema inventory and migration (catalog 101).a torn line stops the rewrite before any byte changes" time="0.0144" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="the rewrite engine backs up, rebuilds the chain and keeps the journal verifiable" name="Journal schema inventory and migration (catalog 101).the rewrite engine backs up, rebuilds the chain and keeps the journal verifiable" time="0.0675" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="the audit entry chains onto the migrated tail and is filterable" name="Journal schema inventory and migration (catalog 101).the audit entry chains onto the migrated tail and is filterable" time="0.031" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="a torn line stops the rewrite before any byte changes" name="Journal schema inventory and migration (catalog 101).a torn line stops the rewrite before any byte changes" time="0.0347" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="Shell menu audit (catalog 104)" executed="True" result="Success" success="True" time="4.3298" asserts="0" description="Shell menu audit (catalog 104)">
+          <test-suite type="TestFixture" name="Shell menu audit (catalog 104)" executed="True" result="Success" success="True" time="4.5111" asserts="0" description="Shell menu audit (catalog 104)">
             <results>
-              <test-case description="finds the synthetic handler with the DLL present" name="Shell menu audit (catalog 104).finds the synthetic handler with the DLL present" time="0.6707" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="reports a handler whose DLL is gone as dll-missing" name="Shell menu audit (catalog 104).reports a handler whose DLL is gone as dll-missing" time="0.4282" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="inventories the Open-with choices for the synthetic extension" name="Shell menu audit (catalog 104).inventories the Open-with choices for the synthetic extension" time="0.4764" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="the -Extension filter narrows the Open-with section to one row" name="Shell menu audit (catalog 104).the -Extension filter narrows the Open-with section to one row" time="0.3415" asserts="0" success="True" result="Success" executed="True" />
-            </results>
-          </test-suite>
-        </results>
-      </test-suite>
-      <test-suite type="TestFixture" name="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.V14.Catalog.Tests.ps1" executed="True" result="Ignored" success="True" time="0.4727" asserts="0" description="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.V14.Catalog.Tests.ps1">
-        <results>
-          <test-suite type="TestFixture" name="Edge Update service manifests (catalog 77)" executed="True" result="Success" success="True" time="0.022" asserts="0" description="Edge Update service manifests (catalog 77)">
-            <results>
-              <test-case description="ships both Edge Update service manifests with Manual startup and honest references" name="Edge Update service manifests (catalog 77).ships both Edge Update service manifests with Manual startup and honest references" time="0.0118" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="names exactly the verified Edge Update service document names" name="Edge Update service manifests (catalog 77).names exactly the verified Edge Update service document names" time="0.0074" asserts="0" success="True" result="Success" executed="True" />
-            </results>
-          </test-suite>
-          <test-suite type="TestFixture" name="SmartScreen/SMB audit (catalog 95)" executed="True" result="Ignored" success="True" time="0.0819" asserts="0" description="SmartScreen/SMB audit (catalog 95)">
-            <results>
-              <test-case description="the command exists in the module" name="SmartScreen/SMB audit (catalog 95).the command exists in the module" time="0.0119" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="on non-Windows it refuses loudly instead of touching a registry" name="SmartScreen/SMB audit (catalog 95).on non-Windows it refuses loudly instead of touching a registry" time="0.0036" asserts="0" success="False" result="Ignored" executed="False" />
-              <test-case description="on Windows it returns one honest row per audited setting plus a summary" name="SmartScreen/SMB audit (catalog 95).on Windows it returns one honest row per audited setting plus a summary" time="0.0418" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="finds the synthetic handler with the DLL present" name="Shell menu audit (catalog 104).finds the synthetic handler with the DLL present" time="0.6471" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="reports a handler whose DLL is gone as dll-missing" name="Shell menu audit (catalog 104).reports a handler whose DLL is gone as dll-missing" time="0.4547" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="inventories the Open-with choices for the synthetic extension" name="Shell menu audit (catalog 104).inventories the Open-with choices for the synthetic extension" time="0.4959" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="the -Extension filter narrows the Open-with section to one row" name="Shell menu audit (catalog 104).the -Extension filter narrows the Open-with section to one row" time="0.3583" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
         </results>
       </test-suite>
-      <test-suite type="TestFixture" name="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.V14.Shell.Tests.ps1" executed="True" result="Success" success="True" time="1.2663" asserts="0" description="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.V14.Shell.Tests.ps1">
+      <test-suite type="TestFixture" name="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.V14.Catalog.Tests.ps1" executed="True" result="Ignored" success="True" time="0.4995" asserts="0" description="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.V14.Catalog.Tests.ps1">
         <results>
-          <test-suite type="TestFixture" name="Shell handler removal (catalog 81)" executed="True" result="Success" success="True" time="0.382" asserts="0" description="Shell handler removal (catalog 81)">
+          <test-suite type="TestFixture" name="Edge Update service manifests (catalog 77)" executed="True" result="Success" success="True" time="0.0401" asserts="0" description="Edge Update service manifests (catalog 77)">
             <results>
-              <test-case description="apply removes exactly the named handler; undo restores the exact registration" name="Shell handler removal (catalog 81).apply removes exactly the named handler; undo restores the exact registration" time="0.148" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="apply on an absent handler is honest; undo restores the absence" name="Shell handler removal (catalog 81).apply on an absent handler is honest; undo restores the absence" time="0.0968" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="the Approved CLSID list is never touched by a handler removal" name="Shell handler removal (catalog 81).the Approved CLSID list is never touched by a handler removal" time="0.1344" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="ships both Edge Update service manifests with Manual startup and honest references" name="Edge Update service manifests (catalog 77).ships both Edge Update service manifests with Manual startup and honest references" time="0.0116" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="names exactly the verified Edge Update service document names" name="Edge Update service manifests (catalog 77).names exactly the verified Edge Update service document names" time="0.0252" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="Open-with entry removal (catalog 81)" executed="True" result="Success" success="True" time="0.6454" asserts="0" description="Open-with entry removal (catalog 81)">
+          <test-suite type="TestFixture" name="SmartScreen/SMB audit (catalog 95)" executed="True" result="Ignored" success="True" time="0.0931" asserts="0" description="SmartScreen/SMB audit (catalog 95)">
             <results>
-              <test-case description="apply drops the letter and rebalances MRUList; undo restores letters and the exact MRUList" name="Open-with entry removal (catalog 81).apply drops the letter and rebalances MRUList; undo restores letters and the exact MRUList" time="0.1125" asserts="0" success="True" result="Success" executed="True" />
-              <test-case description="apply on OpenWithProgids removes the exact value; undo restores the exact data" name="Open-with entry removal (catalog 81).apply on OpenWithProgids removes the exact value; undo restores the exact data" time="0.1477" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="the command exists in the module" name="SmartScreen/SMB audit (catalog 95).the command exists in the module" time="0.0129" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="on non-Windows it refuses loudly instead of touching a registry" name="SmartScreen/SMB audit (catalog 95).on non-Windows it refuses loudly instead of touching a registry" time="0.0049" asserts="0" success="False" result="Ignored" executed="False" />
+              <test-case description="on Windows it returns one honest row per audited setting plus a summary" name="SmartScreen/SMB audit (catalog 95).on Windows it returns one honest row per audited setting plus a summary" time="0.0318" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="Shell extension block op (catalog 81)" executed="True" result="Success" success="True" time="0.8569" asserts="0" description="Shell extension block op (catalog 81)">
+        </results>
+      </test-suite>
+      <test-suite type="TestFixture" name="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.V14.Shell.Tests.ps1" executed="True" result="Success" success="True" time="1.2407" asserts="0" description="D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.V14.Shell.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="Shell handler removal (catalog 81)" executed="True" result="Success" success="True" time="0.3521" asserts="0" description="Shell handler removal (catalog 81)">
             <results>
-              <test-case description="apply blocks the synthetic CLSID; undo restores the previous state" name="Shell extension block op (catalog 81).apply blocks the synthetic CLSID; undo restores the previous state" time="0.2085" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="apply removes exactly the named handler; undo restores the exact registration" name="Shell handler removal (catalog 81).apply removes exactly the named handler; undo restores the exact registration" time="0.1262" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="apply on an absent handler is honest; undo restores the absence" name="Shell handler removal (catalog 81).apply on an absent handler is honest; undo restores the absence" time="0.1143" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="the Approved CLSID list is never touched by a handler removal" name="Shell handler removal (catalog 81).the Approved CLSID list is never touched by a handler removal" time="0.1086" asserts="0" success="True" result="Success" executed="True" />
+            </results>
+          </test-suite>
+          <test-suite type="TestFixture" name="Open-with entry removal (catalog 81)" executed="True" result="Success" success="True" time="0.5797" asserts="0" description="Open-with entry removal (catalog 81)">
+            <results>
+              <test-case description="apply drops the letter and rebalances MRUList; undo restores letters and the exact MRUList" name="Open-with entry removal (catalog 81).apply drops the letter and rebalances MRUList; undo restores letters and the exact MRUList" time="0.1109" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="apply on OpenWithProgids removes the exact value; undo restores the exact data" name="Open-with entry removal (catalog 81).apply on OpenWithProgids removes the exact value; undo restores the exact data" time="0.0992" asserts="0" success="True" result="Success" executed="True" />
+            </results>
+          </test-suite>
+          <test-suite type="TestFixture" name="Shell extension block op (catalog 81)" executed="True" result="Success" success="True" time="0.7953" asserts="0" description="Shell extension block op (catalog 81)">
+            <results>
+              <test-case description="apply blocks the synthetic CLSID; undo restores the previous state" name="Shell extension block op (catalog 81).apply blocks the synthetic CLSID; undo restores the previous state" time="0.2128" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
         </results>
