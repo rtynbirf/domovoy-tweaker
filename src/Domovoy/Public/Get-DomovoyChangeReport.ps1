@@ -35,34 +35,39 @@ function Get-DomovoyChangeReport {
         $entries = @($entries | Where-Object { [DateTimeOffset]$_.timestamp -ge $sinceOffset })
     }
 
+    # v1.6 (item 6): the human summaries come from the strings table, so
+    # the report speaks the active language. The event names and every
+    # machine-readable field stay frozen (spec section 10).
+    $s = Get-DomovoyStrings
+
     $rows = @()
     foreach ($entry in $entries) {
         $summary = switch ($entry.event) {
-            'ledger.init' { 'store initialized' }
+            'ledger.init' { $s.reportStoreInitialized }
             'feature.apply' {
-                $pass = '<unknown>'
+                $pass = $s.reportUnknownPass
                 if ($entry.PSObject.Properties['verification'] -and $entry.verification) {
                     $pass = [string]$entry.verification.AllPass
                 }
-                'feature applied, verified: {0}' -f $pass
+                $s.reportFeatureApplied -f $pass
             }
-            'feature.undo' { 'feature undone from snapshot' }
+            'feature.undo' { $s.reportFeatureUndone }
             'cleanup.apply' {
-                'cleanup: {0} files, {1} bytes freed, {2} failed' -f $entry.filesRemoved, $entry.bytesFreed, $entry.filesFailed
+                $s.reportCleanup -f $entry.filesRemoved, $entry.bytesFreed, $entry.filesFailed
             }
             'networkreset.apply' {
-                'network reset ({0}); static settings snapshot recorded' -f $entry.target
+                $s.reportNetworkReset -f $entry.target
             }
             'eventlog.cleanup.apply' {
-                'event logs cleared: {0} entries -> {1} entries' -f $entry.entriesBefore, $entry.entriesAfter
+                $s.reportEventlogCleanup -f $entry.entriesBefore, $entry.entriesAfter
             }
             'memorytrim.apply' {
-                'memory trim: {0} processes, {1} bytes before, {2} bytes after' -f $entry.processes, $entry.bytesBefore, $entry.bytesAfter
+                $s.reportMemoryTrim -f $entry.processes, $entry.bytesBefore, $entry.bytesAfter
             }
             'integritycheck.apply' {
-                'integrity check ({0}) exit code {1}' -f $entry.tool, $entry.exitCode
+                $s.reportIntegrityCheck -f $entry.tool, $entry.exitCode
             }
-            default { 'event' }
+            default { $s.reportEventDefault }
         }
 
         $rows += [pscustomobject]@{

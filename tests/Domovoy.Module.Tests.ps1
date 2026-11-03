@@ -14,8 +14,14 @@ AfterAll {
 
 Describe 'Module Domovoy' {
 
-    It 'exports exactly 52 public commands' {
-        @(Get-Command -Module Domovoy).Count | Should -Be 52
+    It 'exports exactly the commands the manifest declares (54 at v1.5.0)' {
+        # The count follows the manifest, not a frozen literal: the literal
+        # rots on every catalog-localized wave (the 52->54 language pair of
+        # v1.5.0 was exactly that rot), while the CI documentation-freshness
+        # gate already pins the README claim to the same manifest number.
+        $manifest = Import-PowerShellDataFile -Path (Join-Path -Path $repoRoot -ChildPath 'src/Domovoy/Domovoy.psd1')
+        @(Get-Command -Module Domovoy).Count | Should -Be @($manifest.FunctionsToExport).Count
+        @(Get-Command -Module Domovoy).Count | Should -BeGreaterThan 50
     }
 
     It 'parses every source file without syntax errors' {

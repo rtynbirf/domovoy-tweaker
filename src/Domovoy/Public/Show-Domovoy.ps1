@@ -15,7 +15,12 @@ function Show-Domovoy {
     The window shows the feature catalog with the journal status of every
     feature, buttons for the per-feature contour (dry-run / apply / undo /
     effect report) and a toolbar for the machine-wide contours (drift scan,
-    change report, network report, auto-heal, theme switch, policy export).
+    change report, network report, auto-heal, theme switch, policy export,
+    language switch). Every user-facing sentence comes from the strings
+    table (Get-DomovoyStrings, v1.6 item 6): the window builds in the
+    active language, the Language toolbar button switches en/ru for the
+    session and writes the preference, and the dynamic messages resolve
+    the table live so a switch is visible without reopening.
 
     .PARAMETER Preview
     Builds the whole window, wires every handler, appends the welcome text
@@ -44,18 +49,23 @@ function Show-Domovoy {
         Add-Type -AssemblyName System.Drawing
     }
 
+    # v1.6 (item 6): every user-facing sentence comes from the strings
+    # table. Labels freeze at build time (the languageSwitched message
+    # asks the user to reopen); dynamic messages resolve live.
+    $s = Get-DomovoyStrings
+
     # ---- data --------------------------------------------------------------
 
     $welcome = @(
-        ('Domovoy GUI - thin client over the CLI (module {0}).' -f (Get-Module -Name Domovoy).Version),
-        'Every action below first prints the CLI command it runs, then runs exactly that command.',
+        ($s.welcome1 -f (Get-Module -Name Domovoy).Version),
+        $s.welcome2,
         ''
     )
 
     # ---- controls ----------------------------------------------------------
 
     $form = [System.Windows.Forms.Form]::new()
-    $form.Text = 'Domovoy - the ledger-based Windows tweaker'
+    $form.Text = $s.windowTitle
     $form.Size = [System.Drawing.Size]::new(1040, 680)
     $form.StartPosition = 'CenterScreen'
     $form.MinimumSize = [System.Drawing.Size]::new(820, 520)
@@ -86,10 +96,10 @@ function Show-Domovoy {
     $list.MultiSelect = $false
     $list.HideSelection = $false
     $list.Dock = 'Fill'
-    $null = $list.Columns.Add('Id', 240)
-    $null = $list.Columns.Add('Title', 430)
-    $null = $list.Columns.Add('Risk', 60)
-    $null = $list.Columns.Add('Journal', 90)
+    $null = $list.Columns.Add($s.columnId, 240)
+    $null = $list.Columns.Add($s.columnTitle, 430)
+    $null = $list.Columns.Add($s.columnRisk, 60)
+    $null = $list.Columns.Add($s.columnJournal, 90)
 
     # Docking is processed from the last control added to the first:
     # toolbar takes the top, output takes the bottom, featureBar sits just
@@ -109,18 +119,18 @@ function Show-Domovoy {
 
     $runAction = {
         param([string]$CliLine, [scriptblock]$Action)
-        & $append ('CLI: ' + $CliLine)
+        & $append ((Get-DomovoyStrings).cliPrefix + $CliLine)
         try {
             $result = & $Action
             if ($null -ne $result) {
                 & $append (($result | Out-String -Width 110).TrimEnd())
             }
             else {
-                & $append '(no output)'
+                & $append (Get-DomovoyStrings).noOutput
             }
         }
         catch {
-            & $append ('ERROR: ' + $_.Exception.Message)
+            & $append ((Get-DomovoyStrings).errorPrefix + $_.Exception.Message)
         }
         & $append ('-' * 72)
     }.GetNewClosure()
@@ -169,54 +179,54 @@ function Show-Domovoy {
 
     # ---- per-feature buttons ----------------------------------------------
 
-    $btnDryRun = & $newButton 'Dry-run'
+    $btnDryRun = & $newButton $s.btnDryRun
     $btnDryRun.Add_Click({
         $id = & $selectedId
         if (-not $id) {
-            & $append 'Select a feature first.'
+            & $append (Get-DomovoyStrings).selectFirst
             return
         }
         $cli = "Invoke-DomovoyFeature -Id '$id'"
         & $runAction $cli ([scriptblock]::Create($cli))
     }.GetNewClosure())
 
-    $btnApply = & $newButton 'Apply...'
+    $btnApply = & $newButton $s.btnApply
     $btnApply.Add_Click({
         $id = & $selectedId
         if (-not $id) {
-            & $append 'Select a feature first.'
+            & $append (Get-DomovoyStrings).selectFirst
             return
         }
         $cli = "Invoke-DomovoyFeature -Id '$id' -Apply"
-        $answer = [System.Windows.Forms.MessageBox]::Show($form, ("Run: {0}`n`nA snapshot is taken before the change; undo stays available." -f $cli), 'Domovoy', 'YesNo', 'Warning')
+        $answer = [System.Windows.Forms.MessageBox]::Show($form, ((Get-DomovoyStrings).applyConfirm -f $cli), (Get-DomovoyStrings).messageBoxTitle, 'YesNo', 'Warning')
         if ($answer -ne [System.Windows.Forms.DialogResult]::Yes) {
-            & $append 'Cancelled.'
+            & $append (Get-DomovoyStrings).cancelled
             return
         }
         & $runAction $cli ([scriptblock]::Create($cli))
     }.GetNewClosure())
 
-    $btnUndo = & $newButton 'Undo...'
+    $btnUndo = & $newButton $s.btnUndo
     $btnUndo.Add_Click({
         $id = & $selectedId
         if (-not $id) {
-            & $append 'Select a feature first.'
+            & $append (Get-DomovoyStrings).selectFirst
             return
         }
         $cli = "Undo-DomovoyFeature -Id '$id' -Apply"
-        $answer = [System.Windows.Forms.MessageBox]::Show($form, ("Run: {0}" -f $cli), 'Domovoy', 'YesNo', 'Warning')
+        $answer = [System.Windows.Forms.MessageBox]::Show($form, ((Get-DomovoyStrings).undoConfirm -f $cli), (Get-DomovoyStrings).messageBoxTitle, 'YesNo', 'Warning')
         if ($answer -ne [System.Windows.Forms.DialogResult]::Yes) {
-            & $append 'Cancelled.'
+            & $append (Get-DomovoyStrings).cancelled
             return
         }
         & $runAction $cli ([scriptblock]::Create($cli))
     }.GetNewClosure())
 
-    $btnEffect = & $newButton 'Effect'
+    $btnEffect = & $newButton $s.btnEffect
     $btnEffect.Add_Click({
         $id = & $selectedId
         if (-not $id) {
-            & $append 'Select a feature first.'
+            & $append (Get-DomovoyStrings).selectFirst
             return
         }
         $cli = "Test-DomovoyEffect -Id '$id'"
@@ -229,49 +239,59 @@ function Show-Domovoy {
 
     # ---- toolbar buttons ---------------------------------------------------
 
-    $btnDrift = & $newButton 'Drift scan'
+    $btnDrift = & $newButton $s.btnDriftScan
     $btnDrift.Add_Click({
         & $runAction 'Invoke-DomovoyDriftScan' ([scriptblock]::Create('Invoke-DomovoyDriftScan'))
     }.GetNewClosure())
 
-    $btnChanges = & $newButton 'Change report'
+    $btnChanges = & $newButton $s.btnChangeReport
     $btnChanges.Add_Click({
         & $runAction 'Get-DomovoyChangeReport -Last 20' ([scriptblock]::Create('Get-DomovoyChangeReport -Last 20'))
     }.GetNewClosure())
 
-    $btnNetwork = & $newButton 'Network report'
+    $btnNetwork = & $newButton $s.btnNetworkReport
     $btnNetwork.Add_Click({
         & $runAction 'Get-DomovoyNetworkReport' ([scriptblock]::Create('Get-DomovoyNetworkReport'))
     }.GetNewClosure())
 
-    $btnAutoHeal = & $newButton 'Auto-heal (dry-run)'
+    $btnAutoHeal = & $newButton $s.btnAutoHeal
     $btnAutoHeal.Add_Click({
         & $runAction 'Invoke-DomovoyAutoHeal' ([scriptblock]::Create('Invoke-DomovoyAutoHeal'))
     }.GetNewClosure())
 
-    $btnTheme = & $newButton 'Switch theme'
+    $btnTheme = & $newButton $s.btnSwitchTheme
     $btnTheme.Add_Click({
         $cli = 'Switch-DomovoyTheme -Apply'
-        $answer = [System.Windows.Forms.MessageBox]::Show($form, ("Run: {0}`n`nThe theme toggles between dark and light; the previous values stay undo-able." -f $cli), 'Domovoy', 'YesNo', 'Warning')
+        $answer = [System.Windows.Forms.MessageBox]::Show($form, ((Get-DomovoyStrings).themeConfirm -f $cli), (Get-DomovoyStrings).messageBoxTitle, 'YesNo', 'Warning')
         if ($answer -ne [System.Windows.Forms.DialogResult]::Yes) {
-            & $append 'Cancelled.'
+            & $append (Get-DomovoyStrings).cancelled
             return
         }
         & $runAction $cli ([scriptblock]::Create($cli))
     }.GetNewClosure())
 
-    $btnPolicies = & $newButton 'Export policies'
+    $btnPolicies = & $newButton $s.btnExportPolicies
     $btnPolicies.Add_Click({
         & $runAction 'Export-DomovoyPolicy' ([scriptblock]::Create('Export-DomovoyPolicy'))
     }.GetNewClosure())
 
-    $btnRefresh = & $newButton 'Refresh'
+    $btnRefresh = & $newButton $s.btnRefresh
     $btnRefresh.Add_Click({
         & $fillList
-        & $append 'Feature list refreshed.'
+        & $append (Get-DomovoyStrings).refreshed
     }.GetNewClosure())
 
-    foreach ($button in @($btnDrift, $btnChanges, $btnNetwork, $btnAutoHeal, $btnTheme, $btnPolicies, $btnRefresh)) {
+    $btnLanguage = & $newButton ((Get-DomovoyStrings).btnLanguage -f (Get-DomovoyLanguage).Language)
+    $btnLanguage.Add_Click({
+        $target = if ((Get-DomovoyLanguage).Language -eq 'ru') { 'en' } else { 'ru' }
+        $cli = "Set-DomovoyLanguage -Language $target"
+        & $runAction $cli ([scriptblock]::Create($cli))
+        $sLive = Get-DomovoyStrings
+        & $append ($sLive.languageSwitched -f $target)
+        $btnLanguage.Text = $sLive.btnLanguage -f $target
+    }.GetNewClosure())
+
+    foreach ($button in @($btnDrift, $btnChanges, $btnNetwork, $btnAutoHeal, $btnTheme, $btnPolicies, $btnRefresh, $btnLanguage)) {
         $null = $toolbar.Controls.Add($button)
     }
 
