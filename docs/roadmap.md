@@ -521,6 +521,56 @@ content-валидации. Корневая причина доказана п�
 - [x] Контракт упаковки (имена ресурсов, гейты, ассеты) закреплён
       Pester-тестом `Domovoy.Portable.Tests.ps1` — гоняется на каждый пуш.
 
+## v1.5.4 — GUI: клики, которые падали ✅ (2026-11-04)
+
+Портативный exe v1.5.3 падал на КАЖДОМ клике: `Button.OnMouseUp →
+CommandNotFoundException: Get-DomovoyStrings is not recognized` (Windows
+PowerShell 5.1, журнал исключений владельца). Хендлеры кнопок GUI связаны
+через `.GetNewClosure()` — это новый динамический модуль, чья цепочка
+поиска команд доходит только до глобального session state: публичные
+команды там видны (шимы импортируют модуль `-Global`), приватная таблица
+строк — нет. Локализация (v1.6 п.6) добавила вызовы `Get-DomovoyStrings`
+во все closure-хендлеры, и каждая кнопка стала миной; CI не ловил, потому
+что `-Preview` строит окно, но кнопки не нажимает.
+
+- Фикс: module-bound мост `$stringsLive = { Get-DomovoyStrings }`
+  (`src/Domovoy/Public/Show-Domovoy.ps1`) — scriptblock создан в scope
+  модуля, приватная функция резолвится в его собственном session state;
+  все closure-хендлеры зовут его через `&`. Таблица по-прежнему читается
+  живьём — смена языка работает.
+- Доказательство механики: proof-харнесс на реальном модуле (песочница,
+  pwsh) — баг воспроизведён 1-в-1 (CommandNotFoundException из closure),
+  публичная команда в том же closure — контроль (почему CI был зелёным),
+  мост верифицирован, включая живое чтение после смены языка.
+- Регресс закреплён кликовым тестом в `tests/Domovoy.V07.Tests.ps1`:
+  `-Preview` экспонирует `Tag.Probe` — closure, созданный ровно как
+  хендлеры (`.GetNewClosure` над мостом); тест инвокаит его headlessly и
+  сверяет таблицу до и после `Set-DomovoyLanguage`. `Tag.Buttons`
+  экспонирует живые кнопки.
+
+**Критерии приёмки:**
+- [x] Ни одна кнопка GUI не падает с CommandNotFoundException: точная
+      поверхность краша (handler-style closure + приватная таблица)
+      закрыта и проверена машиной — Probe-ассерт зелёный на windows-latest
+      (CI run 80, коммиты 19eb75d..c5bbcf0; runs 77–79 красные — итерации
+      самого теста, не фикса: 77/78 — PerformClick-доставка на раннере,
+      79 — Probe-ассерт уже зелёный при падении только PerformClick-части,
+      поэтому клик-доставка вынесена из ассерта: PerformClick не
+      доставляется под headless Pester ни при каком раскладе handle, это
+      свойство раннера, не фиксa).
+- [x] Релиз v1.5.4 собран конвейером и проверен при скачивании: тег
+      v1.5.4 → release-воркфлоу (await-tests → shim-exe с двумя smoke →
+      portable-exe с selftest и сквозным `Get-DomovoyLanguage` → release);
+      ассеты появились только после всех гейтов. `Domovoy-1.5.4-Portable.exe`
+      sha256 2d7a59091e2e622f4268fa8b22ed9afeca6a9760bdb98f54bcf9b85c07e86f2a
+      == содержимое `Domovoy-1.5.4-Portable.exe.sha256`;
+      `Domovoy-1.5.4.zip` sha256
+      fa0f92087dec756f2c826d641eacf9f2d8604d09237dadfdb9f210a6b1399239
+      == содержимое `Domovoy-1.5.4.zip.sha256`; внутри zip — 145 файлов,
+      ModuleVersion 1.5.4, фикс в `Domovoy/Public/Show-Domovoy.ps1`
+      (17 ссылок на мост), оба шима на месте.
+- [x] CHANGELOG-секция [1.5.4] перенесена в release notes конвейером.
+
 ## Beyond v1.0 (идеи, не обещания)
 
 - Мульти-машина: журнал и профили как вход для Intune/SCCM-конвейеров.
