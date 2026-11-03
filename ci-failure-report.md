@@ -1,6 +1,6 @@
 # CI failure report
 
-- run: 83 on 73545d8707884ca2518ce70fca2c02fc6a0af13b (refs/heads/main)
+- run: 84 on 73545d8707884ca2518ce70fca2c02fc6a0af13b (refs/tags/v1.6.0)
 
 ## step trace (the first missing OK names the culprit)
 ```text
