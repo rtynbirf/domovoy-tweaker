@@ -213,7 +213,11 @@ jobs:
             Copy-Item -Path 'src/Domovoy/*' -Destination $stage -Recurse
             Copy-Item -Path 'config','schema' -Destination "$stage/" -Recurse
             Copy-Item -Path 'packaging/shim/domovoy.ps1' -Destination $stage
-            & $csc /nologo /target:exe /out:"$stage\domovoy.exe" 'packaging/shim/DomovoyShim.cs'
+            # Copy the source next to the output and compile from a full
+            # backslash path: csc.exe (CS1504) did not receive the
+            # forward-slash relative path intact from the pwsh native call.
+            Copy-Item -Path 'packaging/shim/DomovoyShim.cs' -Destination $stage
+            & $csc /nologo /target:exe /out:"$stage\domovoy.exe" "$stage\DomovoyShim.cs"
             if ($LASTEXITCODE -ne 0) { throw "csc failed with exit code $LASTEXITCODE" }
             # (b) direct smoke
             $out = & "$stage\domovoy.exe" Get-DomovoyLanguage

@@ -90,7 +90,12 @@ jobs:
           Copy-Item -Path 'src/Domovoy/*' -Destination $stage -Recurse
           Copy-Item -Path 'config','schema' -Destination "$stage/" -Recurse
           Copy-Item -Path 'packaging/shim/domovoy.ps1' -Destination $stage
-          & $csc /nologo /target:exe /out:"$stage\domovoy.exe" 'packaging/shim/DomovoyShim.cs'
+          # Copy the source next to the output and compile from a full
+          # backslash path: csc.exe (CS1504) did not receive the
+          # forward-slash relative path intact from the pwsh native call
+          # (that is exactly how run 65 failed).
+          Copy-Item -Path 'packaging/shim/DomovoyShim.cs' -Destination $stage
+          & $csc /nologo /target:exe /out:"$stage\domovoy.exe" "$stage\DomovoyShim.cs"
           if ($LASTEXITCODE -ne 0) { throw "csc failed with exit code $LASTEXITCODE" }
           if (-not (Test-Path -LiteralPath "$stage\domovoy.exe" -PathType Leaf)) { throw 'csc produced no executable' }
           $sha = (Get-FileHash -LiteralPath "$stage\domovoy.exe" -Algorithm SHA256).Hash
