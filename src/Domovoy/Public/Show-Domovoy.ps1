@@ -329,6 +329,12 @@ function Show-Domovoy {
                 Changes = $btnChanges
                 Refresh = $btnRefresh
             }
+            # A probe bound exactly like the click handlers (.GetNewClosure
+            # over the bridge variable): the tests invoke it headlessly and
+            # prove the closure/session-state mechanics without WinForms click
+            # plumbing (a .NET 9+ PerformClick on a never-created handle is a
+            # silent no-op, and the preview form is never shown).
+            Probe = { (& $stringsLive).selectFirst }.GetNewClosure()
         }
         return $form
     }

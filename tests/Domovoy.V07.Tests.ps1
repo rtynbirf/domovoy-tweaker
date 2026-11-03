@@ -652,14 +652,22 @@ Describe 'GUI (Show-Domovoy)' {
         $expectedSelect = InModuleScope Domovoy { (Get-DomovoyStrings).selectFirst }
         $expectedRefreshed = InModuleScope Domovoy { (Get-DomovoyStrings).refreshed }
         $form = Show-Domovoy -Preview
-        # .NET 9+ WinForms silently ignores PerformClick on a control whose
-        # handle was never created - and the preview form is never shown, so
-        # nothing has a handle. Force the handle so the clicks land on every
-        # engine (.NET Framework has no such guard; an extra handle is free).
-        $null = $form.Handle
         try {
             $buttons = $form.Tag.Buttons
             $buttons.DryRun | Should -BeOfType [System.Windows.Forms.Button]
+
+            # Headless probe, bound exactly like the click handlers
+            # (.GetNewClosure over the bridge variable): the precise surface
+            # the v1.5.3 crash lived on, invoked without WinForms click
+            # plumbing - engine-independent and never handle-dependent.
+            & $form.Tag.Probe | Should -Be $expectedSelect
+
+            # Real clicks too: .NET 9+ PerformClick silently no-ops on a
+            # control whose handle was never created, and the preview form is
+            # never shown - force every clicked button's handle first.
+            $null = $buttons.DryRun.Handle
+            $null = $buttons.Changes.Handle
+            $null = $buttons.Refresh.Handle
 
             # DryRun with no selection: the first bridge call inside a click handler.
             { $buttons.DryRun.PerformClick() } | Should -Not -Throw
