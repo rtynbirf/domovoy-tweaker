@@ -18,6 +18,15 @@ AfterAll {
 }
 
 Describe 'Strings table (v1.6 item 6)' {
+    It 'returns the EN table on the default branch without throwing (regression: runs 54-55)' {
+        # Runs 54/55: with a fresh store and no session override the table
+        # lookup received a $null language and threw at ContainsKey - the
+        # GUI-preview and change-report tests of OTHER suites hit exactly
+        # this branch while the language suite always set a language first.
+        $table = InModuleScope Domovoy { Get-DomovoyStrings }
+        $table.windowTitle | Should -Not -BeNullOrEmpty
+        $table.reportEventDefault | Should -Be 'event'
+    }
     It 'resolves to en by default with a fresh store' {
         $status = Get-DomovoyLanguage
         $status.Language | Should -Be 'en'

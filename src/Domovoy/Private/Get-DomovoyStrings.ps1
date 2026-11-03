@@ -119,7 +119,14 @@
         }
     }
 
-    $language = $null
+    # The documented default is applied BEFORE the table lookup:
+    # ContainsKey must never see a null key. With a fresh store and no
+    # session override $language used to reach the lookup as $null and
+    # threw on PS 7.6 (ArgumentNullException at Get-DomovoyStrings:141 -
+    # CI runs 54/55: the GUI-preview and change-report paths of OTHER
+    # suites read the table without ever setting a language, which is
+    # exactly the branch the language suite never covered).
+    $language = 'en'
     if ($script:DomovoyLanguage) {
         $language = [string]$script:DomovoyLanguage
     }
