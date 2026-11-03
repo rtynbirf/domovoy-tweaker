@@ -29,15 +29,22 @@ jobs:
           set -uo pipefail
           # Poll every 30 s, up to 40 iterations = 20 minutes.
           for i in $(seq 1 40); do
+            # Superseded duplicates are excluded, not selected: one push of
+            # two refs (main + tag, release run 15) starts two runs of the
+            # same SHA, the concurrency group cancels the loser, and
+            # max_by(.id) over EVERY run used to hand the gate the cancelled
+            # duplicate - refusing a release that a green run of the very
+            # same commit had already earned. Cancelled runs carry no vote;
+            # a real failure still refuses outright.
             state=$(gh api "/repos/${{ github.repository }}/actions/runs?head_sha=${{ github.sha }}&per_page=100" \
-              --jq '[.workflow_runs[] | select(.path == ".github/workflows/ci.yml" and .event == "push")] | max_by(.id) | if . == null then "none" else ((.status // "unknown") + "/" + (.conclusion // "pending")) end' \
+              --jq '[.workflow_runs[] | select(.path == ".github/workflows/ci.yml" and .event == "push" and (.conclusion != "cancelled"))] | max_by(.id) | if . == null then "none" else ((.status // "unknown") + "/" + (.conclusion // "pending")) end' \
               2>/dev/null || echo api-error)
             case "${state}" in
               */success)
                 echo "CI run for ${{ github.sha }} is green - proceeding with the release."
                 exit 0
                 ;;
-              */failure|*/cancelled|*/timed_out|*/startup_failure|*/action_required)
+              */failure|*/timed_out|*/startup_failure|*/action_required)
                 echo "::error::CI run for ${{ github.sha }} concluded '${state##*/}' - refusing to publish a release on a red commit"
                 exit 1
                 ;;
