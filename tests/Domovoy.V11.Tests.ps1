@@ -10,6 +10,21 @@
 # with the read-only automatic $IsWindows (names are case-insensitive).
 $script:isWindowsPlatform = ($PSVersionTable.PSVersion.Major -lt 6) -or $IsWindows
 
+# The admin flag must ALSO live at the file top level - the same Pester 5
+# discovery rule as the platform flag above (v1.4.1, finding P1-13): the
+# admin-gated tests of this suite never executed anywhere while the flag
+# lived inside BeforeAll. Non-Windows platforms are non-admin and the
+# skips engage.
+$script:isAdmin = $false
+try {
+    $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+    $principal = New-Object -TypeName Security.Principal.WindowsPrincipal -ArgumentList $identity
+    $script:isAdmin = $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+}
+catch {
+    $script:isAdmin = $false
+}
+
 BeforeAll {
     $repoRoot = Split-Path -Parent $PSScriptRoot
     $env:DOMOVOY_STORE = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ("domovoy-v11-" + [guid]::NewGuid().ToString('N'))
@@ -20,15 +35,6 @@ BeforeAll {
     New-Item -Path $script:manifestDir -ItemType Directory -Force | Out-Null
 
     $script:registryRef = 'https://learn.microsoft.com/windows/win32/sysinfo/registry'
-    $script:isAdmin = $false
-    try {
-        $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
-        $principal = New-Object -TypeName Security.Principal.WindowsPrincipal -ArgumentList $identity
-        $script:isAdmin = $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-    }
-    catch {
-        $script:isAdmin = $false
-    }
 }
 
 AfterAll {

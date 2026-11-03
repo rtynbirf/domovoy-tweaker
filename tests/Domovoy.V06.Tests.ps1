@@ -1,3 +1,20 @@
+# Pester 5 evaluates -Skip at DISCOVERY, before any BeforeAll runs - the
+# admin flag must live at the file top level, or every gate that reads it
+# sees an undefined variable and the gate goes dead (v1.4.1, finding
+# P1-13: the admin-gated blocks of this suite never executed anywhere).
+# Direct elevation check (same logic as the private Test-DomovoyAdmin,
+# without crossing module scope); non-Windows platforms are non-admin and
+# the skips engage.
+$script:isAdmin = $false
+try {
+    $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+    $principal = New-Object -TypeName Security.Principal.WindowsPrincipal -ArgumentList $identity
+    $script:isAdmin = $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+}
+catch {
+    $script:isAdmin = $false
+}
+
 BeforeAll {
     $repoRoot = Split-Path -Parent $PSScriptRoot
     $env:DOMOVOY_STORE = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ("domovoy-v06-" + [guid]::NewGuid().ToString('N'))
@@ -8,18 +25,6 @@ BeforeAll {
     New-Item -Path $script:manifestDir -ItemType Directory -Force | Out-Null
 
     $script:registryRef = 'https://learn.microsoft.com/windows/win32/sysinfo/registry'
-    # Direct elevation check (same logic as the private Test-DomovoyAdmin,
-    # without crossing module scope); non-Windows platforms are non-admin and
-    # the skips engage.
-    $script:isAdmin = $false
-    try {
-        $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
-        $principal = New-Object -TypeName Security.Principal.WindowsPrincipal -ArgumentList $identity
-        $script:isAdmin = $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-    }
-    catch {
-        $script:isAdmin = $false
-    }
 }
 
 AfterAll {

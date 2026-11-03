@@ -198,12 +198,18 @@ jobs:
             Write-Host "PSGALLERY_API_KEY is not configured - skipping the gallery publish."
             exit 0
           }
-          Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Scope CurrentUser | Out-Null
+          # v1.6 (item 1): publish through PSResourceGet (Publish-PSResource),
+          # the successor of the deprecated Publish-Module. PSResourceGet
+          # ships inside pwsh 7.4+; the install line only covers runners
+          # with an older image.
+          if (-not (Get-Command Publish-PSResource -ErrorAction SilentlyContinue)) {
+            Install-Module -Name Microsoft.PowerShell.PSResourceGet -Scope CurrentUser -Force
+          }
           # The gallery package must carry the feature catalog the same way the
           # zip does - otherwise an installed module cannot list any features.
           Copy-Item -Recurse -Path 'config','schema' -Destination 'src/Domovoy/'
           Import-Module -Name (Join-Path (Get-Location) 'src/Domovoy/Domovoy.psd1') -Force
           $meta = Test-ModuleManifest -Path (Join-Path (Get-Location) 'src/Domovoy/Domovoy.psd1')
           Write-Host "Publishing $($meta.Name) $($meta.Version) to the PowerShell Gallery."
-          Publish-Module -Path (Join-Path (Get-Location) 'src/Domovoy') -NuGetApiKey $env:PSGALLERY_API_KEY
+          Publish-PSResource -Path (Join-Path (Get-Location) 'src/Domovoy') -ApiKey $env:PSGALLERY_API_KEY -Repository PSGallery
           Write-Host "Published. Install-Module -Name Domovoy now serves this release."

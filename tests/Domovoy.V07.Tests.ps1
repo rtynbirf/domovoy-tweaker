@@ -6,6 +6,21 @@
 # with the read-only automatic $IsWindows (names are case-insensitive).
 $script:isWindowsPlatform = ($PSVersionTable.PSVersion.Major -lt 6) -or $IsWindows
 
+# The admin flag must ALSO live at the file top level - the same Pester 5
+# discovery rule as the platform flag above (v1.4.1, finding P1-13): the
+# admin-gated tests of this suite never executed anywhere while the flag
+# lived inside BeforeAll. Non-Windows platforms are non-admin and the
+# skips engage.
+$script:isAdmin = $false
+try {
+    $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+    $principal = New-Object -TypeName Security.Principal.WindowsPrincipal -ArgumentList $identity
+    $script:isAdmin = $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+}
+catch {
+    $script:isAdmin = $false
+}
+
 BeforeAll {
     $repoRoot = Split-Path -Parent $PSScriptRoot
     $env:DOMOVOY_STORE = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ("domovoy-v07-" + [guid]::NewGuid().ToString('N'))
@@ -16,17 +31,6 @@ BeforeAll {
     New-Item -Path $script:manifestDir -ItemType Directory -Force | Out-Null
 
     $script:registryRef = 'https://learn.microsoft.com/windows/win32/sysinfo/registry'
-    # Elevation and platform checks mirror the v0.6 fixture: non-Windows
-    # platforms are non-admin and the skips engage.
-    $script:isAdmin = $false
-    try {
-        $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
-        $principal = New-Object -TypeName Security.Principal.WindowsPrincipal -ArgumentList $identity
-        $script:isAdmin = $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-    }
-    catch {
-        $script:isAdmin = $false
-    }
 }
 
 AfterAll {
@@ -611,7 +615,11 @@ Describe 'GUI (Show-Domovoy)' {
             $form | Should -BeOfType [System.Windows.Forms.Form]
             $form.Tag.Output.Text | Should -Match 'Domovoy GUI'
             $form.Tag.List.Columns.Count | Should -Be 4
-            $form.Tag.List.Items.Count | Should -Be 31
+            # The catalog grows with every wave: the window carries
+            # exactly the live manifest count, never a frozen number
+            # (the frozen 31 broke the moment the catalog hit 58 -
+            # first fallout of the v1.4.1 unmasking).
+            $form.Tag.List.Items.Count | Should -Be @((Get-DomovoyFeature)).Count
         }
         finally {
             $form.Dispose()

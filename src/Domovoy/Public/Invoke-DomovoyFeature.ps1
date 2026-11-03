@@ -211,7 +211,22 @@ function Invoke-DomovoyFeature {
                 $currentText = 'creation={0};lastWrite={1};lastAccess={2}' -f $current['creation'], $current['lastWrite'], $current['lastAccess']
                 $newParts = foreach ($field in @('creation', 'lastWrite', 'lastAccess')) {
                     $opProp = $op.PSObject.Properties[$field]
-                    if ($opProp) { '{0}={1}' -f $field, $opProp.Value }
+                    if ($opProp) {
+                        # The manifest stores ISO 8601 strings (schema
+                        # timestampValue), but ConvertFrom-Json hands the
+                        # plan a DateTime - rendering it with the current
+                        # culture printed "01/15/2024 10:30:00" and broke
+                        # the documented plan contract (v1.4.1 fallout).
+                        # The plan shows the instant in ISO 8601 again.
+                        $stamp = $opProp.Value
+                        if ($stamp -is [datetime]) {
+                            if ($stamp.Kind -eq [System.DateTimeKind]::Local) {
+                                $stamp = $stamp.ToUniversalTime()
+                            }
+                            $stamp = $stamp.ToString('yyyy-MM-ddTHH:mm:ssZ', [System.Globalization.CultureInfo]::InvariantCulture)
+                        }
+                        '{0}={1}' -f $field, $stamp
+                    }
                     else { '{0}=<keep>' -f $field }
                 }
                 $plan += [pscustomobject]@{
