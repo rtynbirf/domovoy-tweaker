@@ -103,6 +103,9 @@ jobs:
               Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value $dsum
             }
           }
+          # v1.4.1 regression guard, restored: the container block replaced
+          # the exit gate in run 48 and red tests flowed through as green.
+          if ($result.FailedCount -gt 0) { exit 1 }
           Add-Content -LiteralPath step-trace.txt -Value ('pester OK - passed {0}, failed {1}, containers failed {2}' -f $result.PassedCount, $result.FailedCount, $failedContainers.Count)
 
       - name: Upload NUnit test results
@@ -389,6 +392,12 @@ jobs:
             $onBranch = git branch --show-current
             if ($onBranch -ne 'ci-report') { throw ("branch switch failed, on: {0}" -f $onBranch) }
             Set-Content -LiteralPath 'ci-failure-report.md' -Value $lines -Encoding UTF8
+            if (Test-Path -LiteralPath 'testResults.xml') {
+              # The raw NUnit XML is the ground truth: counters, every case,
+              # every failure message and stack trace, nothing summarized.
+              Copy-Item -LiteralPath 'testResults.xml' -Destination 'testResults-latest.xml' -Force
+              git add testResults-latest.xml
+            }
             git add ci-failure-report.md
             git commit -m ("ci: failure report for run {0} ({1})" -f $env:GITHUB_RUN_NUMBER, $env:GITHUB_SHA.Substring(0, 7))
             git push --force https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git ci-report:ci-report
