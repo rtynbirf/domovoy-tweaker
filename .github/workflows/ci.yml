@@ -46,6 +46,7 @@ jobs:
           $errors = @($results | Where-Object { $_.Severity -eq 'Error' })
           Write-Host "Analyzer errors: $($errors.Count)"
           if ($errors.Count -gt 0) { exit 1 }
+          Add-Content -LiteralPath step-trace.txt -Value 'analyzer OK'
 
       - name: Pester tests
         shell: pwsh
@@ -93,7 +94,16 @@ jobs:
           $covLine = "Coverage baseline: {0}% (commands {1}/{2}). Threshold is recorded as fact, not invented." -f $pctText, $executed, $analyzed
           Write-Host $covLine
           Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value $covLine
-          if ($result.FailedCount -gt 0) { exit 1 }
+          $failedContainers = @($result.Containers | Where-Object { $_.Status -eq 'Failed' })
+          foreach ($c in $failedContainers) {
+            Write-Host ("::error::CONTAINER FAILED: {0}" -f $c.Path)
+            foreach ($dc in @($c.DiscoveryFailure)) {
+              Write-Host ("::error::discovery: {0}" -f $dc.Message)
+              $dsum = "### CONTAINER FAILED: {0}`n`n``````text`n{1}`n```````n" -f $c.Path, $dc.Message
+              Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value $dsum
+            }
+          }
+          Add-Content -LiteralPath step-trace.txt -Value ('pester OK - passed {0}, failed {1}, containers failed {2}' -f $result.PassedCount, $result.FailedCount, $failedContainers.Count)
 
       - name: Upload NUnit test results
         # v1.5 (item 5): upload the NUnit XML even when tests fail, so the
@@ -151,6 +161,13 @@ jobs:
           else {
             $lines += 'testResults.xml is missing - the Pester step failed before writing it.'
           }
+          if (Test-Path -LiteralPath 'step-trace.txt') {
+            $lines += '## step trace'
+            $lines += '```text'
+            $lines += @(Get-Content -LiteralPath 'step-trace.txt')
+            $lines += '```'
+            $lines += ''
+          }
           $report = 'ci-failure-report.md'
           Set-Content -LiteralPath $report -Value $lines -Encoding UTF8
           git config user.name 'domovoy-ci'
@@ -185,6 +202,7 @@ jobs:
             Test-Json -Json (Get-Content -LiteralPath $_.FullName -Raw -Encoding UTF8) -SchemaFile 'schema/groups.schema.json'
             Write-Host "OK $($_.Name)"
           }
+          Add-Content -LiteralPath step-trace.txt -Value 'validate-manifests OK'
 
       - name: Packaging verification (catalog ships inside the artifact)
         shell: pwsh
@@ -235,6 +253,7 @@ jobs:
             }
             if ($failed) { exit 1 }
             Write-Host 'Packaging verification passed: the staged artifact carries the full catalog.'
+            Add-Content -LiteralPath step-trace.txt -Value 'packaging OK'
           }
           catch {
             Write-Host ("::error::Packaging verification failed: {0}" -f $_.Exception.Message)
@@ -300,6 +319,7 @@ jobs:
 
           if ($failed) { exit 1 }
           Write-Host 'Documentation freshness gate passed.'
+          Add-Content -LiteralPath step-trace.txt -Value 'docs-gate OK'
 
       - name: Help content gate (.SYNOPSIS + .EXAMPLE on every public command)
         shell: pwsh
@@ -338,6 +358,7 @@ jobs:
           }
           Write-Host ("Help content gate: {0} public command file(s) checked." -f $files.Count)
           if ($failed) { exit 1 }
+          Add-Content -LiteralPath step-trace.txt -Value 'help-gate OK'
 
       - name: Signature check (verifies when a signature is present)
         shell: pwsh
@@ -363,6 +384,7 @@ jobs:
           else {
             Write-Host "No signatures present (no signing certificate configured) - accepted by design."
           }
+          Add-Content -LiteralPath step-trace.txt -Value 'signature OK'
 
   ps51:
     name: "PS 5.1 leg (windows-latest, experimental)"
