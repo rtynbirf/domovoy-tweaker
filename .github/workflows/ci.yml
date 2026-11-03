@@ -371,19 +371,23 @@ jobs:
           catch {
             $lines += ("report build error: {0}" -f $_.Exception.Message)
           }
-          Set-Content -LiteralPath 'ci-failure-report.md' -Value $lines -Encoding UTF8
           try {
             git config user.name 'domovoy-ci'
             git config user.email 'domovoy-ci@users.noreply.github.com'
-            $fetched = git fetch origin ci-report --depth=1 2>$null
+            $null = git fetch origin ci-report --depth=1 2>$null
             if ($LASTEXITCODE -eq 0) {
               git branch ci-report origin/ci-report 2>$null
-              git checkout ci-report 2>$null
+              git checkout -f ci-report 2>$null
             }
             else {
               git checkout --orphan ci-report 2>$null
               git rm -rf . 2>$null
             }
+            # The report is written only AFTER the branch switch: a file
+            # written before checkout blocks it as an untracked collision
+            # (that is exactly how runs 48-49 lost their reports).
+            $onBranch = git branch --show-current
+            if ($onBranch -ne 'ci-report') { throw ("branch switch failed, on: {0}" -f $onBranch) }
             Set-Content -LiteralPath 'ci-failure-report.md' -Value $lines -Encoding UTF8
             git add ci-failure-report.md
             git commit -m ("ci: failure report for run {0} ({1})" -f $env:GITHUB_RUN_NUMBER, $env:GITHUB_SHA.Substring(0, 7))
