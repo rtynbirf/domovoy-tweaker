@@ -13,8 +13,12 @@ function Register-DomovoyWatchdog {
     edition of PowerShell with a generated runner script that imports the
     module and calls Invoke-DomovoyAutoHeal -Apply -Trigger Scheduled.
     Registration details:
-    - Logon type Interactive: the task runs only while the registering user
-      is logged on, and no password is stored anywhere.
+    - Default principal (current user, Interactive logon type): the task
+      runs only while the registering user is logged on, and no password
+      is stored anywhere. The LogonType switch lives on
+      New-ScheduledTaskPrincipal, not on Register-ScheduledTask - passing
+      it there was a ParameterBindingException on every real machine
+      (v1.4.1 CI fallout, round 2).
     - Run level Highest: healing needs elevation.
     - The runner script is regenerated on every registration, so moving the
       module only requires registering again.
@@ -125,7 +129,6 @@ function Register-DomovoyWatchdog {
             Trigger = $trigger
             Settings = $settings
             RunLevel = 'Highest'
-            LogonType = 'Interactive'
             Description = 'Domovoy drift watchdog: re-applies features that drifted from their verified baseline.'
             Force = $true
         }

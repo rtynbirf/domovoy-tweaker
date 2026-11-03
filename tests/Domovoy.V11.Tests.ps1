@@ -151,13 +151,13 @@ Describe 'Proxy off profile (catalog 85)' {
                 if ($target -like 'HKCU:*') { return $true }
                 if ($script:V11RealTestPath) { return & $script:V11RealTestPath @PSBoundParameters }
                 return $true
-            }
+            } -ParameterFilter { ($Path -like 'HK*:*') -or ($LiteralPath -like 'HK*:*') }
             Mock New-Item {
                 param($Path)
                 if ($Path -like 'HKCU:*') { return $null }
                 if ($script:V11RealNewItem) { return & $script:V11RealNewItem @PSBoundParameters }
                 return $null
-            }
+            } -ParameterFilter { $Path -like 'HK*:*' }
             Mock New-ItemProperty {
                 param($LiteralPath, $Name, $Value, $PropertyType, $Force)
                 if ($Name -eq 'ProxyEnable') { $script:V11Proxy.ProxyEnable = [string]$Value }

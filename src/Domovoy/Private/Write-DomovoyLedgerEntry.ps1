@@ -78,6 +78,15 @@ function Write-DomovoyLedgerEntry {
     }
 
     $line = $Entry | ConvertTo-Json -Depth 12 -Compress
+
+    # Invariant I1: an append must never fail merely because the store
+    # directory does not exist yet. The parent is ensured through .NET
+    # directly - that path cannot be shadowed by test mocks of the
+    # Test-Path/New-Item cmdlets and behaves identically on every volume.
+    $ledgerDir = [System.IO.Path]::GetDirectoryName($ledgerPath)
+    if (-not [string]::IsNullOrEmpty($ledgerDir) -and -not [System.IO.Directory]::Exists($ledgerDir)) {
+        $null = [System.IO.Directory]::CreateDirectory($ledgerDir)
+    }
     Add-Content -LiteralPath $ledgerPath -Value $line -Encoding UTF8
 
     return $Entry

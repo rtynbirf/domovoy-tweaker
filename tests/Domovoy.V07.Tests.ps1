@@ -117,13 +117,13 @@ Describe 'network.proxy op (v0.7.0)' {
                 if ($target -like 'HKCU:*') { return $true }
                 if ($script:V07RealTestPath) { return & $script:V07RealTestPath @PSBoundParameters }
                 return $true
-            }
+            } -ParameterFilter { ($Path -like 'HK*:*') -or ($LiteralPath -like 'HK*:*') }
             Mock New-Item {
                 param($Path)
                 if ($Path -like 'HKCU:*') { return $null }
                 if ($script:V07RealNewItem) { return & $script:V07RealNewItem @PSBoundParameters }
                 return $null
-            }
+            } -ParameterFilter { $Path -like 'HK*:*' }
             Mock New-ItemProperty {
                 param($LiteralPath, $Name, $Value, $PropertyType, $Force)
                 $script:V07ProxyState[$Name] = [string]$Value
@@ -393,13 +393,13 @@ Describe 'Network state export/restore (catalog 35)' {
                 if ($target -like 'HKCU:*') { return $true }
                 if ($script:V07RealTestPath2) { return & $script:V07RealTestPath2 @PSBoundParameters }
                 return $true
-            }
+            } -ParameterFilter { ($Path -like 'HK*:*') -or ($LiteralPath -like 'HK*:*') }
             Mock New-Item {
                 param($Path)
                 if ($Path -like 'HKCU:*') { return $null }
                 if ($script:V07RealNewItem2) { return & $script:V07RealNewItem2 @PSBoundParameters }
                 return $null
-            }
+            } -ParameterFilter { $Path -like 'HK*:*' }
             Mock New-ItemProperty {
                 param($LiteralPath, $Name, $Value, $PropertyType, $Force)
                 $script:V07NetState.ProxyEnable = [string]$Value

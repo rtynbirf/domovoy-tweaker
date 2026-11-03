@@ -103,7 +103,7 @@ Describe 'network.dns op (catalog 34)' {
     It 'apply sets the servers, the probe passes honestly' -Skip:(-not $script:isAdmin) {
         $applied = Invoke-DomovoyFeature -ManifestFile $script:dnsManifest -Apply -SkipRestorePoint
         $applied.Mode | Should -Be 'Apply'
-        $applied.Verification.AllPass | Should -BeTrue
+        $applied.Verification.AllPass | Should -BeTrue -Because (($applied.Verification.Results | ConvertTo-Json -Depth 4 -Compress) + ' | fakeState=' + ($script:dnsState | ConvertTo-Json -Depth 3 -Compress))
         $script:dnsState['Ethernet'] | Should -Be @('1.1.1.1', '1.0.0.1')
         $script:dnsState['Wi-Fi'] | Should -Be @('1.1.1.1', '1.0.0.1')
     }
@@ -353,11 +353,20 @@ Describe 'Watchdog registration (catalog 58)' -Skip:(-not $script:isAdmin) {
             $script:V06WatchdogRegistered = $Registered
             $script:V06WatchdogUnregistered = $Unregistered
 
-            Mock New-ScheduledTaskAction { [pscustomobject]@{ Execute = $Execute; Arguments = $Argument } }
-            Mock New-ScheduledTaskTrigger { [pscustomobject]@{ StartBoundary = $At } }
-            Mock New-ScheduledTaskSettingsSet { [pscustomobject]@{ StartWhenAvailable = $true } }
+            # Pester 5 copies the original cmdlet's parameter metadata onto
+            # every mock: the Register-ScheduledTask mock binds its
+            # -Action/-Trigger/-Settings values against the REAL cmdlet's
+            # CimInstance parameter types, so pscustomobject stubs fail the
+            # binding before the mock body ever runs (v1.4.1 CI fallout,
+            # round 2). The builders return synthetic CimInstance objects of
+            # the documented task-scheduler classes instead. Named parameters
+            # consumed by the metadata-faithful binding never reach $args,
+            # so the register/unregister mocks record a fixed marker.
+            Mock New-ScheduledTaskAction { [Microsoft.Management.Infrastructure.CimInstance]::new('MSFT_TaskAction', 'Root/Microsoft/Windows/TaskScheduler') }
+            Mock New-ScheduledTaskTrigger { [Microsoft.Management.Infrastructure.CimInstance]::new('MSFT_TaskTrigger', 'Root/Microsoft/Windows/TaskScheduler') }
+            Mock New-ScheduledTaskSettingsSet { [Microsoft.Management.Infrastructure.CimInstance]::new('MSFT_TaskSettings', 'Root/Microsoft/Windows/TaskScheduler') }
             Mock Register-ScheduledTask {
-                foreach ($a in $args) { $script:V06WatchdogRegistered.Add([string]$a) }
+                $script:V06WatchdogRegistered.Add('registered')
                 [pscustomobject]@{ TaskPath = '\Domovoy\'; TaskName = 'DriftWatchdog' }
             }
             Mock Get-ScheduledTask {
@@ -365,7 +374,7 @@ Describe 'Watchdog registration (catalog 58)' -Skip:(-not $script:isAdmin) {
                 [pscustomobject]@{ TaskPath = $TaskPath; TaskName = $TaskName; State = 'Ready' }
             }
             Mock Unregister-ScheduledTask {
-                foreach ($a in $args) { $script:V06WatchdogUnregistered.Add([string]$a) }
+                $script:V06WatchdogUnregistered.Add('unregistered')
             }
         } -Parameters @{ Registered = $script:registered; Unregistered = $script:unregistered }
     }
