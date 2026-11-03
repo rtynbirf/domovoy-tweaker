@@ -1,6 +1,6 @@
 # CI failure report
 
-- run: 77 on 19eb75df4e6ea3557ff16790baf97e21b682f8c9 (refs/heads/main)
+- run: 78 on 6fd63a50095451ccb1e66581d452585bc58ec2ad (refs/heads/main)
 
 ## step trace (the first missing OK names the culprit)
 ```text
@@ -14,8 +14,8 @@ analyzer OK
 
 ```
 ```text
-at $form.Tag.Output.Text | Should -Match ([regex]::Escape($expectedSelect)), D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.V07.Tests.ps1:661
-at <ScriptBlock>, D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.V07.Tests.ps1:661
+at $form.Tag.Output.Text | Should -Match ([regex]::Escape($expectedSelect)), D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.V07.Tests.ps1:666
+at <ScriptBlock>, D:\a\domovoy-tweaker\domovoy-tweaker\tests\Domovoy.V07.Tests.ps1:666
 ```
 
 ## FAILED SUITE: Pester
