@@ -2,15 +2,20 @@
 # (catalog 103), the file.timestamp op with all four projections (catalog 91),
 # the documented catalog wave (80/82/86/74), the driver rollback-readiness
 # report (catalog 90) and the component store cleanup trigger (catalog 88).
+# Pester 5 evaluates -Skip at DISCOVERY, before any BeforeAll runs - the
+# platform flag must live at the file top level, or every gate that reads
+# it sees an undefined variable and the gate goes dead (v1.4.1, finding
+# P1-13: the Windows-only blocks of these suites never executed in CI).
+# NOTE: the variable must not be named *isWindows* - that name collides
+# with the read-only automatic $IsWindows (names are case-insensitive).
+$script:isWindowsPlatform = ($PSVersionTable.PSVersion.Major -lt 6) -or $IsWindows
+
 BeforeAll {
     $repoRoot = Split-Path -Parent $PSScriptRoot
     $env:DOMOVOY_STORE = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ("domovoy-v12-" + [guid]::NewGuid().ToString('N'))
     $env:DOMOVOY_FEATURES_DIR = Join-Path -Path $repoRoot -ChildPath 'config/features'
     Import-Module (Join-Path -Path $repoRoot -ChildPath 'src/Domovoy/Domovoy.psd1') -Force
 
-    # NOTE: the variable must not be named *isWindows* - that name collides
-    # with the read-only automatic $IsWindows (names are case-insensitive).
-    $script:isWindowsPlatform = ($PSVersionTable.PSVersion.Major -lt 6) -or $IsWindows
     $script:v12SchemaPath = Join-Path -Path $repoRoot -ChildPath 'schema/features.schema.json'
 }
 

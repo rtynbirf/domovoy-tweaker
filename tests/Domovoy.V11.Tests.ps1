@@ -2,6 +2,14 @@
 # proxy-off profile, the task-state export, winget hints in undo, the
 # watchdog cleanup report, the thumbnail-cache cleanup target, the LSA
 # audit and the batch policy export for profiles.
+# Pester 5 evaluates -Skip at DISCOVERY, before any BeforeAll runs - the
+# platform flag must live at the file top level, or every gate that reads
+# it sees an undefined variable and the gate goes dead (v1.4.1, finding
+# P1-13: the Windows-only blocks of these suites never executed in CI).
+# NOTE: the variable must not be named *isWindows* - that name collides
+# with the read-only automatic $IsWindows (names are case-insensitive).
+$script:isWindowsPlatform = ($PSVersionTable.PSVersion.Major -lt 6) -or $IsWindows
+
 BeforeAll {
     $repoRoot = Split-Path -Parent $PSScriptRoot
     $env:DOMOVOY_STORE = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ("domovoy-v11-" + [guid]::NewGuid().ToString('N'))
@@ -21,9 +29,6 @@ BeforeAll {
     catch {
         $script:isAdmin = $false
     }
-    # NOTE: the variable must not be named *isWindows* - that name collides
-    # with the read-only automatic $IsWindows (names are case-insensitive).
-    $script:isWindowsPlatform = ($PSVersionTable.PSVersion.Major -lt 6) -or $IsWindows
 }
 
 AfterAll {

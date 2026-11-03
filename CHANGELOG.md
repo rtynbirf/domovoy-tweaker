@@ -3,7 +3,19 @@
 Формат — [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
 версионирование — [SemVer](https://semver.org/lang/ru/).
 
+## [1.4.1] — 2026-11-03
+
+### Fixed
+- Платформенные гейты размаскированы (находка P1-13): флаг
+  `$script:isWindowsPlatform` перенесён на топ-уровень файлов
+  Domovoy.V07/V11/V12/V13.Tests.ps1 — Pester 5 вычисляет `-Skip` на дискавери,
+  до `BeforeAll`, поэтому прежнее размещение делало «Windows-only» блоки этих
+  сьютов мёртыми: они скипались на ВСЕХ платформах и ни разу не гонялись в CI.
+  Windows-only тесты (GUI-preview, thumbcache, file.timestamp, driver rollback,
+  component store, группы, аудит shell-меню) впервые исполняются в CI.
+
 ## [1.4.0] — 2026-11-03
+
 
 ### Added
 - №81: операции контекстного меню и «Открыть с помощью» поверх готового
