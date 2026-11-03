@@ -3,6 +3,24 @@
 Формат — [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
 версионирование — [SemVer](https://semver.org/lang/ru/).
 
+## [1.5.1] — 2026-11-03
+
+### Added
+- **CLI-shim `domovoy.ps1` внутри пакета** (v1.6 п.3 — winget-подача):
+  тонкая исполняемая точка входа для winget portable-установок — импортирует
+  модуль рядом с собой и форвардит вызов ровно одной публичной команде,
+  никакой собственной логики (правило тонкого клиента, как у GUI). Zip,
+  подписанный zip и галерейный пакет несут его одинаково.
+
+### Fixed
+- **Имя локали winget-манифеста**: `Rtynbirf.Domovoy.locale.yaml` →
+  `Rtynbirf.Domovoy.locale.en-US.yaml` — валидация winget-pkgs требует
+  локаль в имени файла; старое имя отверг бы PR до ревью.
+- **Portable-цель winget-манифеста**: `Domovoy/Domovoy.psd1` (файл данных,
+  не команда) → `Domovoy/domovoy.ps1` (shim); псевдоним команды — `domovoy`.
+- **ManifestVersion 1.6.0 → 1.9.0** во всех трёх шаблонах манифестов.
+- `docs/distribution.md` описывает новую схему и порядок подачи PR.
+
 ## [1.5.0] — 2026-11-03
 
 ### Added

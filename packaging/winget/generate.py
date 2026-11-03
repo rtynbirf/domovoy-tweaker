@@ -17,7 +17,10 @@ import sys
 TEMPLATES = [
     "Rtynbirf.Domovoy.version.template.yaml",
     "Rtynbirf.Domovoy.installer.template.yaml",
-    "Rtynbirf.Domovoy.locale.template.yaml",
+    # The defaultLocale manifest must carry the locale in its file name
+    # (<PackageIdentifier>.locale.<PackageLocale>.yaml) - the winget-pkgs
+    # validation pipeline rejects the old bare "locale.yaml" naming.
+    "Rtynbirf.Domovoy.locale.en-US.template.yaml",
 ]
 
 PLACEHOLDERS = {

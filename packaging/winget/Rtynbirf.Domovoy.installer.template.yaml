@@ -7,7 +7,10 @@ Installers:
     InstallerSha256: __SHA256__
     NestedInstallerType: portable
     NestedInstallerFiles:
-      - RelativeFilePath: Domovoy/Domovoy.psd1
-        PortableCommandAlias: Domovoy
+      # The portable target is the CLI shim shipped inside the zip (a real
+      # executable entry point), not Domovoy.psd1 - a data file is not a
+      # portable command.
+      - RelativeFilePath: Domovoy/domovoy.ps1
+        PortableCommandAlias: domovoy
 ManifestType: installer
-ManifestVersion: 1.6.0
+ManifestVersion: 1.9.0

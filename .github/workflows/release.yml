@@ -98,6 +98,9 @@ jobs:
           # there is no repository checkout next to the module.
           cp -r config schema staging/Domovoy/
           cp README.md LICENSE staging/
+          # The CLI shim travels inside the package: the winget portable
+          # manifest targets Domovoy/domovoy.ps1 as the command entry point.
+          cp packaging/shim/domovoy.ps1 staging/Domovoy/domovoy.ps1
           cd staging
           zip -r "../Domovoy-${VERSION}.zip" .
           cd ..
@@ -176,6 +179,7 @@ jobs:
           Copy-Item -Recurse -Path 'src/Domovoy' -Destination 'staging/Domovoy'
           Copy-Item -Recurse -Path 'config','schema' -Destination 'staging/Domovoy/'
           Copy-Item 'README.md','LICENSE' 'staging/'
+          Copy-Item 'packaging/shim/domovoy.ps1' 'staging/Domovoy/domovoy.ps1'
           Compress-Archive -Path 'staging/*' -DestinationPath "Domovoy-$VERSION-signed.zip" -Force
 
       - name: Upload the signed zip to the release
@@ -215,6 +219,9 @@ jobs:
           # The gallery package must carry the feature catalog the same way the
           # zip does - otherwise an installed module cannot list any features.
           Copy-Item -Recurse -Path 'config','schema' -Destination 'src/Domovoy/'
+          # Package parity: the CLI shim ships in the zip, so it ships to the
+          # gallery too.
+          Copy-Item 'packaging/shim/domovoy.ps1' 'src/Domovoy/domovoy.ps1'
           Import-Module -Name (Join-Path (Get-Location) 'src/Domovoy/Domovoy.psd1') -Force
           $meta = Test-ModuleManifest -Path (Join-Path (Get-Location) 'src/Domovoy/Domovoy.psd1')
           Write-Host "Publishing $($meta.Name) $($meta.Version) to the PowerShell Gallery."

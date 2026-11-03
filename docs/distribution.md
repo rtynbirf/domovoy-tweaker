@@ -22,8 +22,9 @@ Import-Module Domovoy
 ### Из zip-архива релиза
 
 Каждый релиз на GitHub вкладывает `Domovoy-<версия>.zip` (модуль + каталог
-манифестов `config/` + схемы `schema/` + README + LICENSE). Распаковать и
-импортировать — каталог функций работает сразу, без git-клона:
+манифестов `config/` + схемы `schema/` + README + LICENSE + CLI-shim
+`Domovoy/domovoy.ps1`). Распаковать и импортировать — каталог функций
+работает сразу, без git-клона:
 
 ```powershell
 Import-Module .\Domovoy\Domovoy.psd1 -Force
@@ -85,15 +86,29 @@ CI зелёный. Никаких следов секретов в коде не
 Шаблоны манифестов и генератор лежат в `packaging/winget/`; релиз вкладывает
 готовые манифесты под свою версию. Публикация в winget — это pull request в
 [`microsoft/winget-pkgs`](https://github.com/microsoft/winget-pkgs)
-(`manifests/r/Rtynbirf/Domovoy/<версия>/`), который делает владелец из
-готовых файлов.
+(`manifests/r/Rtynbirf/Domovoy/<версия>/`).
+
+С v1.5.1 манифесты готовы к подаче без ручных правок:
+
+- файл локали назван по требованию валидатора winget-pkgs —
+  `Rtynbirf.Domovoy.locale.en-US.yaml` (локаль в имени файла);
+- `ManifestVersion` — 1.9.0;
+- `NestedInstallerType: portable` целяется в `Domovoy/domovoy.ps1` —
+  CLI-shim, который едет внутри zip (тонкая точка входа: импортирует модуль
+  рядом с собой и форвардит вызов ровно одной публичной команде).
+  На `.psd1` portable целяться нельзя — это файл данных, а не команда.
+
+Порядок подачи (исполнен для v1.5.1, см. ТЗ-дорожную карту):
+форк `microsoft/winget-pkgs` аккаунтом владельца → ветка → три файла в
+`manifests/r/Rtynbirf/Domovoy/1.5.1/` → PR («New package: Rtynbirf.Domovoy
+version 1.5.1») → комментарий CLA-боту `@microsoft-github-policy-service
+agree`. Вердикт модераторов и ботов валидации фиксируется здесь и в ТЗ.
 
 Оговорка, сказанная прямо: winget рассчитан на исполняемые/portable
-приложения, а ДОМОВОЙ — PowerShell-модуль. Схема с
-`NestedInstallerType: portable` на `.psd1` может не пройти ревью в
-winget-pkgs. Основной канал дистрибуции — PSGallery; winget-манифесты
-даются как готовая отправная точка, и если ревью их не примет — это не
-ломает ни один критерий вехи.
+приложения, а ДОМОВОЙ — PowerShell-модуль; портативный target на `.ps1`
+валидатор может не принять. Основной канал дистрибуции — PSGallery;
+winget-манифесты — готовая отправная точка, и если ревью их не примет —
+это не ломает ни один критерий вехи (записано в ТЗ v1.6 п.3).
 
 ## Именование артефактов релиза
 
