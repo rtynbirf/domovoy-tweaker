@@ -137,6 +137,16 @@ Backup-DomovoyBitLockerKey -MountPoint C: -OutFile D:\keys\c.txt -Apply         
 
 Требуется Windows 10/11, PowerShell 5.1 или 7+; для `-Apply` — сессия с правами администратора.
 
+## Локальная проверка одним кликом
+
+Запустите [DOMOVOY-ONECLICK.bat](DOMOVOY-ONECLICK.bat) — он сам склонирует
+(или обновит) локальную копию репозитория в `%USERPROFILE%\domovoy-tweaker`,
+поставит Pester 5.7.1 и PSScriptAnalyzer, прогонит зеркало CI
+(PSScriptAnalyzer с гейтом Error, Pester, JSON-схемы, верификация упаковки)
+и соберёт локальный `Domovoy-<версия>.zip` с `.sha256`. Артефакты и логи —
+в `%LOCALAPPDATA%\Domovoy\`, репозиторий не изменяется, права администратора
+не нужны (UAC возможен только если git отсутствует и ставится через winget).
+
 ## Дорожная карта
 
 Вехи с критериями приёмки — в [docs/roadmap.md](docs/roadmap.md).

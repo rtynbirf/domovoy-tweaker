@@ -3,6 +3,20 @@
 Формат — [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
 версионирование — [SemVer](https://semver.org/lang/ru/).
 
+## [Не выпущено]
+
+### Added
+- **Локальный one-click прогон**: `DOMOVOY-ONECLICK.bat` в корне репо +
+  `tools/Invoke-DomovoyLocalCI.ps1`. Двойной клик: клонирование/обновление
+  локальной копии (`%USERPROFILE%\domovoy-tweaker`), установка Pester 5.7.1
+  и PSScriptAnalyzer, зеркало CI — анализатор с гейтом Error, Pester
+  (полный набор на pwsh 7; на Windows PowerShell 5.1 — те же
+  5.1-безопасные сьюты, что в CI-ноге), JSON-схемы, верификация упаковки
+  (гейт P0-1) — и локальная сборка `Domovoy-<версия>.zip` + `.sha256`
+  по раскладке release.yml (включая exe-шим через `csc.exe`). Артефакты
+  и логи — вне репозитория (`%LOCALAPPDATA%\Domovoy\`); система
+  не меняется, права администратора не требуются.
+
 ## [1.5.2] — 2026-11-03
 
 ### Fixed
