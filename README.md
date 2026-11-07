@@ -1,5 +1,8 @@
 # ДОМОВОЙ · МЕГА=ТВИКЕР
 
+<p align="center"><img src=".github/social-preview.png" alt="domovoy-tweaker" width="100%"></p>
+
+
 > Твикер Windows как **состояние**, а не **событие**. Прототип на PowerShell.
 
 ![CI](https://github.com/rtynbirf/domovoy-tweaker/actions/workflows/ci.yml/badge.svg)
