@@ -121,8 +121,9 @@ function Save-MemoryStore {
 
 function ConvertTo-RegistrySubPath {
     param([string]$PsPath)
-    if ($PsPath -like 'HKCU:*') { return @{ hive = [Microsoft.Win32.Registry]::CurrentUser; sub = $PsPath.Substring(5) } }
-    if ($PsPath -like 'HKLM:*') { return @{ hive = [Microsoft.Win32.Registry]::LocalMachine; sub = $PsPath.Substring(5) } }
+    # .NET API улья не принимает ведущий '\': 'HKCU:\Software\X' -> 'Software\X'
+    if ($PsPath -like 'HKCU:*') { return @{ hive = [Microsoft.Win32.Registry]::CurrentUser; sub = $PsPath.Substring(5).TrimStart('\') } }
+    if ($PsPath -like 'HKLM:*') { return @{ hive = [Microsoft.Win32.Registry]::LocalMachine; sub = $PsPath.Substring(5).TrimStart('\') } }
     throw "П39: путь не HKCU:/HKLM: — $PsPath"
 }
 
@@ -330,6 +331,7 @@ function Undo-TweakOldState {
                 $cur = $Rec.path
                 while ($cur -and ($cur -like 'HKCU:*' -or $cur -like 'HKLM:*')) {
                     $probe = ConvertTo-RegistrySubPath -PsPath $cur
+                    if ([string]::IsNullOrEmpty($probe.sub)) { break }   # корень улья не трогаем
                     $key = $probe.hive.OpenSubKey($probe.sub)
                     if ($null -eq $key) { break }
                     $hasChildren = @($key.GetSubKeyNames()).Count -gt 0
