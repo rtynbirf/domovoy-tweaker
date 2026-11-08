@@ -218,8 +218,8 @@ Describe 'П39 · твик-журнал с гарантированным отк
         BeforeAll {
             $Root = 'HKCU:\Software\DomovoyP39Test\Live'
             if (Test-Path -LiteralPath $Root) { Remove-Item -LiteralPath $Root -Recurse -Force }
-            New-Item -LiteralPath $Root -Force | Out-Null
-            # у New-ItemProperty нет -LiteralPath — обычный -Path (без масок)
+            # у New-Item и New-ItemProperty нет -LiteralPath — обычный -Path (без масок)
+            New-Item -Path $Root -Force | Out-Null
             New-ItemProperty -Path $Root -Name 'DWordVal' -Value 1 -PropertyType DWord -Force | Out-Null
             New-ItemProperty -Path $Root -Name 'QWordVal' -Value 1234567890123 -PropertyType QWord -Force | Out-Null
             New-ItemProperty -Path $Root -Name 'StrVal' -Value 'старая-строка' -PropertyType String -Force | Out-Null
