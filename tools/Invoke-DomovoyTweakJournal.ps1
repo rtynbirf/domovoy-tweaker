@@ -145,15 +145,18 @@ function Get-RegistryValueTyped {
 }
 
 function ConvertTo-RegistryValue {
-    # значение манифеста/журнала -> значение для API реестра нужного типа
+    # значение манифеста/журнала -> значение для API реестра нужного типа.
+    # Коллекции (Binary/MultiString) возвращаются через запятую-обёртку:
+    # конвейер PowerShell разворачивает IEnumerable в object[] (CI run 97:
+    # SetValue отверг object[] с ArgumentException), обёртка сохраняет тип.
     param([string]$Kind, [object]$Value)
     switch ($Kind) {
         'DWord'        { return [int32]$Value }
         'QWord'        { return [int64]$Value }
         'String'       { return [string]$Value }
         'ExpandString' { return [string]$Value }
-        'Binary'       { return [byte[]][int[]]@($Value) }
-        'MultiString'  { return [string[]]@($Value) }
+        'Binary'       { return ,([byte[]][int[]]@($Value)) }
+        'MultiString'  { return ,([string[]]@($Value)) }
         default        { throw "П39: неизвестный тип значения: $Kind" }
     }
 }
