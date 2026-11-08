@@ -1,0 +1,38 @@
+# domovoy-tweaker
+> ДОМОВОЙ / MEGA=TWEAKER — Windows tweaker as a state, not an event: change ledger, drift sentinel, per-feature undo, effect verification. PowerShell prototype.
+
+Автоген 2026-11-08 · источник: живой GitHub API (номера и файлы не руками) · владелец rtynbirf · ветка `main`
+
+## Мембрана
+- README.md — для человека (ДОМОВОЙ · МЕГА=ТВИКЕР)
+- AGENTS.md — есть
+- LICENSE — MIT
+- topics: debloat, drift-detection, ledger, powershell, privacy, system-layer, telemetry, tweaker, undo, windows, windows-11
+
+## Карта корня
+- .editorconfig
+- .gitattributes
+- .github/
+- .gitignore
+- AGENTS.md
+- CHANGELOG.md
+- CODEOWNERS
+- CODE_OF_CONDUCT.md
+- CONTRIBUTING.md
+- DOMOVOY-ONECLICK.bat
+- LICENSE
+- PSScriptAnalyzerSettings.psd1
+- PULSE.md
+- README.md
+- SECURITY.md
+- … ещё 7
+
+## CI
+- workflow: ci
+- workflow: release
+- workflow: self-audit
+
+## Ссылки
+- [GitHub](https://github.com/rtynbirf/domovoy-tweaker)
+- [README](https://github.com/rtynbirf/domovoy-tweaker/blob/main/README.md)
+- [raw llms.txt](https://raw.githubusercontent.com/rtynbirf/domovoy-tweaker/main/llms.txt)
