@@ -219,12 +219,13 @@ Describe 'П39 · твик-журнал с гарантированным отк
             $Root = 'HKCU:\Software\DomovoyP39Test\Live'
             if (Test-Path -LiteralPath $Root) { Remove-Item -LiteralPath $Root -Recurse -Force }
             New-Item -LiteralPath $Root -Force | Out-Null
-            New-ItemProperty -LiteralPath $Root -Name 'DWordVal' -Value 1 -PropertyType DWord -Force | Out-Null
-            New-ItemProperty -LiteralPath $Root -Name 'QWordVal' -Value 1234567890123 -PropertyType QWord -Force | Out-Null
-            New-ItemProperty -LiteralPath $Root -Name 'StrVal' -Value 'старая-строка' -PropertyType String -Force | Out-Null
-            New-ItemProperty -LiteralPath $Root -Name 'ExpandVal' -Value 'старый-expand' -PropertyType ExpandString -Force | Out-Null
-            New-ItemProperty -LiteralPath $Root -Name 'BinVal' -Value ([byte[]]@(4, 5, 6)) -PropertyType Binary -Force | Out-Null
-            New-ItemProperty -LiteralPath $Root -Name 'MultiVal' -Value @('старый', 'мульти') -PropertyType MultiString -Force | Out-Null
+            # у New-ItemProperty нет -LiteralPath — обычный -Path (без масок)
+            New-ItemProperty -Path $Root -Name 'DWordVal' -Value 1 -PropertyType DWord -Force | Out-Null
+            New-ItemProperty -Path $Root -Name 'QWordVal' -Value 1234567890123 -PropertyType QWord -Force | Out-Null
+            New-ItemProperty -Path $Root -Name 'StrVal' -Value 'старая-строка' -PropertyType String -Force | Out-Null
+            New-ItemProperty -Path $Root -Name 'ExpandVal' -Value 'старый-expand' -PropertyType ExpandString -Force | Out-Null
+            New-ItemProperty -Path $Root -Name 'BinVal' -Value ([byte[]]@(4, 5, 6)) -PropertyType Binary -Force | Out-Null
+            New-ItemProperty -Path $Root -Name 'MultiVal' -Value @('старый', 'мульти') -PropertyType MultiString -Force | Out-Null
         }
 
         AfterAll {
