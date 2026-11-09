@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="banner.png" alt="domovoy-tweaker — ДОМОВОЙ / MEGA=TWEAKER — твикер Windows как состояние" width="100%">
+</div>
+
 # ДОМОВОЙ · МЕГА=ТВИКЕР
 
 <p align="center"><img src=".github/social-preview.png" alt="domovoy-tweaker" width="100%"></p>
