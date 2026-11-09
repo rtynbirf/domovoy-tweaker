@@ -19,6 +19,10 @@ jobs:
   # commit before packaging anything. The PS 5.1 job is continue-on-error, so
   # it never blocks the release gate - this poller only requires the main CI
   # workflow (".github/workflows/ci.yml", the "test" job) to succeed.
+  # v1.6.1 (волна ×9, run 42637523380): workflow_dispatch on main is a
+  # no-op by design - there is no tag ref, no version, no CHANGELOG section,
+  # so the run could only end red ("No green CI run ...", then a changelog
+  # failure). An honest dispatch on a non-tag ref exits 0 immediately.
   await-tests:
     name: Await green CI on this commit
     runs-on: ubuntu-latest
@@ -28,6 +32,17 @@ jobs:
       - name: Poll for a successful CI run of exactly this commit
         run: |
           set -uo pipefail
+          # Guard: the release pipeline is tag-driven; a dispatch on a branch
+          # ref is a honest no-op, not a red run.
+          case "${GITHUB_REF_NAME}" in
+            v*)
+              echo "tag ref ${GITHUB_REF_NAME} - proceeding with the release gate."
+              ;;
+            *)
+              echo "Ref '${GITHUB_REF_NAME}' is not a v* tag - release only runs on tags; dispatch = no-op (exit 0)."
+              exit 0
+              ;;
+          esac
           # Poll every 30 s, up to 40 iterations = 20 minutes.
           for i in $(seq 1 40); do
             # Superseded duplicates are excluded, not selected: one push of
@@ -37,9 +52,40 @@ jobs:
             # duplicate - refusing a release that a green run of the very
             # same commit had already earned. Cancelled runs carry no vote;
             # a real failure still refuses outright.
+            # v1.6.1 (волна ×9): pulse commits carry "[skip ci]" - GitHub never
+            # starts CI for them, so a gate demanding a verdict of exactly
+            # github.sha dead-ends whenever HEAD (or the tagged commit) is a
+            # pulse commit ("No green CI run ... within 20 minutes", run
+            # 42637523380). Honest cure: walk back through commits whose
+            # message carries the repo's own machine-verifiable skip marker
+            # and poll the nearest ancestor that can carry a CI verdict; a red
+            # verdict still refuses outright. A content commit without a
+            # verdict yet stays itself - the 20-minute window waits for it.
             state=$(gh api "/repos/${{ github.repository }}/actions/runs?head_sha=${{ github.sha }}&per_page=100" \
               --jq '[.workflow_runs[] | select(.path == ".github/workflows/ci.yml" and .event == "push" and (.conclusion != "cancelled"))] | max_by(.id) | if . == null then "none" else ((.status // "unknown") + "/" + (.conclusion // "pending")) end' \
               2>/dev/null || echo api-error)
+            if [ "${state}" = "none" ]; then
+              walk="${{ github.sha }}"
+              for k in 1 2 3 4 5; do
+                msg=$(gh api "/repos/${{ github.repository }}/commits/${walk}" --jq '.commit.message' 2>/dev/null || echo '')
+                case "${msg}" in
+                  *"[skip ci]"*)
+                    parent=$(gh api "/repos/${{ github.repository }}/commits/${walk}" --jq '.parents[0].sha' 2>/dev/null || echo '')
+                    if [ -z "${parent}" ]; then break; fi
+                    walk="${parent}"
+                    ;;
+                  *)
+                    break
+                    ;;
+                esac
+              done
+              if [ "${walk}" != "${{ github.sha }}" ]; then
+                state=$(gh api "/repos/${{ github.repository }}/actions/runs?head_sha=${walk}&per_page=100" \
+                  --jq '[.workflow_runs[] | select(.path == ".github/workflows/ci.yml" and .event == "push" and (.conclusion != "cancelled"))] | max_by(.id) | if . == null then "none" else ((.status // "unknown") + "/" + (.conclusion // "pending")) end' \
+                  2>/dev/null || echo api-error)
+                echo "HEAD carries [skip ci] - CI verdict resolved from nearest ancestor ${walk:0:8}: ${state}"
+              fi
+            fi
             case "${state}" in
               */success)
                 echo "CI run for ${{ github.sha }} is green - proceeding with the release."
