@@ -362,29 +362,31 @@ jobs:
           printf '%s  %s\n' "${PORTABLE_SHA256}" "${PORTABLE_NAME}" > "${PORTABLE_NAME}.sha256"
           echo "portable sha256: ${PORTABLE_SHA256}"
           if gh release view "${GITHUB_REF_NAME}" > /dev/null 2>&1; then
-            echo "Release ${GITHUB_REF_NAME} already exists - uploading assets"
-            gh release upload "${GITHUB_REF_NAME}" \
-              "Domovoy-${VERSION}.zip" \
-              "Domovoy-${VERSION}.zip.sha256" \
-              "Domovoy-${VERSION}-winget-manifests.zip" \
-              "$PORTABLE_EXE" \
-              "${PORTABLE_NAME}.sha256" --clobber
-          else
-            gh release create "${GITHUB_REF_NAME}" \
-              "Domovoy-${VERSION}.zip" \
-              "Domovoy-${VERSION}.zip.sha256" \
-              "Domovoy-${VERSION}-winget-manifests.zip" \
-              "$PORTABLE_EXE" \
-              "${PORTABLE_NAME}.sha256" \
-              --title "${GITHUB_REF_NAME}" --notes-file release_notes.md $FLAG
+            echo "::error::Release ${GITHUB_REF_NAME} already exists. Immutable releases are enabled: a published release must not be modified. Delete the release and the tag, then re-push the tag."
+            exit 1
           fi
+          # v1.7 (hardening 2026-11-10): релиз создаётся как DRAFT одним вызовом
+          # со всеми основными ассетами. Править опубликованный релиз запрещено
+          # immutable releases; джобы sign/updatable-help прикрепляют свои
+          # артефакты к черновику, publish-release публикует его последним.
+          gh release create "${GITHUB_REF_NAME}" \
+            "Domovoy-${VERSION}.zip" \
+            "Domovoy-${VERSION}.zip.sha256" \
+            "Domovoy-${VERSION}-winget-manifests.zip" \
+            "$PORTABLE_EXE" \
+            "${PORTABLE_NAME}.sha256" \
+            --draft \
+            --title "${GITHUB_REF_NAME}" --notes-file release_notes.md $FLAG
+          echo "Draft release ${GITHUB_REF_NAME} created with all core assets (immutable-safe)"
 
   sign:
     # v1.6.1 (волна ×9): релиз — тег-Driven контур; диспатч на ветку = все джобы skipped, ран честно зелёный.
+    # v1.7 (hardening 2026-11-10): опциональная джоба — не блокирует publish-release.
     if: ${{ startsWith(github.ref, 'refs/tags/v') }}
     name: Optional Authenticode signing (windows-latest)
     runs-on: windows-latest
     needs: [await-tests, shim-exe, release]
+    continue-on-error: true
     env:
       CODE_SIGNING_PFX: ${{ secrets.CODE_SIGNING_PFX }}
       CODE_SIGNING_PASSWORD: ${{ secrets.CODE_SIGNING_PASSWORD }}
@@ -427,22 +429,30 @@ jobs:
           if (-not (Test-Path 'staging/Domovoy/domovoy.exe')) { throw 'packaging bug: domovoy.exe missing from the signed zip' }
           Compress-Archive -Path 'staging/*' -DestinationPath "Domovoy-$VERSION-signed.zip" -Force
 
-      - name: Upload the signed zip to the release
+      - name: Attach the signed zip to the draft release
         if: ${{ env.CODE_SIGNING_PFX != '' }}
         env:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
         run: |
+          # v1.7 (hardening 2026-11-10): immutable releases запрещают менять
+          # опубликованный релиз, поэтому артефакт прикладывается к DRAFT
+          # через REST API; publish-release публикует черновик последним.
           $VERSION = $env:GITHUB_REF_NAME.Substring(1)
-          gh release upload "$env:GITHUB_REF_NAME" "Domovoy-$VERSION-signed.zip" --clobber
-          Write-Host "Signed zip uploaded."
+          $tag = $env:GITHUB_REF_NAME
+          $rid = gh api "/repos/$env:GITHUB_REPOSITORY/releases" --jq ".[] | select(.tag_name == \"$tag\" and .draft == true) | .id" | Select-Object -First 1
+          if (-not $rid) { Write-Error "Draft release for $tag not found"; exit 1 }
+          gh api --method POST "/repos/$env:GITHUB_REPOSITORY/releases/$rid/assets?name=Domovoy-$VERSION-signed.zip" --input "Domovoy-$VERSION-signed.zip" -H "Content-Type: application/zip" > $null
+          Write-Host "Signed zip attached to draft $tag."
 
   publish-psgallery:
     # v1.6.1 (волна ×9): релиз — тег-Driven контур; диспатч на ветку = все джобы skipped, ран честно зелёный.
+    # v1.7 (hardening 2026-11-10): опциональная джоба — не блокирует publish-release.
     if: ${{ startsWith(github.ref, 'refs/tags/v') }}
     name: Optional PSGallery publish (windows-latest)
     runs-on: windows-latest
     needs: [await-tests, shim-exe, release]
+    continue-on-error: true
     env:
       PSGALLERY_API_KEY: ${{ secrets.PSGALLERY_API_KEY }}
     steps:
@@ -490,10 +500,12 @@ jobs:
   # attaches its artifacts to that release.
   updatable-help:
     # v1.6.1 (волна ×9): релиз — тег-Driven контур; диспатч на ветку = все джобы skipped, ран честно зелёный.
+    # v1.7 (hardening 2026-11-10): опциональная джоба — не блокирует publish-release.
     if: ${{ startsWith(github.ref, 'refs/tags/v') }}
     name: Updatable help cab (windows-latest)
     runs-on: windows-latest
     needs: [release]
+    continue-on-error: true
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -524,11 +536,41 @@ jobs:
           $doc.Save($helpInfo.FullName)
           Write-Host "Help cab built: $($cabFile.Name); HelpContentURI = $uri"
 
-      - name: Attach the cab and HelpInfo to the release
+      - name: Attach the cab and HelpInfo to the draft release
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          # v1.7 (hardening 2026-11-10): прикладываем к DRAFT-релизу через REST
+          # (immutable releases запрещают менять опубликованный релиз).
+          $tag = "${{ github.ref_name }}"
+          $rid = gh api "/repos/$env:GITHUB_REPOSITORY/releases" --jq ".[] | select(.tag_name == \"$tag\" and .draft == true) | .id" | Select-Object -First 1
+          if (-not $rid) { Write-Error "Draft release for $tag not found"; exit 1 }
           $files = @(Get-ChildItem -Path (Join-Path $env:RUNNER_TEMP 'cab') -File | ForEach-Object { $_.FullName })
-          gh release upload "${{ github.ref_name }}" @files --clobber
-          Write-Host "Attached $($files.Count) help artifact(s) to ${{ github.ref_name }}."
+          foreach ($f in $files) {
+            gh api --method POST "/repos/$env:GITHUB_REPOSITORY/releases/$rid/assets?name=$([IO.Path]::GetFileName($f))" --input "$f" -H "Content-Type: application/octet-stream" > $null
+          }
+          Write-Host "Attached $($files.Count) help artifact(s) to draft $tag."
+
+  # v1.7 (hardening 2026-11-10): immutable releases требуют паттерн
+  # "draft -> assets -> publish". Публикация только после того, как все
+  # джобы, прикладывающие артефакты, завершились; опциональные джобы выше
+  # continue-on-error, поэтому публикацию не блокируют.
+  publish-release:
+    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+    name: Publish the draft release (immutable-safe)
+    runs-on: ubuntu-latest
+    needs: [release, sign, publish-psgallery, updatable-help]
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Publish the draft
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          RID=$(gh api "/repos/${{ github.repository }}/releases" --jq ".[] | select(.tag_name == \"$TAG\" and .draft == true) | .id" | head -n1)
+          if [ -z "$RID" ]; then
+            echo "::error::Draft release for $TAG not found - the release job must create it."
+            exit 1
+          fi
+          gh api --method PATCH "/repos/${{ github.repository }}/releases/$RID" -f draft=false > /dev/null
+          echo "Release $TAG published - from now on it is immutable."
