@@ -2,6 +2,15 @@
   <img src="banner.png" alt="domovoy-tweaker — ДОМОВОЙ / MEGA=TWEAKER — твикер Windows как состояние" width="100%">
 </div>
 
+<!--ФОРЖ:МУЗА:НАЧАЛО-->
+<div align="center">
+  <img src="repo-muse.svg" width="100%" alt="Муза domovoy-tweaker: картина кузни ПОЛИМАТ, раунд 9" />
+  <br/>
+  <img src="forge-divider.svg" width="62%" alt="разделитель кузни ПОЛИМАТ" />
+</div>
+<!--ФОРЖ:МУЗА:КОНЕЦ-->
+
+
 # ДОМОВОЙ · МЕГА=ТВИКЕР
 
 <p align="center"><img src=".github/social-preview.png" alt="domovoy-tweaker" width="100%"></p>
@@ -208,3 +217,10 @@ of Modern Tweaker 2.0/3.0 and lessons from Sophia Script, WinUtil, Win11Debloat
 and privacy.sexy. PowerShell 5.1+/7, dry-run by default, no runtime downloads.
 See `docs/` for the spec, architecture, roadmap and the full numbered feature catalog.
 </details>
+
+<!--ФОРЖ:ПОДВАЛ-->
+---
+
+<div align="center">
+  <sub>◆ картина и штандарт — ручная ковка <a href="https://github.com/rtynbirf">КУЗНИ ПОЛИМАТ</a> · ЧЕЛОВЕК=АККАУНТ=PID1 ◆</sub>
+</div>
