@@ -1,0 +1,8 @@
+КОЛЛАЖ-ШТАНДАРТ · РАУНД 12 · REVE=РЕВО
+репо: domovoy-tweaker (№28)
+мастерская: ВЕРСТАК
+
+ДОМОВОЙ / MEGA=TWEAKER — Windows tweaker as a state, not an event: change ledger, drift sentinel, per-feature undo, effect verification. PowerShell prototype.
+
+Релиз иммутабелен — набор хранится в репо.
+◆ РЕВО В ОСНОВЕ ВСЕГО · КУЗНЯ ПОЛИМАТ ◆
