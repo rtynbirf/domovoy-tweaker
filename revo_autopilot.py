@@ -10,7 +10,7 @@
 import hashlib, json, os, re, subprocess
 
 try:
-    CFG = json.loads(r'''{"name": "domovoy-tweaker", "num": 28, "school": "ВЕРСТАК", "desc": "ДОМОВОЙ / MEGA=TWEAKER — Windows tweaker as a state, not an event: change ledger, drift sentinel, per-feature undo, effect verification. PowerShell prototype.", "topics": ["drift-detection", "ledger", "powershell", "system-tuning", "tweaker", "windows"], "releases": 21, "palette": {"bg": "#171512", "bg2": "#232017", "ink": "#F2E9D4", "gold": "#D4AF37", "gold2": "#E8C868", "dim": "#A99E82", "accent": "#B03A2A"}}''')
+    CFG = json.loads(r'''{"name": "domovoy-tweaker", "num": 16, "school": "НОВОСТРОЙ РОЯ", "desc": "ДОМОВОЙ / MEGA=TWEAKER — Windows tweaker as a state, not an event: change ledger, drift sentinel, per-feature undo, effect verification. PowerShell prototype.", "topics": ["drift-detection", "ledger", "pid1", "powershell"], "releases": 0, "palette": {"bg": "#171512", "bg2": "#232017", "ink": "#F2E9D4", "gold": "#D4AF37", "gold2": "#E8C868", "dim": "#A99E82", "accent": "#B03A2A"}}''')
 except Exception:
     CFG = {"name": "REVO", "num": 0, "school": "", "desc": "", "topics": [], "releases": 0,
            "palette": dict(bg="#EFE6CF", bg2="#F6EFDC", ink="#241C10", gold="#9A7B23",

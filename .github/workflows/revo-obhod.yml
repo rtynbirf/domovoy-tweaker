@@ -1,11 +1,13 @@
 name: РЕВО АВТОПИЛОТ
 # Протокол тишины A-HUSH (волна ×1176, 2026-11-18):
-#  Зуб 1 — самозапись получает 5 попыток fetch+regen+push (гонка ботов за main);
+#  Зуб 1 — самозапись получает 3 попытки fetch+rebase+push (гонка ботов за main);
 #  Зуб 2 — «тревога однажды»: issue alarm:revo открывается один раз,
 #  разряжается при зелёной записи.
 on:
   schedule:
     - cron: "30 5 * * 1"
+  push:
+    branches: ["main"]
   workflow_dispatch:
 concurrency:
   group: revo-obhod
