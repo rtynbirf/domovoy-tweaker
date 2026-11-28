@@ -1,24 +1,36 @@
 <div align="center">
-  <img src="banner.png" alt="domovoy-tweaker — ДОМОВОЙ / MEGA=TWEAKER — твикер Windows как состояние" width="100%">
+
+<a href="https://github.com/rtynbirf/domovoy-tweaker"><img src="banner.png" width="100%" alt="domovoy-tweaker — штандарт мастерской в каноне ORNAMENTAL MYTHO-REALISM"></a>
+
 </div>
 
 <!--ФОРЖ:МУЗА:НАЧАЛО-->
 <div align="center">
-  <img src="repo-muse.svg" width="100%" alt="Муза domovoy-tweaker: мастерская ВЕРСТАК, кузня ПОЛИМАТ, раунд 12 · REVE=РЕВО" />
+  <img src="https://cdn.jsdelivr.net/gh/rtynbirf/domovoy-tweaker@main/repo-muse.svg" width="100%" alt="Муза domovoy-tweaker: мастерская ВЕРСТАК, кузня ПОЛИМАТ, раунд 12 · REVE=РЕВО" />
   <br/>
-  <img src="forge-divider.svg" width="62%" alt="делитель мастерской ВЕРСТАК" />
+  <img src="https://cdn.jsdelivr.net/gh/rtynbirf/domovoy-tweaker@main/forge-divider.svg" width="62%" alt="делитель мастерской ВЕРСТАК" />
 </div>
 <!--ФОРЖ:МУЗА:КОНЕЦ-->
 
 <!--ФОРЖ:ПАСПОРТ:НАЧАЛО-->
 <div align="center">
-  <img src="revo-page.svg" width="100%" alt="РЕВО-паспорт страницы domovoy-tweaker в каноне ORNAMENTAL MYTHO-REALISM: орнаментальная решётка, медальон-миф, строение файлов, лексикон — по фактическому контенту" />
+  <img src="revo-page.svg" width="100%" alt="РЕВО-паспорт страницы domovoy-tweaker №28 в каноне ORNAMENTAL MYTHO-REALISM: орнаментальная решётка, медальон-миф, строение файлов, лексикон — по фактическому контенту" />
 </div>
 
 | ФАЙЛОВ | ПАПОК | КОММИТОВ | ОБНОВЛЕНО | РЕЛИЗОВ |
 |---:|---:|---:|---|---:|
-| 242 | 20 | 211 | 2026-11-28 | 21 |
+| 242 | 23 | 1 | 2026-11-28 | 21 |
 <!--ФОРЖ:ПАСПОРТ:КОНЕЦ-->
+
+# domovoy-tweaker
+
+<div align="center">
+  <img src="banner.png" alt="domovoy-tweaker — ДОМОВОЙ / MEGA=TWEAKER — твикер Windows как состояние" width="100%">
+</div>
+
+
+
+
 
 
 
